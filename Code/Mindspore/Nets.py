@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-03-21 21:00
+LastEditTime: 2023-03-26 20:02
 '''
 from Backbone import Backbone
 from Config import config
@@ -12,7 +12,7 @@ import numpy as np
 np.random.seed(3)
 
 import mindspore
-from mindspore import Parameter, Tensor
+from mindspore import Parameter, Tensor, ParameterTuple
 import mindspore.nn as nn
 import mindspore.ops as ops
 
@@ -22,9 +22,9 @@ class SG_net(nn.Cell):
         self.SG_level = SG_level
         self.label_graph_mode = config.label_graph_mode
         if self.SG_level == "image":
-            self.score_seed_List = []
-            for _ in range(len(self.label_graph_mode)):
-                self.score_seed_List.append(Parameter(Tensor(np.ones((1,config.PL_nums)), mindspore.float32), name="score_seed"))
+            self.score_seed_List = ParameterTuple(
+                tuple([Parameter(Tensor(np.ones((1,config.PL_nums)), mindspore.float32), name="score_seed_{}".format(mode_index)) for mode_index in range(len(self.label_graph_mode))])
+                )
             self.softmax = ops.Softmax()
             self.SG_Seq = nn.SequentialCell([
                     nn.Dense(config.PL_nums, config.SG_dims),

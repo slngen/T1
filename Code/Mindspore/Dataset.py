@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-03-21 19:33
+LastEditTime: 2023-03-26 19:41
 '''
 import os
 import cv2
@@ -359,6 +359,10 @@ class Datasets:
             label_numpy=label_numpy*255/maxValue
             label_numpy=np.uint8(label_numpy)
             label_edge = cv2.Canny(label_numpy, 0, 255)
+            # 创建一个核，用于形态学操作
+            kernel = np.ones((5, 5), np.uint8)
+            # 使用膨胀操作增加边缘宽度
+            label_edge = cv2.dilate(label_edge, kernel, iterations=1)
             label_edge = self.toTensor(label_edge).astype(np.int32)
             label_List.append(label_edge)
         return image, label_List, data["task_flag"]

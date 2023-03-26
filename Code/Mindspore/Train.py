@@ -110,8 +110,10 @@ class MonitorCallBack(Callback):
             for cls_index in range(self.n_class):
                 P[cls_index] = CM[cls_index, cls_index] / (CM[:,cls_index].sum()+smooth)
                 R[cls_index] = CM[cls_index, cls_index] / (CM[cls_index,:].sum()+smooth)
-            P = P.mean()
-            R = R.mean()
+            # P = P.mean()
+            # R = R.mean()
+            P = P[-1]
+            R = R[-1]
             F1 = 2*P*R/(P+R+smooth)
             F1_Dict["F1"].append(F1)
             F1_Dict["precision"].append(P)

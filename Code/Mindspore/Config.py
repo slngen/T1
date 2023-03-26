@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-03-21 21:19
+LastEditTime: 2023-03-23 13:01
 '''
 from easydict import EasyDict as ed
 
@@ -25,7 +25,7 @@ config = ed({
     },
     "channel_mode":"order",  # overlap or order
     "alpha":0.2, 
-    "label_graph_mode":["edge"],  # "full", "edge"
+    "label_graph_mode":["full", "edge"],  # "full", "edge"
     # Ascend
     "context_mode":"PYNATIVE",  # GRAPH or PYNATIVE
     "device_target":"Ascend",  # Ascend or CPU or GPU

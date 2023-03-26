@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-03-18 12:35
 LastEditors: CT
-LastEditTime: 2023-03-21 20:53
+LastEditTime: 2023-03-23 08:18
 '''
 import mindspore.nn as nn
 import mindspore.ops as ops
@@ -30,10 +30,10 @@ def make_encoder(in_channels, out_channels, conv_nums, selfconv_flag):
 
 def make_decoder(in_channels):
     decoder = nn.SequentialCell([
-        nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=1, pad_mode="same", padding=0, has_bias=False),
-        nn.ReLU(),
-        nn.BatchNorm2d(num_features=in_channels),
-        nn.Conv2d(in_channels=in_channels, out_channels=2*config.class_nums, kernel_size=1, stride=1, pad_mode="same", padding=0, has_bias=False),
+        # nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=1, pad_mode="same", padding=0, has_bias=False),
+        # nn.ReLU(),
+        # nn.BatchNorm2d(num_features=in_channels),
+        nn.Conv2d(in_channels=in_channels, out_channels=len(config.label_graph_mode)*config.class_nums, kernel_size=1, stride=1, pad_mode="same", padding=0, has_bias=False),
     ])
     return decoder
 
@@ -87,9 +87,6 @@ class Backbone(nn.Cell):
             f = self.decoders[layer_index](f)
             f = self.resize(f, size=(self.image_size,self.image_size))
             f = ops.transpose(f, (0,2,3,1))
-            if f.shape[-1] == 2*self.class_nums:
-                PL_List.append((f[:,:,:,:self.class_nums], f[:,:,:,self.class_nums:]))
-            else:
-                PL_List.append((f))
+            PL_List.append([f[:,:,:,PLout_index*config.class_nums:(PLout_index+1)*config.class_nums] for PLout_index in range(int(f.shape[-1]/2))])
 
         return PL_List
