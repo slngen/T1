@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-03-26 20:02
+LastEditTime: 2023-03-26 23:24
 '''
 from Backbone import Backbone
 from Config import config
@@ -115,7 +115,7 @@ class Train_net(nn.Cell):
             output_List = [0 for _ in range(len(self.score_List))]
             for PL_index, PLout in enumerate(PL_List):
                 for PLout_index, PLout_sub in enumerate(PLout):
-                    output_List[PLout_index] += PLout_sub * self.score_List[PLout_index][PL_index]
+                    output_List[PLout_index] += ops.stop_gradient(PLout_sub) * self.score_List[PLout_index][PL_index]
         elif self.SG_level == "pixel":
             for PL_index, PLout in enumerate(PL_List):
                 PLout = ops.transpose(PLout, (0,3,1,2))
