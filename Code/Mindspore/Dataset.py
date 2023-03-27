@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-03-26 19:41
+LastEditTime: 2023-03-27 21:01
 '''
 import os
 import cv2
@@ -353,7 +353,19 @@ class Datasets:
         if "full" in self.label_graph_mode:
             label_List.append(label)
         # Edge-Label
-        if "edge" in self.label_graph_mode:
+        if "edge-3" in self.label_graph_mode:
+            label_numpy = label.copy()[0]
+            maxValue=label_numpy.max()
+            label_numpy=label_numpy*255/maxValue
+            label_numpy=np.uint8(label_numpy)
+            label_edge = cv2.Canny(label_numpy, 0, 255)
+            # 创建一个核，用于形态学操作
+            kernel = np.ones((3, 3), np.uint8)
+            # 使用膨胀操作增加边缘宽度
+            label_edge = cv2.dilate(label_edge, kernel, iterations=1)
+            label_edge = self.toTensor(label_edge).astype(np.int32)
+            label_List.append(label_edge)
+        if "edge-5" in self.label_graph_mode:
             label_numpy = label.copy()[0]
             maxValue=label_numpy.max()
             label_numpy=label_numpy*255/maxValue
@@ -361,6 +373,18 @@ class Datasets:
             label_edge = cv2.Canny(label_numpy, 0, 255)
             # 创建一个核，用于形态学操作
             kernel = np.ones((5, 5), np.uint8)
+            # 使用膨胀操作增加边缘宽度
+            label_edge = cv2.dilate(label_edge, kernel, iterations=1)
+            label_edge = self.toTensor(label_edge).astype(np.int32)
+            label_List.append(label_edge)
+        if "edge-7" in self.label_graph_mode:
+            label_numpy = label.copy()[0]
+            maxValue=label_numpy.max()
+            label_numpy=label_numpy*255/maxValue
+            label_numpy=np.uint8(label_numpy)
+            label_edge = cv2.Canny(label_numpy, 0, 255)
+            # 创建一个核，用于形态学操作
+            kernel = np.ones((7, 7), np.uint8)
             # 使用膨胀操作增加边缘宽度
             label_edge = cv2.dilate(label_edge, kernel, iterations=1)
             label_edge = self.toTensor(label_edge).astype(np.int32)

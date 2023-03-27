@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-03-23 13:01
+LastEditTime: 2023-03-27 21:01
 '''
 from easydict import EasyDict as ed
 
@@ -25,7 +25,6 @@ config = ed({
     },
     "channel_mode":"order",  # overlap or order
     "alpha":0.2, 
-    "label_graph_mode":["full", "edge"],  # "full", "edge"
     # Ascend
     "context_mode":"PYNATIVE",  # GRAPH or PYNATIVE
     "device_target":"Ascend",  # Ascend or CPU or GPU
@@ -34,6 +33,7 @@ config = ed({
     "SG_level": "image", # "image" or "pixel"
     "SG_dims": 64,
     # Dataset
+    "label_graph_mode":["full", "edge-5", "edge-7", "edge-3"],  # "full", "edge"
     "image_size":512,
     "dataset_path_Dict": {
                 "RSOD-Aircraft": "/root/CT/ModelArts/T1/Datasets/RSOD-OD/aircraft",
