@@ -2,12 +2,14 @@
 Author: CT
 Date: 2023-03-18 12:35
 LastEditors: CT
-LastEditTime: 2023-03-23 08:18
+LastEditTime: 2023-03-28 21:31
 '''
 import mindspore.nn as nn
 import mindspore.ops as ops
+import numpy as np
 
 from Config import config
+from Utilizes import task_info
 
 def conv_step(in_channels, out_channels, kernel_size=3, stride=1, pad_mode="same", padding=0, has_bias=True):
     return nn.Conv2d(in_channels, out_channels, kernel_size, stride, pad_mode, padding, has_bias=has_bias)
@@ -30,9 +32,6 @@ def make_encoder(in_channels, out_channels, conv_nums, selfconv_flag):
 
 def make_decoder(in_channels):
     decoder = nn.SequentialCell([
-        # nn.Conv2d(in_channels=in_channels, out_channels=in_channels, kernel_size=3, stride=1, pad_mode="same", padding=0, has_bias=False),
-        # nn.ReLU(),
-        # nn.BatchNorm2d(num_features=in_channels),
         nn.Conv2d(in_channels=in_channels, out_channels=len(config.label_graph_mode)*config.class_nums, kernel_size=1, stride=1, pad_mode="same", padding=0, has_bias=False),
     ])
     return decoder
@@ -55,7 +54,8 @@ class Backbone(nn.Cell):
         for layer_index in range(self.layer_nums):
             self.encoders.append(
                 make_encoder(
-                        in_channels = self.dims[layer_index], 
+                        # in_channels = self.dims[layer_index] + (0 if layer_index==0 else task_info.get_input_channels() if layer_index==1 else self.dims[layer_index-1]), 
+                        in_channels = int(np.array(self.dims[:layer_index+1]).sum()), 
                         out_channels = self.dims[layer_index+1], 
                         conv_nums = self.conv_nums[layer_index],
                         selfconv_flag = self.selfconv_flags[layer_index]
@@ -68,7 +68,7 @@ class Backbone(nn.Cell):
         self.decoders = nn.CellList([])
         for layer_index in range(self.layer_nums):
             self.decoders.append(
-                make_decoder(self.dims[layer_index+1])
+                make_decoder(int(np.array(self.dims[:layer_index+2]).sum()))
             )
 
         self.resize = nn.ResizeBilinear()
@@ -77,8 +77,11 @@ class Backbone(nn.Cell):
         # Encode
         feature_List = []
         for layer_index, encoder in enumerate(self.encoders):
+            x_raw = x.copy()
             for cell in encoder:
                 x = cell(x)
+            x_add = nn.MaxPool2d(kernel_size=2, stride=2)(x_raw)
+            x = ops.Concat(1)((x, x_add))
             feature_List.append(x)
         # Decode
         PL_List = []
