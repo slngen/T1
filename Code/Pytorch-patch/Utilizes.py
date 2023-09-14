@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-04-03 20:04
 LastEditors: CT
-LastEditTime: 2023-04-12 08:03
+LastEditTime: 2023-07-22 15:10
 '''
 from Config import config
 
@@ -21,9 +21,9 @@ class Loss_net(nn.Module):
         #     for label_index, label in enumerate(label_List):
         #         loss += self.loss_ce(PLout[:,label_index*2:label_index*2+config.class_nums,:,:], label)
         loss += self.loss_ce(PL_List[0], label_List[0])
-        loss += self.loss_ce(PL_List[1], label_List[0])
-        loss += self.loss_ce(PL_List[2], label_List[0])
-        loss += self.loss_ce(PL_List[3], label_List[0])
+        # loss += self.loss_ce(PL_List[1], label_List[0])
+        # loss += self.loss_ce(PL_List[2], label_List[0])
+        # loss += self.loss_ce(PL_List[3], label_List[0])
         return loss
 
 class Metrics_net():
@@ -32,11 +32,11 @@ class Metrics_net():
         self.n_class = config.class_nums
         self.label_graph_mode = config.label_graph_mode
         # self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(len(self.label_graph_mode))]
-        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(4)]
+        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(1)]
 
     def clear(self):
         # self.CM_List = [[np.zeros((self.n_class, self.n_class)) for _ in range(6)] for _ in range(len(self.label_graph_mode))]
-        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(4)]
+        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(1)]
 
     def get(self):
         return self.CM_List
@@ -56,24 +56,24 @@ class Metrics_net():
         Label = label_List[0].cpu().numpy().flatten()
         cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
         self.CM_List[0] += cm
-        # get cm1
-        Output = F.softmax(output_List[1], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[1] += cm
-        # get cm2
-        Output = F.softmax(output_List[2], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[2] += cm
-        # get cm3
-        Output = F.softmax(output_List[3], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[3] += cm
+        # # get cm1
+        # Output = F.softmax(output_List[1], dim=1).cpu().numpy()
+        # Prediction = np.argmax(Output, axis=1).flatten()
+        # Label = label_List[0].cpu().numpy().flatten()
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[1] += cm
+        # # get cm2
+        # Output = F.softmax(output_List[2], dim=1).cpu().numpy()
+        # Prediction = np.argmax(Output, axis=1).flatten()
+        # Label = label_List[0].cpu().numpy().flatten()
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[2] += cm
+        # # get cm3
+        # Output = F.softmax(output_List[3], dim=1).cpu().numpy()
+        # Prediction = np.argmax(Output, axis=1).flatten()
+        # Label = label_List[0].cpu().numpy().flatten()
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[3] += cm
 
 def Metrics(CM):
     result = {}

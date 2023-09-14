@@ -1,8 +1,14 @@
 '''
 Author: CT
+Date: 2023-08-15 10:10
+LastEditors: CT
+LastEditTime: 2023-09-06 14:09
+'''
+'''
+Author: CT
 Date: 2023-04-03 20:04
 LastEditors: CT
-LastEditTime: 2023-04-12 08:03
+LastEditTime: 2023-08-15 09:51
 '''
 from Config import config
 
@@ -10,21 +16,51 @@ import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 
-class Loss_net(nn.Module):
-    def __init__(self):
-        super(Loss_net, self).__init__()
-        self.loss_ce = nn.CrossEntropyLoss()
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
 
+class Loss_net(nn.Module):
+    def __init__(self, mode="dice"):
+        super(Loss_net, self).__init__()
+        self.mode = mode
+        self.loss_ce = nn.CrossEntropyLoss()
+    
+    def dice_loss(self, pred, target):
+        smooth = 1e-5
+        intersection = (pred * target).sum()
+        union = pred.sum() + target.sum()
+        dice = (2. * intersection + smooth) / (union + smooth)
+        return 1 - dice
+    
+    def iou_loss(self, pred, target):
+        smooth = 1e-5
+        intersection = (pred * target).sum()
+        union = pred.sum() + target.sum() - intersection
+        iou = (intersection + smooth) / (union + smooth)
+        return 1 - iou
+    
     def forward(self, PL_List, label_List):
         loss = 0
-        # for PLout_index, PLout in enumerate(PL_List):
-        #     for label_index, label in enumerate(label_List):
-        #         loss += self.loss_ce(PLout[:,label_index*2:label_index*2+config.class_nums,:,:], label)
-        loss += self.loss_ce(PL_List[0], label_List[0])
-        loss += self.loss_ce(PL_List[1], label_List[0])
-        loss += self.loss_ce(PL_List[2], label_List[0])
-        loss += self.loss_ce(PL_List[3], label_List[0])
+        if self.mode == "ce":
+            loss += self.loss_ce(PL_List[0], label_List[0])
+        elif self.mode == "dice":
+            pred = F.softmax(PL_List[0], dim=1)[:, 1, :, :]
+            loss += self.dice_loss(pred, label_List[0] == 1)
+        elif self.mode == "iou":
+            pred = F.softmax(PL_List[0], dim=1)[:, 1, :, :]
+            loss += self.iou_loss(pred, label_List[0] == 1)
         return loss
+
+# class Loss_net(nn.Module):
+#     def __init__(self):
+#         super(Loss_net, self).__init__()
+#         self.loss_ce = nn.CrossEntropyLoss()
+
+#     def forward(self, PL_List, label_List):
+#         loss = 0
+#         loss += self.loss_ce(PL_List[0], label_List[0])
+#         return loss
 
 class Metrics_net():
     def __init__(self):
@@ -32,11 +68,11 @@ class Metrics_net():
         self.n_class = config.class_nums
         self.label_graph_mode = config.label_graph_mode
         # self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(len(self.label_graph_mode))]
-        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(4)]
+        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(1)]
 
     def clear(self):
         # self.CM_List = [[np.zeros((self.n_class, self.n_class)) for _ in range(6)] for _ in range(len(self.label_graph_mode))]
-        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(4)]
+        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(1)]
 
     def get(self):
         return self.CM_List
@@ -49,31 +85,41 @@ class Metrics_net():
         #         Label = label.cpu().numpy().flatten()
         #         cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
         #         self.CM_List[label_index][PLout_index] += cm
-
-        # get cm0
+        true_label = label_List[0].cpu().numpy().flatten()
         Output = F.softmax(output_List[0], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[0] += cm
-        # get cm1
-        Output = F.softmax(output_List[1], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[1] += cm
-        # get cm2
-        Output = F.softmax(output_List[2], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[2] += cm
-        # get cm3
-        Output = F.softmax(output_List[3], dim=1).cpu().numpy()
-        Prediction = np.argmax(Output, axis=1).flatten()
-        Label = label_List[0].cpu().numpy().flatten()
-        cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        self.CM_List[3] += cm
+        pred_label = np.argmax(Output, axis=1).flatten()
+        # show_images(final_prediction.cpu(), label.squeeze().cpu())
+        TP = np.sum((true_label == 1) & (pred_label == 1))
+        FP = np.sum((true_label == 0) & (pred_label == 1))
+        FN = np.sum((true_label == 1) & (pred_label == 0))
+        TN = np.sum((true_label == 0) & (pred_label == 0))
+
+        self.CM_List[0][0][1] += FP
+        self.CM_List[0][1][0] += FN
+        self.CM_List[0][1][1] += TP
+        self.CM_List[0][0][0] += TN
+
+        # # get cm0
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[0] += cm
+        # # get cm1
+        # Output = F.softmax(output_List[1], dim=1).cpu().numpy()
+        # Prediction = np.argmax(Output, axis=1).flatten()
+        # Label = label_List[0].cpu().numpy().flatten()
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[1] += cm
+        # # get cm2
+        # Output = F.softmax(output_List[2], dim=1).cpu().numpy()
+        # Prediction = np.argmax(Output, axis=1).flatten()
+        # Label = label_List[0].cpu().numpy().flatten()
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[2] += cm
+        # # get cm3
+        # Output = F.softmax(output_List[3], dim=1).cpu().numpy()
+        # Prediction = np.argmax(Output, axis=1).flatten()
+        # Label = label_List[0].cpu().numpy().flatten()
+        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
+        # self.CM_List[3] += cm
 
 def Metrics(CM):
     result = {}
@@ -118,11 +164,6 @@ def Metrics(CM):
 
 class Task_Info():
     def __init__(self):
-        # print("="*10, "Task Info", "="*10)
-        # # Check channel mode
-        # if config.channel_mode not in ["overlap", "order"]:
-        #     print("channel mode error!")
-        #     raise NotImplementedError
         self.task_flag_Dict = config.task_flag_Dict
         self.dataset_path_Dict = config.dataset_path_Dict
         self.task_channels_decoder = config.task_channels_decoder
@@ -134,11 +175,6 @@ class Task_Info():
                 # print("{}:".format(task_index))
                 for task in task_list:
                     self.task_seq.append(task)
-                    # print("\t{},\n".format(task))
-                    if config.channel_mode == "overlap":
-                        self.input_channels = max(self.input_channels, self.task_channels_decoder[task])
-                    elif config.channel_mode == "order":
-                        self.input_channels = self.input_channels + self.task_channels_decoder[task]
         self.task_str = "."+"-".join(self.task_seq)
         # Task index encoder/decoder
         self.task_encoder = {}
@@ -147,8 +183,6 @@ class Task_Info():
             self.task_encoder[task] = task_index
             self.task_decoder[task_index] = task
             
-    def get_input_channels(self):
-        return self.input_channels
 
     def encode_task(self, task):
         return self.task_encoder[task]

@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-04-03 21:24
 LastEditors: CT
-LastEditTime: 2023-04-10 21:27
+LastEditTime: 2023-09-06 14:11
 '''
 import os
 import time
@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from Config import config
 from Dataset import create_Dataset
-from ResNet_FPN import resnet50 
+from Backbone import Backbone
 from Utilizes import Metrics, Metrics_net, Loss_net
 
 if __name__=='__main__':
@@ -19,7 +19,7 @@ if __name__=='__main__':
     Log
     '''
     # get time stamp with format "2021-01-01_00-00"
-    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime())
+    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice"+config.backbone_type + "x"+str(config.raw_size)+"tox"+str(config.image_size)
     # create log path
     log_path = os.path.join(config.log_path, time_stamp)
     os.makedirs(log_path, exist_ok=True)
@@ -37,15 +37,17 @@ if __name__=='__main__':
     '''
     train_dataset = create_Dataset(batch_size=config.batch_size, shuffle=True, speed_flag=False, mode="train")
     eval_dataset = create_Dataset(batch_size=config.batch_size, shuffle=False, speed_flag=False, mode="eval")
+    # print(len(eval_dataset.dataset))
     '''
     Network
     '''
     if config.resume != "":
-        net = resnet50(pretrained=False)
+        net = Backbone()
         net_state = torch.load(config.resume)
+        print("### Load Checkpoint -> ",config.resume.split("/")[-1].split("\\")[-1])
         net.load_state_dict(net_state)
     else:
-        net = resnet50(pretrained=config.pretrained)
+        net = Backbone()
     lossNet = Loss_net()
     print(net)
     # wirte info log
@@ -96,6 +98,7 @@ if __name__=='__main__':
                 info_log_file.flush()
                 # clear loss avg
                 loss_avg = 0
+                
         # eval
         if epoch%config.eval_epochs==0:
             net.eval()
@@ -114,26 +117,13 @@ if __name__=='__main__':
                     metricNet.update(output_List, label_List)
                 # metrics
                 CM_List = metricNet.get()
-                result_List = []
-                # for PLout_index in range(len((output_List))):
-                #     result_List.append([])
-                #     for label_index in range(len((label_List))):
-                #         result = Metrics(CM_List[label_index][PLout_index])
-                #         result_List[PLout_index].append(result)
-                #     for key, value in result.items():
-                #         print(key, "--> ", value)
-                #         # wirte info log
-                #         info_log_file.write(key+"--> "+str(value)+"\n")
-                #         if key == "F1":
-                #             f1_socre = value["F1"][0]
+                # result_List = []
                 for PLout_index in range(len((output_List))):
                     print("PLout index: ", PLout_index+2)
                     # wirte info log
                     info_log_file.write("PLout index: "+str(PLout_index+2)+"\n")
                     info_log_file.flush()
-                    result_List.append([])
                     result = Metrics(CM_List[PLout_index])
-                    result_List[PLout_index].append(result)
                     for key, value in result.items():
                         print(key, "--> ", value)
                         # wirte info log
@@ -141,6 +131,7 @@ if __name__=='__main__':
                         if key == "F1":
                             f1_socre = value["F1"][0]
                 # eval dataset
+                metricNet.clear()
                 print("#"*10, "eval dataset", "#"*10)
                 # write info log
                 info_log_file.write("#"*10+"eval dataset"+"#"*10+"\n")
@@ -154,30 +145,9 @@ if __name__=='__main__':
                     metricNet.update(output_List, label_List)
                 # metrics
                 CM_List = metricNet.get()
-                result_List = []
-                # for PLout_index in range(len((output_List))):
-                #     result_List.append([])
-                #     for label_index in range(len((label_List))):
-                #         result = Metrics(CM_List[label_index][PLout_index])
-                #         result_List[PLout_index].append(result)
-                #     for key, value in result.items():
-                #         print(key, "--> ", value)
-                #         # wirte info log
-                #         info_log_file.write(key+"--> "+str(value)+"\n")
-                #         info_log_file.flush()
-                #         if key == "F1":
-                #             f1_socre = value["F1"][0]
-                #             if f1_socre > best_f1:
-                #                 best_f1 = f1_socre
-                #                 torch.save(net.state_dict(), os.path.join(save_model_path,"ResNet50-FPN-{:.4f}.ckpt".format(best_f1)))
-                #                 print("save model!")
-                #                 # write info log
-                #                 info_log_file.write("save model!\n")
-                #                 info_log_file.flush()
+                # result_List = []
                 for PLout_index in range(len((output_List))):
-                    result_List.append([])
                     result = Metrics(CM_List[PLout_index])
-                    result_List[PLout_index].append(result)
                     print("PLout index: ", PLout_index+2)
                     # wirte info log
                     info_log_file.write("PLout index: "+str(PLout_index+2)+"\n")
@@ -191,7 +161,7 @@ if __name__=='__main__':
                             f1_socre = value["F1"][0]
                             if f1_socre > best_f1:
                                 best_f1 = f1_socre
-                                torch.save(net.state_dict(), os.path.join(save_model_path,"ResNet50-FPN-C{}-{:.4f}.ckpt".format(PLout_index+2,best_f1)))
+                                torch.save(net.state_dict(), os.path.join(save_model_path,config.backbone_type+"-E{}-{:.4f}.ckpt".format(epoch,best_f1)))
                                 print("save model!")
                                 # write info log
                                 info_log_file.write("save model!\n")

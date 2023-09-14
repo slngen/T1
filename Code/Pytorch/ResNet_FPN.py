@@ -147,10 +147,31 @@ class ResNet(nn.Module):
         self.latlayer3_bn = nn.BatchNorm2d(256)
         self.latlayer3_relu = nn.ReLU(inplace=True)
 
-        self.conv2 = nn.Conv2d(1024, 256, kernel_size=3, stride=1, padding=1)
-        self.bn2 = nn.BatchNorm2d(256)
-        self.relu2 = nn.ReLU(inplace=True)
-        self.conv3 = nn.Conv2d(256, num_classes, kernel_size=1, stride=1, padding=0)
+        # self.conv2 = nn.Conv2d(1024, 256, kernel_size=3, stride=1, padding=1)
+        # self.bn2 = nn.BatchNorm2d(256)
+        # self.relu2 = nn.ReLU(inplace=True)
+        # self.conv3 = nn.Conv2d(256, num_classes, kernel_size=1, stride=1, padding=0)
+
+        # decode all features to outputs
+        self.conv2_2 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
+        self.bn2_2 = nn.BatchNorm2d(256)
+        self.relu2_2 = nn.ReLU(inplace=True)
+        self.conv3_2 = nn.Conv2d(256, num_classes, kernel_size=1, stride=1, padding=0)
+
+        self.conv2_3 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
+        self.bn2_3 = nn.BatchNorm2d(256)
+        self.relu2_3 = nn.ReLU(inplace=True)
+        self.conv3_3 = nn.Conv2d(256, num_classes, kernel_size=1, stride=1, padding=0)
+
+        self.conv2_4 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
+        self.bn2_4 = nn.BatchNorm2d(256)
+        self.relu2_4 = nn.ReLU(inplace=True)
+        self.conv3_4 = nn.Conv2d(256, num_classes, kernel_size=1, stride=1, padding=0)
+
+        self.conv2_5 = nn.Conv2d(256, 256, kernel_size=3, stride=1, padding=1)
+        self.bn2_5 = nn.BatchNorm2d(256)
+        self.relu2_5 = nn.ReLU(inplace=True)
+        self.conv3_5 = nn.Conv2d(256, num_classes, kernel_size=1, stride=1, padding=0)
 
         self.scale = scale
 
@@ -232,13 +253,33 @@ class ResNet(nn.Module):
         p4 = self._upsample(p4, p2)
         p5 = self._upsample(p5, p2)
 
-        out = torch.cat((p2, p3, p4, p5), 1)
-        out = self.conv2(out)
-        out = self.relu2(self.bn2(out))
-        out = self.conv3(out)
-        out = self._upsample(out, x, scale=self.scale)
+        # out = torch.cat((p2, p3, p4, p5), 1)
+        # out = self.conv2(out)
+        # out = self.relu2(self.bn2(out))
+        # out = self.conv3(out)
+        # out = self._upsample(out, x, scale=self.scale)
+        # get out2
+        out2 = self.conv2_2(p2)
+        out2 = self.relu2_2(self.bn2_2(out2))
+        out2 = self.conv3_2(out2)
+        out2 = self._upsample(out2, x, scale=self.scale)
+        # get out3
+        out3 = self.conv2_3(p3)
+        out3 = self.relu2_3(self.bn2_3(out3))
+        out3 = self.conv3_3(out3)
+        out3 = self._upsample(out3, x, scale=self.scale)
+        # get out4
+        out4 = self.conv2_4(p4)
+        out4 = self.relu2_4(self.bn2_4(out4))
+        out4 = self.conv3_4(out4)
+        out4 = self._upsample(out4, x, scale=self.scale)
+        # get out5
+        out5 = self.conv2_5(p5)
+        out5 = self.relu2_5(self.bn2_5(out5))
+        out5 = self.conv3_5(out5)
+        out5 = self._upsample(out5, x, scale=self.scale)
 
-        return [out]
+        return [out2, out3, out4, out5]
 
 
 def resnet18(pretrained=False, **kwargs):
@@ -269,6 +310,7 @@ def resnet50(pretrained=False, **kwargs):
         pretrained (bool): If True, returns a model pre-trained on ImageNet
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+    # model = ResNet(Bottleneck, [2, 2, 2, 2], **kwargs)
     if pretrained:
         # pretrained_model = model_zoo.load_url(model_urls['resnet50'])
         pretrained_model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2).state_dict()

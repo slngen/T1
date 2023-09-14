@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-04-03 21:24
 LastEditors: CT
-LastEditTime: 2023-07-22 14:54
+LastEditTime: 2023-07-22 14:55
 '''
 import os
 import time
@@ -11,7 +11,8 @@ from tqdm import tqdm
 
 from Config import config
 from Dataset import create_Dataset
-from ResNet_FPN import resnet50 
+# from ResNet_FPN import resnet50 
+from Backbone import Backbone
 from Utilizes import Metrics, Metrics_net, Loss_net
 
 if __name__=='__main__':
@@ -47,11 +48,11 @@ if __name__=='__main__':
     # else:
     #     net = resnet50(pretrained=config.pretrained)
     if config.resume != "":
-        net = Backbone(pretrained=False)
+        net = Backbone()
         net_state = torch.load(config.resume)
         net.load_state_dict(net_state)
     else:
-        net = resnet50(pretrained=config.pretrained)
+        net = Backbone()
     lossNet = Loss_net()
     print(net)
     # wirte info log

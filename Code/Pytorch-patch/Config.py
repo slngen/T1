@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-07-17 12:51
+LastEditTime: 2023-07-26 08:47
 '''
 from easydict import EasyDict as ed
 
@@ -33,34 +33,35 @@ config = ed({
     "decoder_dims": 8,
     # Dataset
     "label_graph_mode":["full"],  # "full", "edge"
-    "image_size":64,
+    "image_size":512,
     "dataset_path_Dict": {
                 "RSOD-Aircraft": "/root/CT/ModelArts/T1/Datasets/RSOD-OD/aircraft",
                 "UCMLU": "/root/CT/ModelArts/T1/Datasets/UCMerced_LandUse",
-                "WHU-BCD": "W:/Data/T1/CD/WHU-BCD-Patch",
+                # "WHU-BCD": "W:/Data/T1/CD/WHU-BCD-Patch",
+                "WHU-BCD": "W:/Data/T1/CD/WHU-BCD",
                 "CDD": "W:/Data/T1/CD/CDD",
         },
     "num_parallel_workers":16,
-    "batch_size": 512,
+    "batch_size": 8,
     "speed_up_nums":128,
     # Model
     "pretrained":False,
-    "resume":r"", 
+    "resume":r"W:\Code\T1\Models\2023-07-26_08-40\ResNet50-FPN-C2-0.5893.ckpt", 
     # Train & Eval
-    "eval_epochs":10,
+    "eval_epochs":5,
     "start_eval_epochs":0,
     "eval_traindata":True,
-    "epoch_size": 500,
-    "loss_monitor_step":1,
+    "epoch_size": 301,
+    "loss_monitor_step":10,
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
     "save_model_path":r"W:\Code\T1\Models",
     "log_path":r"W:\Code\T1\Logs",
     # LR
-    "lr_init":1e-5,
-    "lr_max":1e-5,
-    "lr_end":1e-6,
+    "lr_init":1e-4,
+    "lr_max":1e-4,
+    "lr_end":1e-5,
     "warmup_epochs":0,
     # ProcessLine
     "scale_factor_List":[10],

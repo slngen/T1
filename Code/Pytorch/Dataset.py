@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-04-09 08:25
+LastEditTime: 2023-07-16 20:28
 '''
 import os
 import cv2
@@ -301,12 +301,15 @@ class Datasets(Dataset):
         return len(self.data_List)
 
     def __getitem__(self, idx):
+        # random_x = random.randint(0, 511-64)
+        # random_y = random.randint(0, 511-64)
         data = self.data_List[idx]
         # Image
         if task_info.decode_task(data["task_flag"]) in ["RSOD-Aircraft", "UCMLU"]:
             image_path = data["path"]
-            image = Image.open(image_path).convert('RGB')
-            image = self.toTensor(image)
+            image_ = Image.open(image_path).convert('RGB')
+            image = self.toTensor(image_)
+            image_.close()
             img_shape = image.shape
             image = transform.resize(image, (image.shape[0], self.img_size, self.img_size), order=2)
             if self.channel_mode == "order":
@@ -335,6 +338,7 @@ class Datasets(Dataset):
         else:
             raise NotImplementedError
         image = torch.Tensor(image)
+        # image = image[:,random_x:random_x+64,random_y:random_y+64]
         # Label
         label_List = []
         if task_info.decode_task(data["task_flag"]) == "RSOD-Aircraft":
@@ -351,6 +355,9 @@ class Datasets(Dataset):
             label = transform.resize(label, (1, self.img_size, self.img_size), order=2)
         else:
             raise NotImplementedError
+        
+        # label = label[:,random_x:random_x+64,random_y:random_y+64]
+
         if "full" in self.label_graph_mode:
             label_List.append(label)
         # Edge-Label
