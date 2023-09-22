@@ -7,17 +7,19 @@ from tqdm import tqdm
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
 
-
 # Global variables
 tile_size = 64
 root_dir = '/Code/T1/Dataset/WHU-BCD/Raw'
 output_root = f'/Code/T1/Dataset/WHU-BCD/split_{tile_size}'
 
-def save_tile(img_array, path):
-    im = Image.fromarray(img_array.astype('uint8'), 'RGB')
+def save_tile(img_array, path, is_rgb=True):
+    if is_rgb:
+        im = Image.fromarray(img_array.astype('uint8'), 'RGB')
+    else:
+        im = Image.fromarray(img_array.astype('uint8'), 'L')
     im.save(path)
 
-def split_image(input_path, output_folder):
+def split_image(input_path, output_folder, is_rgb=True):
     img = Image.open(input_path)
     img_array = np.array(img)
     
@@ -40,11 +42,11 @@ def split_image(input_path, output_folder):
                 tile = img_array[i:i+rows, j:j+cols]
                 
                 # Padding if needed
-                if tile.shape[0] < tile_size or tile.shape[1] < tile_size:
-                    tile = np.pad(tile, ((0, tile_size - tile.shape[0]), (0, tile_size - tile.shape[1]), (0, 0)), 'constant')
+                padding_dims = ((0, tile_size - tile.shape[0]), (0, tile_size - tile.shape[1])) + ((0, 0),) * (tile.ndim - 2)
+                tile = np.pad(tile, padding_dims, 'constant')
                 
                 tile_path = os.path.join(output_folder, f"x_{j}_y_{i}.tif")
-                save_tile(tile, tile_path)
+                save_tile(tile, tile_path, is_rgb=is_rgb)
                 
                 pbar.update(1)
 
@@ -62,8 +64,9 @@ if __name__ == "__main__":
     os.makedirs(output_folder_label, exist_ok=True)
 
     print("Processing 'before' images...")
-    split_image(input_before, output_folder_before)
+    split_image(input_before, output_folder_before, is_rgb=True)
     print("Processing 'after' images...")
-    split_image(input_after, output_folder_after)
+    split_image(input_after, output_folder_after, is_rgb=True)
     print("Processing 'label' images...")
-    split_image(input_label, output_folder_label)
+    split_image(input_label, output_folder_label, is_rgb=False)
+
