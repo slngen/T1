@@ -35,10 +35,7 @@ config = ed({
     "dataset_path_Dict": {
                 "RSOD-Aircraft": "/root/CT/ModelArts/T1/Datasets/RSOD-OD/aircraft",
                 "UCMLU": "/root/CT/ModelArts/T1/Datasets/UCMerced_LandUse",
-                # "WHU-BCD": "W:/Data/T1/CD/WHU-BCD-Patch-32",
-                # "WHU-BCD": "W:/Data/T1/CD/WHU-BCD-Patch-128",
-                # "WHU-BCD": "W:/Data/T1/CD/WHU-BCD",
-                "WHU-BCD": "W:/Data/T1/CD/WHU-BCD-Patch",
+                "WHU-BCD": "/Code/T1/Dataset/WHU-BCD/split_64",
                 "CDD": "W:/Data/T1/CD/CDD",
         },
     "num_parallel_workers":8,
@@ -56,15 +53,15 @@ config = ed({
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
-    "save_model_path":r"W:\Code\T1\Baseline\Models",
-    "log_path":r"W:\Code\T1\Baseline\Logs",
+    "save_model_path":"Code/T1/Models",
+    "log_path":"/Code/T1/Logs",
     # LR
     "lr_init":5e-4,
     "lr_max":5e-4,
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "backbone_type": "XB",
+    "backbone_type": "3B",
     "input_dim":6,
     "backbone_dims":[128, 256, 512]
 })

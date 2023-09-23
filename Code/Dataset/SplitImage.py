@@ -18,7 +18,6 @@ def save_tile(img_array, path):
     if len(img_array.shape) == 2:
         img_array *= 255
         img_array = np.stack([img_array] * 3, axis=2)  # Convert to shape (H, W, 3)
-    print(f"Label image shape: {img_array.shape}, dtype: {img_array.dtype}")
     im = Image.fromarray(img_array, 'RGB')
     im.save(path)
 

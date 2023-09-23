@@ -56,7 +56,7 @@ class Datasets(Dataset):
             end_channel += config.task_channels_decoder["WHU-BCD"]
             WHU_BCD_data_path = self.dataset_path_Dict["WHU-BCD"]
             WHU_BCD_data_path = os.path.join(WHU_BCD_data_path, "Train" if mode == "train" else "Eval")
-            self.files = os.listdir(os.path.join(WHU_BCD_data_path, "label"))
+            self.files = os.listdir(os.path.join(WHU_BCD_data_path, "Label"))
 
             for file in self.files:
                 self.data_List.append({
@@ -64,7 +64,7 @@ class Datasets(Dataset):
                         "A": os.path.join(WHU_BCD_data_path, "A", file), 
                         "B": os.path.join(WHU_BCD_data_path, "B", file)
                     },
-                    "label": os.path.join(WHU_BCD_data_path, "label", file), 
+                    "label": os.path.join(WHU_BCD_data_path, "Label", file), 
                     "task_flag": task_info.encode_task("WHU-BCD"),
                     "end_channel": end_channel,
                     "begin_channel": begin_channel
