@@ -53,7 +53,7 @@ config = ed({
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
-    "save_model_path":"Code/T1/Models",
+    "save_model_path":"/Code/T1/Models",
     "log_path":"/Code/T1/Logs",
     # LR
     "lr_init":5e-4,
