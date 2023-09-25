@@ -113,11 +113,11 @@ class Datasets(Dataset):
         return image, label_List, data["task_flag"]
 
 
-def create_Dataset(batch_size, shuffle=True, speed_flag=False, mode="train", train_rate=0.7):
+def create_Dataset(batch_size, shuffle=False, speed_flag=False, mode="train", train_rate=0.7):
     datasets = Datasets(speed_flag, mode, train_rate)
     datasets = DataLoader(datasets, 
                           batch_size=batch_size, 
-                          shuffle=shuffle, 
+                          shuffle=False, 
                           num_workers=config.num_parallel_workers,
                           sampler=DistributedSampler(datasets))
     return datasets

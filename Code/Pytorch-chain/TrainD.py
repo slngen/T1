@@ -56,17 +56,19 @@ if __name__=='__main__':
         net = Backbone()
     lossNet = Loss_net()
     print(net)
-    if torch.cuda.device_count() > 1:
-        print("Let's use", torch.cuda.device_count(), "GPUs!")
-        net = torch.nn.parallel.DistributedDataParallel(net,
-                                                        device_ids=[local_rank],
-                                                        output_device=local_rank)
     # wirte info log
     info_log_file.write("\n"+"#"*10+"Network"+"#"*10+"\n")
     info_log_file.write(str(net)+"\n")
     net.to(device)
     lossNet.to(device)
     metricNet = Metrics_net()
+
+    if torch.cuda.device_count() > 1:
+        print("Let's use", torch.cuda.device_count(), "GPUs! Current GPU ->",device)
+        net = torch.nn.parallel.DistributedDataParallel(net,
+                                                        device_ids=[local_rank],
+                                                        output_device=local_rank,
+                                                        find_unused_parameters=True)
     '''
     Optimizer
     '''
