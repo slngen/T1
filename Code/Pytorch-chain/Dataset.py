@@ -42,7 +42,6 @@ class Datasets(Dataset):
         if mode == "train":
             self.transforms = transforms.Compose([
                 transforms.Resize((self.img_size, self.img_size)),
-                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor()
             ])
         else:

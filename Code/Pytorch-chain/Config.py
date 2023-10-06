@@ -7,7 +7,7 @@ LastEditTime: 2023-09-13 11:05
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda",  # CPU or cuda
+    "device":"cuda:0",  # CPU or cuda
     "class_nums":2,
     # Task
     "task_flag_Dict":{
@@ -39,7 +39,7 @@ config = ed({
                 "CDD": "W:/Data/T1/CD/CDD",
         },
     "num_parallel_workers":8,
-    "batch_size": 8,
+    "batch_size": 32,
     "speed_up_nums":128,
     # Model
     "pretrained":False,
@@ -61,7 +61,7 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "backbone_type": "3B",
+    "backbone_type": "chain-B",
     "input_dim":6,
-    "backbone_dims":[128, 256, 512]
+    "backbone_dims":[32, 64, 128]
 })
