@@ -227,9 +227,6 @@ class Backbone(nn.Module):
         f_2_2_3 = self.encoder_2_2_3(f_1_3)
         f_2_2_5 = self.encoder_2_2_5(f_1_5)
         f_2_2_7 = self.encoder_2_2_7(f_1_7)
-        f_2_3_3 = self.encoder_2_3_3(f_1_3)
-        f_2_3_5 = self.encoder_2_3_5(f_1_5)
-        f_2_3_7 = self.encoder_2_3_7(f_1_7)
 
         '''
         Decoder
