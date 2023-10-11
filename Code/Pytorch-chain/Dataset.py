@@ -51,8 +51,8 @@ class Datasets(Dataset):
             ])
 
         if "WHU-BCD" in self.task_flag_List:
-            begin_channel = end_channel
-            end_channel += config.task_channels_decoder["WHU-BCD"]
+            # begin_channel = end_channel
+            # end_channel += config.task_channels_decoder["WHU-BCD"]
             WHU_BCD_data_path = self.dataset_path_Dict["WHU-BCD"]
             WHU_BCD_data_path = os.path.join(WHU_BCD_data_path, "Train" if mode == "train" else "Eval")
             self.files = os.listdir(os.path.join(WHU_BCD_data_path, "Label"))
@@ -65,8 +65,27 @@ class Datasets(Dataset):
                     },
                     "label": os.path.join(WHU_BCD_data_path, "Label", file), 
                     "task_flag": task_info.encode_task("WHU-BCD"),
-                    "end_channel": end_channel,
-                    "begin_channel": begin_channel
+                    # "end_channel": end_channel,
+                    # "begin_channel": begin_channel
+                })
+
+        if "CDD-BCD" in self.task_flag_List:
+            # begin_channel = end_channel
+            # end_channel += config.task_channels_decoder["CDD-BCD"]
+            CDD_BCD_data_path = self.dataset_path_Dict["CDD-BCD"]
+            CDD_BCD_data_path = os.path.join(CDD_BCD_data_path, "train" if mode == "train" else "val")
+            self.files = os.listdir(os.path.join(CDD_BCD_data_path, "Label"))
+
+            for file in self.files:
+                self.data_List.append({
+                    "path": {
+                        "A": os.path.join(CDD_BCD_data_path, "A", file), 
+                        "B": os.path.join(CDD_BCD_data_path, "B", file)
+                    },
+                    "label": os.path.join(CDD_BCD_data_path, "Label", file), 
+                    "task_flag": task_info.encode_task("CDD-BCD"),
+                    # "end_channel": end_channel,
+                    # "begin_channel": begin_channel
                 })
             
     def __len__(self):

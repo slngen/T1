@@ -13,7 +13,7 @@ config = ed({
     "task_flag_Dict":{
         "SC":[],  #  "UCMLU"
         "OD":[],  #  "RSOD-Aircraft"
-        "CD":["WHU-BCD"],  #  "WHU-BCD", "CDD"
+        "CD":["CDD-BCD"],  #  "WHU-BCD", "CDD-BCD"
         "SS":[],  #  "GID"
     },
     # Task channels decoder
@@ -36,7 +36,7 @@ config = ed({
                 "RSOD-Aircraft": "/root/CT/ModelArts/T1/Datasets/RSOD-OD/aircraft",
                 "UCMLU": "/root/CT/ModelArts/T1/Datasets/UCMerced_LandUse",
                 "WHU-BCD": "/Code/T1/Dataset/WHU-BCD/split_64",
-                "CDD": "W:/Data/T1/CD/CDD",
+                "CDD-BCD": "/Code/T1/Dataset/CDD-BCD/split_64",
         },
     "num_parallel_workers":8,
     "batch_size": 32,
@@ -45,11 +45,11 @@ config = ed({
     "pretrained":False,
     "resume":r"", 
     # Train & Eval
-    "eval_epochs":10,
+    "eval_epochs":3,
     "start_eval_epochs":0,
     "eval_traindata":True,
-    "epoch_size": 301,
-    "loss_monitor_step":10,
+    "epoch_size": 201,
+    "loss_monitor_step":50,
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
@@ -64,5 +64,5 @@ config = ed({
     "backbone_type": "L3-8",
     "input_dim":6,
     "layer_nums":3,
-    "backbone_dims":[8, 16, 32, 64]
+    "backbone_dims":[8,16,32,64]
 })

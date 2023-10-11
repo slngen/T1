@@ -19,7 +19,7 @@ if __name__=='__main__':
     Log
     '''
     # get time stamp with format "2021-01-01_00-00"
-    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice"+config.backbone_type + "x"+str(config.raw_size)+"tox"+str(config.image_size)
+    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice"+config.backbone_type + "x"+str(config.raw_size)+"tox"+str(config.image_size)+"CDD"
     # create log path
     log_path = os.path.join(config.log_path, time_stamp)
     os.makedirs(log_path, exist_ok=True)
