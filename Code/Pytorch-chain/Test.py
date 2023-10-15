@@ -123,15 +123,15 @@ print("Acc:", acc)
 
 # Save predicted image
 pred_img = Image.fromarray((predicted_class * 255).astype(np.uint8))
-pred_img.save("predicted.png")
+pred_img.save("predicted-s{}.png".format(stride))
 
 # Calculate difference
 difference_image = np.abs(binary_label - predicted_class) * 255  # Multiply by 255 to get white where there's a difference
 
 # Save difference image
 diff_img = Image.fromarray(difference_image.astype(np.uint8))
-diff_img.save("diff.png")
+diff_img.save("diff-s{}.png".format(stride))
 
 # Save label image
 label_img = Image.fromarray((binary_label * 255).astype(np.uint8))
-label_img.save("label.png")
+label_img.save("label-s{}.png".format(stride))
