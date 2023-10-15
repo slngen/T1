@@ -3,13 +3,13 @@ import torch.nn as nn
 from torchvision import transforms
 from PIL import Image
 import numpy as np
-from sklearn.metrics import confusion_matrix, f1_score
+from tqdm import tqdm
 
 from Config import config
 from Backbone import Backbone
-'''
-Network
-'''
+Image.MAX_IMAGE_PIXELS = None
+
+# Network loading
 ckpt_path = r"/Code/T1/Models/2023-10-08_06-27--DiceL2-32x64tox64/L2-32-E290-0.9174.ckpt"
 model = Backbone()
 net_state = torch.load(ckpt_path)
@@ -17,6 +17,19 @@ model.load_state_dict(net_state)
 model.eval()
 
 transform = transforms.Compose([transforms.ToTensor()])
+
+def get_confusion_matrix_elements(gt, pred):
+    TP = np.sum((gt == 1) & (pred == 1))
+    TN = np.sum((gt == 0) & (pred == 0))
+    FP = np.sum((gt == 0) & (pred == 1))
+    FN = np.sum((gt == 1) & (pred == 0))
+    return TP, TN, FP, FN
+
+def compute_f1(TP, FP, FN):
+    precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+    recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+    f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+    return f1
 
 def load_image_pair_and_label(root_dir):
     path_A = f"{root_dir}/before/before.tif"
@@ -31,6 +44,8 @@ def load_image_pair_and_label(root_dir):
     white_mask = (label[0] > 0.9) & (label[1] > 0.9) & (label[2] > 0.9)
     binary_label = white_mask.float().numpy()
 
+    image = image[:,:64*50,:64*50]
+    binary_label = binary_label[:64*50,:64*50]
     return image, binary_label
 
 def slide_window(img, patch_size=64, stride=32):
@@ -45,7 +60,7 @@ def slide_window(img, patch_size=64, stride=32):
 
             # Padding directly in numpy array if the patch size is less than required
             if patch_array.shape[0] < patch_size or patch_array.shape[1] < patch_size:
-                padded_patch = np.zeros((patch_size, patch_size, 3), dtype=np.uint8)
+                padded_patch = np.zeros((patch_size, patch_size, 6), dtype=np.uint8)
                 padded_patch[:patch_array.shape[0], :patch_array.shape[1]] = patch_array
                 patches.append(transform(padded_patch))
             else:
@@ -54,17 +69,25 @@ def slide_window(img, patch_size=64, stride=32):
     return torch.stack(patches)
 
 def inference_on_patches(model, patches):
+    model.to(config.device)
     with torch.no_grad():
         preds = []
-        for patch in patches:
-            output = model(patch.unsqueeze(0))
-            pred = nn.Softmax(dim=1)(output)  # Assuming your model does not apply softmax
-            preds.append(pred.squeeze(0))
-        return torch.stack(preds)
+        # Split patches into batches based on the specified batch size from config
+        num_batches = len(patches) // config.batch_size + int(len(patches) % config.batch_size > 0)
+        for batch_idx in tqdm(range(num_batches)):
+            start_idx = batch_idx * config.batch_size
+            end_idx = start_idx + config.batch_size
+            batch = patches[start_idx:end_idx]
+            batch = batch.to(config.device)
+            # Since your model already applies softmax, we don't need to apply it again
+            output = model(batch)[0]
+            preds.extend(output)
+        return torch.stack(preds).cpu()
+
     
 def reconstruct_from_patches(patches, img_shape, patch_size=64, stride=32):
+    patches = patches.permute(0, 2, 3, 1)
     recon = np.zeros((*img_shape, 2))
-    count = np.zeros(img_shape)
     idx = 0
     for i in range(0, img_shape[0], stride):
         for j in range(0, img_shape[1], stride):
@@ -72,11 +95,10 @@ def reconstruct_from_patches(patches, img_shape, patch_size=64, stride=32):
             w_end = min(j+patch_size, img_shape[1])
             
             recon[i:h_end, j:w_end] += patches[idx].numpy()[:h_end-i, :w_end-j]
-            count[i:h_end, j:w_end] += 1
             idx += 1
-    return recon / count[..., np.newaxis]
+    return recon
 
-image, binary_label = load_image_pair_and_label("after/before")
+image, binary_label = load_image_pair_and_label("/Code/T1/Dataset/WHU-BCD/Raw")
 patches = slide_window(image.permute(1, 2, 0))  # Switch CxHxW to HxWxC
 
 predicted_patches = inference_on_patches(model, patches)
@@ -84,13 +106,16 @@ reconstructed_image = reconstruct_from_patches(predicted_patches, image.shape[1:
 
 # To get the predicted class (either 0 or 1)
 predicted_class = np.argmax(reconstructed_image, axis=-1)
-# Calculate confusion matrix, F1 score
-confusion = confusion_matrix(binary_label.ravel(), predicted_class.ravel())
-f1 = f1_score(binary_label.ravel(), predicted_class.ravel())
+TP, TN, FP, FN = get_confusion_matrix_elements(binary_label.ravel(), predicted_class.ravel())
+f1 = compute_f1(TP, FP, FN)
+
+# Displaying results
+print("True Positives:", TP)
+print("True Negatives:", TN)
+print("False Positives:", FP)
+print("False Negatives:", FN)
+print("F1 Score:", f1)
 
 # Save predicted image
 pred_img = Image.fromarray((predicted_class * 255).astype(np.uint8))
 pred_img.save("predicted.png")
-
-print("Confusion Matrix:", confusion)
-print("F1 Score:", f1)
