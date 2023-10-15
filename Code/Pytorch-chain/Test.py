@@ -9,6 +9,9 @@ from Config import config
 from Backbone import Backbone
 Image.MAX_IMAGE_PIXELS = None
 
+stride = 32
+patch_size = 64
+
 # Network loading
 ckpt_path = r"/Code/T1/Models/2023-10-08_06-27--DiceL2-32x64tox64/L2-32-E290-0.9174.ckpt"
 model = Backbone()
@@ -44,11 +47,11 @@ def load_image_pair_and_label(root_dir):
     white_mask = (label[0] > 0.9) & (label[1] > 0.9) & (label[2] > 0.9)
     binary_label = white_mask.float().numpy()
 
-    image = image[:,:64*50,:64*50]
-    binary_label = binary_label[:64*50,:64*50]
+    # image = image[:,64*30:64*50,64*30:64*50]
+    # binary_label = binary_label[64*30:64*50,64*30:64*50]
     return image, binary_label
 
-def slide_window(img, patch_size=64, stride=32):
+def slide_window(img):
     patches = []
     img_array = np.array(img)
 
@@ -79,13 +82,13 @@ def inference_on_patches(model, patches):
             end_idx = start_idx + config.batch_size
             batch = patches[start_idx:end_idx]
             batch = batch.to(config.device)
-            # Since your model already applies softmax, we don't need to apply it again
+            # Since model already applies softmax, we don't need to apply it again
             output = model(batch)[0]
             preds.extend(output)
         return torch.stack(preds).cpu()
 
     
-def reconstruct_from_patches(patches, img_shape, patch_size=64, stride=32):
+def reconstruct_from_patches(patches, img_shape):
     patches = patches.permute(0, 2, 3, 1)
     recon = np.zeros((*img_shape, 2))
     idx = 0
@@ -108,6 +111,7 @@ reconstructed_image = reconstruct_from_patches(predicted_patches, image.shape[1:
 predicted_class = np.argmax(reconstructed_image, axis=-1)
 TP, TN, FP, FN = get_confusion_matrix_elements(binary_label.ravel(), predicted_class.ravel())
 f1 = compute_f1(TP, FP, FN)
+acc = (binary_label.ravel()*predicted_class.ravel()).sum() / predicted_class.ravel().shape[0]
 
 # Displaying results
 print("True Positives:", TP)
@@ -115,7 +119,19 @@ print("True Negatives:", TN)
 print("False Positives:", FP)
 print("False Negatives:", FN)
 print("F1 Score:", f1)
+print("Acc:", acc)
 
 # Save predicted image
 pred_img = Image.fromarray((predicted_class * 255).astype(np.uint8))
 pred_img.save("predicted.png")
+
+# Calculate difference
+difference_image = np.abs(binary_label - predicted_class) * 255  # Multiply by 255 to get white where there's a difference
+
+# Save difference image
+diff_img = Image.fromarray(difference_image.astype(np.uint8))
+diff_img.save("diff.png")
+
+# Save label image
+label_img = Image.fromarray((binary_label * 255).astype(np.uint8))
+label_img.save("label.png")
