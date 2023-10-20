@@ -19,14 +19,30 @@ from torch.utils.data import Dataset, DataLoader
 from Config import config
 from Utilizes import task_info
 
+def random_foreground_removal(label, p=0.6):
+    """
+    随机移除前景的函数。
+    :param label: 输入的二值标签
+    :param p: 要移除的前景的比例
+    :return: 数据增强后的标签
+    """
+    foreground_indices = torch.nonzero(label)  # 获取前景(白色)的像素位置
+    num_foreground = foreground_indices.shape[0]
+    num_remove = int(p * num_foreground)  # 计算要移除的前景数量
+
+    # 随机选择要移除的前景像素
+    random_indices = random.sample(range(num_foreground), num_remove)
+    for idx in random_indices:
+        position = foreground_indices[idx]
+        label[position[0], position[1]] = 0  # 将前景像素设置为背景
+    return label
+
 def compute_center_decreasing_weights(mask):
     dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 3)
     weights = cv2.normalize(dist_transform, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
     weights = 1 - weights
     weights *= mask / 255.0
     return weights
-
-
 
 class Datasets(Dataset):
     def __init__(self, speed_flag, mode, train_rate):
@@ -37,6 +53,7 @@ class Datasets(Dataset):
         self.data_List = []
         self.label_graph_mode = config.label_graph_mode
         end_channel = 0
+        self.mode = mode
         
         # torchvision transforms
         if mode == "train":
@@ -102,6 +119,8 @@ class Datasets(Dataset):
         label = self.transforms(Image.open(data["label"]).convert('RGB'))
         white_mask = (label[0] > 0.9) & (label[1] > 0.9) & (label[2] > 0.9)
         binary_label = white_mask.float()
+        # if (self.mode == "train"):
+        #     binary_label = random_foreground_removal(binary_label)
 
         label_List = []
 

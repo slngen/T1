@@ -9,11 +9,11 @@ from Config import config
 from Backbone import Backbone
 Image.MAX_IMAGE_PIXELS = None
 
-stride = 32
+stride = 64
 patch_size = 64
 
 # Network loading
-ckpt_path = r"/Code/T1/Models/2023-10-08_06-27--DiceL2-32x64tox64/L2-32-E290-0.9174.ckpt"
+ckpt_path = r"/Code/T1/Models/2023-10-17_05-34--DiceAL2-16x64tox64aug/AL2-16-E640-0.9175.ckpt"
 model = Backbone()
 net_state = torch.load(ckpt_path)
 model.load_state_dict(net_state)
@@ -83,9 +83,9 @@ def inference_on_patches(model, patches):
             batch = patches[start_idx:end_idx]
             batch = batch.to(config.device)
             # Since model already applies softmax, we don't need to apply it again
-            output = model(batch)[0]
+            output = model(batch)[0].cpu()
             preds.extend(output)
-        return torch.stack(preds).cpu()
+        return torch.stack(preds)
 
     
 def reconstruct_from_patches(patches, img_shape):
@@ -134,4 +134,4 @@ diff_img.save("diff-s{}.png".format(stride))
 
 # Save label image
 label_img = Image.fromarray((binary_label * 255).astype(np.uint8))
-label_img.save("label-s{}.png".format(stride))
+label_img.save("label.png".format(stride))
