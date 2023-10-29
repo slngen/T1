@@ -14,7 +14,7 @@ from Config import config
 from Backbone import Backbone
 from Dataset import create_Dataset
 
-ckpt_path = r"W:\Code\T1\Baseline\Models\2023-07-30_10-14--Cx64\C-E290-0.9447.ckpt"
+ckpt_path = r"/Code/T1/Models/2023-10-08_06-27--DiceL2-32x64tox64/L2-32-E290-0.9174.ckpt"
 
 def plot_images(original_A, original_B, predicted, label, index):
     # 输入检查
@@ -60,7 +60,7 @@ def plot_images(original_A, original_B, predicted, label, index):
         ax.axis('off')
 
     # plt.show()
-    plt.savefig("W:/Code/T1/Inference/"+str(index)+".png")
+    plt.savefig("/Code/T1/Inference/"+str(index)+".png")
     plt.close(fig)
 
 if __name__=='__main__':
