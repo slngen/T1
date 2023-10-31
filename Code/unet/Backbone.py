@@ -2,11 +2,12 @@
 Author: CT
 Date: 2023-10-29 16:06
 LastEditors: CT
-LastEditTime: 2023-10-29 20:25
+LastEditTime: 2023-10-31 21:54
 '''
 import torch
 import torch.nn as nn
 from torchinfo import summary
+from Config import config
 
 class DoubleConv(nn.Module):
     def __init__(self, in_channels, out_channels):
@@ -46,65 +47,124 @@ class Decoder(nn.Module):
     def __init__(self, features, out_channels):
         super(Decoder, self).__init__()
         self.layers = nn.ModuleList()
-        for i in range(len(features) - 1):
-            self.layers.append(nn.ConvTranspose2d(features[i], features[i + 1], 2, stride=2))
-            self.layers.append(DoubleConv(features[i] + features[i + 1], features[i + 1]))
-        self.conv = nn.Conv2d(features[-1], out_channels, 1)
+        for i in range(len(features) - 1, 0, -1):
+            self.layers.append(nn.ConvTranspose2d(features[i], features[i - 1], 2, stride=2))
+            self.layers.append(DoubleConv(2*features[i - 1], features[i - 1]))
+        self.conv = nn.Conv2d(features[0], out_channels, 1)
 
     def forward(self, feature_maps):
         x = feature_maps[-1]
         for i in range(0, len(self.layers), 2):
             x = self.layers[i](x)
-            x = torch.cat((x, feature_maps[-(i // 2 + 2)]), dim=1)
+            skip_connection = feature_maps[-(i // 2 + 2)]
+            x = torch.cat((x, skip_connection), dim=1)
             x = self.layers[i + 1](x)
         return self.conv(x)
 
-class UNet(nn.Module):
-    def __init__(self, in_channels, out_channels, features):
-        super(UNet, self).__init__()
-        self.encoder = Encoder(in_channels, features)
-        self.decoder = Decoder(features, out_channels)
+class SpatialAttention(nn.Module):
+    def __init__(self, kernel_size=3):
+        super(SpatialAttention, self).__init__()
+        self.conv1 = nn.Conv2d(2, 1, kernel_size=kernel_size, padding=kernel_size // 2)
+        self.sigmoid = nn.Sigmoid()
 
     def forward(self, x):
-        feature_maps = self.encoder(x)
-        return self.decoder(feature_maps)
+        avg_out = torch.mean(x, dim=1, keepdim=True)
+        max_out, _ = torch.max(x, dim=1, keepdim=True)
+        x = torch.cat([avg_out, max_out], dim=1)
+        x = self.conv1(x)
+        return self.sigmoid(x)
+    
+class ChannelAttention(nn.Module):
+    def __init__(self, num_channels, reduction_ratio=3):
+        super(ChannelAttention, self).__init__()
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.max_pool = nn.AdaptiveMaxPool2d(1)
+        self.fc1 = nn.Conv2d(num_channels, num_channels // reduction_ratio, 1, bias=False)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Conv2d(num_channels // reduction_ratio, num_channels, 1, bias=False)
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x):
+        avg_out = self.fc2(self.relu(self.fc1(self.avg_pool(x))))
+        max_out = self.fc2(self.relu(self.fc1(self.max_pool(x))))
+        out = avg_out + max_out
+        return self.sigmoid(out)
+
+class AttentionUnit(nn.Module):
+    def __init__(self, out_channels):
+        super(AttentionUnit, self).__init__()
+        self.sa = SpatialAttention()
+        self.ca = ChannelAttention(out_channels)
+        self.map = DoubleConv(out_channels, out_channels//2)
+
+    def forward(self, x):
+        x = self.sa(x) * x
+        x = self.ca(x) * x
+        x = self.map(x)
+        return x
+    
+class AttentionModule(nn.Module):
+    def __init__(self):
+        super(AttentionModule, self).__init__()
+        self.layers = nn.ModuleList([
+            AttentionUnit(128),
+            AttentionUnit(256),
+            AttentionUnit(512),
+        ])
+
+    def forward(self, features):
+        att_features = []
+        for feature_index in range(len(features)):
+            feature = features[feature_index]
+            att_feature = self.layers[feature_index](feature)
+            att_features.append(att_feature)
+        return att_features
 
 class PositionalEmbedding(nn.Module):
-    def __init__(self, device):
+    def __init__(self):
         super(PositionalEmbedding, self).__init__()
         self.embeddings = nn.ParameterDict()
-        self.device = device
+        self.device = config.device
 
-    def forward(self, pos, channel, height, width):
-        batch_size = pos.shape[0]
-        embeddings = []
-        for i in range(batch_size):
-            key = f"pos{'_'.join(map(str, pos[i].int().tolist()))}_ch{channel}_h{height}_w{width}"
-            if key not in self.embeddings:
-                self.embeddings[key] = nn.Parameter(torch.randn(1, channel, height, width).to(self.device))
-            embeddings.append(self.embeddings[key])
-        return torch.cat(embeddings, dim=0)
+    def forward(self, feature_maps, pos):
+        feature_outs = []
+        for feature_index in range(len(feature_maps)):
+            batch_size, channel, size, _ = feature_maps[feature_index].shape
+            batch_embeddings = []
+            for i in range(batch_size):
+                key = f"pos{'_'.join(map(str, pos[i].int().tolist()))}_ch{channel}_s{size}"
+                if key not in self.embeddings:
+                    self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
+                batch_embeddings.append(self.embeddings[key])
+            positional_encoding = torch.cat(batch_embeddings)
+            feature_out = torch.einsum('bchw,bcwj->bchj', feature_maps[feature_index], positional_encoding)
+            feature_outs.append(feature_out)
+        return feature_outs
+    
+class Backbone(nn.Module):
+    def __init__(self):
+        super(Backbone, self).__init__()
+        self.device = config.device
+        self.encoder = Encoder(config.input_dim, config.features)
+        self.decoder = Decoder(config.features, 2)
+        self.embedding = PositionalEmbedding()
+        self.attention = AttentionModule()
+        self.softmax = nn.Softmax(dim=1)
 
-def position_encoding(feature_map, positional_encoding):
-    return torch.einsum('bchw,bcwj->bchj', feature_map, positional_encoding)
+    def forward(self, x, pos = torch.randint(-1,1,(config.batch_size,2))):
+        center_patch = x[0]
+        guide_patch = x[1]
+        center_features = self.encoder(center_patch)
+        guide_features = self.encoder(guide_patch)
+        positional_guide_features = self.embedding(guide_features, pos)
+        features = [torch.cat((center_features[i], positional_guide_features[i]), dim=1) for i in range(len(config.features))]
+        att_features = self.attention(features)
+        output = self.decoder(att_features)
+        output = self.softmax(output)
+        return output
 
 # 测试函数
 if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    batch, channel, height, width = 8, 32, 64, 64
-    input_dim = 6
-    
-    # features = [64, 128, 256, 512]
-    # model = UNet(input_dim, 2, features)
-    # summary(model, input_size=(batch, input_dim, height, width))
-
-    embedding = PositionalEmbedding(device)  # 实例化模块
-    pos = torch.Tensor([[0,0],[0,1],[1,1],[0,0],[0,1],[1,1],[0,0],[0,1]])  # 设置位置
-    pos = embedding(pos, channel, height, width).to(device)  # 获取位置编码
-    
-    feature_map = torch.rand(batch, channel, height, width).to(device)
-    result = position_encoding(feature_map, pos)
-    print(result.shape)
-
-
-
+    model = Backbone()
+    summary(model, input_size=(2, config.batch_size, config.input_dim, config.image_size, config.image_size))
+    print(model)

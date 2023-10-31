@@ -2,12 +2,12 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-09-13 11:05
+LastEditTime: 2023-10-31 21:54
 '''
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda:1",  # CPU or cuda
+    "device":"cuda",  # CPU or cuda
     "class_nums":2,
     # Task
     "task_flag_Dict":{
@@ -39,7 +39,7 @@ config = ed({
                 "CDD-BCD": "/Code/T1/Dataset/CDD-BCD/split_64",
         },
     "num_parallel_workers":8,
-    "batch_size": 32,
+    "batch_size": 64,
     "speed_up_nums":128,
     # Model
     "pretrained":False,
@@ -64,5 +64,6 @@ config = ed({
     "backbone_type": "L3-8",
     "input_dim":6,
     "layer_nums":3,
-    "backbone_dims":[8,16,32,64]
+    "backbone_dims":[8,16,32,64],
+    "features":[64, 128, 256]
 })
