@@ -35,8 +35,8 @@ if __name__=='__main__':
     '''
     Dataset
     '''
-    train_dataset = create_Dataset(batch_size=config.batch_size, shuffle=True, speed_flag=False, mode="train")
-    eval_dataset = create_Dataset(batch_size=config.batch_size, shuffle=False, speed_flag=False, mode="eval")
+    train_dataset = create_Dataset(batch_size=config.batch_size, shuffle=True, mode="train")
+    eval_dataset = create_Dataset(batch_size=config.batch_size, shuffle=False, mode="test")
     # print(len(eval_dataset.dataset))
     '''
     Network
@@ -74,15 +74,15 @@ if __name__=='__main__':
         net.train()
         step = 0
         loss_avg = 0
-        for image, label_List, task_flag in train_dataset:
+        for image, label, direction in train_dataset:
             step += 1
             # to device
             image = image.to(config.device)
-            label_List = [label.to(config.device) for label in label_List]
+            label = label.to(config.device)
             # forward
-            output_List = net(image)
+            output = net(image, direction)
             # loss
-            loss = lossNet(output_List, label_List)
+            loss = lossNet(output, label)
             # average loss
             loss_avg += loss.cpu().item()
             # backward
@@ -107,18 +107,18 @@ if __name__=='__main__':
                 print("#"*10, "train dataset", "#"*10)
                 # write info log
                 info_log_file.write("\n"+"#"*10+"train dataset"+"#"*10+"\n")
-                for image, label_List, task_flag in train_dataset:
+                for image, label, task_flag in train_dataset:
                     # to device
                     image = image.to(config.device)
-                    label_List = [label.to(config.device) for label in label_List]
+                    label = label.to(config.device)
                     # forward
-                    output_List = net(image)
+                    output = net(image, direction)
                     # metrics
-                    metricNet.update(output_List, label_List)
+                    metricNet.update(output, label)
                 # metrics
                 CM_List = metricNet.get()
                 # result_List = []
-                for PLout_index in range(len((output_List))):
+                for PLout_index in range(len((output))):
                     print("PLout index: ", PLout_index+2)
                     # wirte info log
                     info_log_file.write("PLout index: "+str(PLout_index+2)+"\n")
@@ -135,18 +135,18 @@ if __name__=='__main__':
                 print("#"*10, "eval dataset", "#"*10)
                 # write info log
                 info_log_file.write("#"*10+"eval dataset"+"#"*10+"\n")
-                for image, label_List, task_flag in eval_dataset:
+                for image, label, direction in eval_dataset:
                     # to device
                     image = image.to(config.device)
-                    label_List = [label.to(config.device) for label in label_List]
+                    label = label.to(config.device)
                     # forward
-                    output_List = net(image)
+                    output = net(image, direction)
                     # metrics
-                    metricNet.update(output_List, label_List)
+                    metricNet.update(output, label)
                 # metrics
                 CM_List = metricNet.get()
                 # result_List = []
-                for PLout_index in range(len((output_List))):
+                for PLout_index in range(len((output))):
                     result = Metrics(CM_List[PLout_index])
                     print("PLout index: ", PLout_index+2)
                     # wirte info log

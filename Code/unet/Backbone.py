@@ -151,12 +151,12 @@ class Backbone(nn.Module):
         self.attention = AttentionModule()
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, x, pos = torch.randint(-1,1,(config.batch_size,2))):
-        center_patch = x[0]
-        guide_patch = x[1]
+    def forward(self, x, direction = torch.randint(-1,1,(config.batch_size,2))):
+        center_patch = x[:,0,:,:,:]
+        guide_patch = x[:,1,:,:,:]
         center_features = self.encoder(center_patch)
         guide_features = self.encoder(guide_patch)
-        positional_guide_features = self.embedding(guide_features, pos)
+        positional_guide_features = self.embedding(guide_features, direction)
         features = [torch.cat((center_features[i], positional_guide_features[i]), dim=1) for i in range(len(config.features))]
         att_features = self.attention(features)
         output = self.decoder(att_features)

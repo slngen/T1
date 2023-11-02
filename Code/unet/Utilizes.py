@@ -40,16 +40,16 @@ class Loss_net(nn.Module):
         iou = (intersection + smooth) / (union + smooth)
         return 1 - iou
     
-    def forward(self, PL_List, label_List):
+    def forward(self, output, label):
         loss = 0
         if self.mode == "ce":
-            loss += self.loss_ce(PL_List[0], label_List[0])
+            loss += self.loss_ce(output, label)
         elif self.mode == "dice":
-            pred = F.softmax(PL_List[0], dim=1)[:, 1, :, :]
-            loss += self.dice_loss(pred, label_List[0] == 1)
+            pred = F.softmax(output, dim=1)[:, 1, :, :]
+            loss += self.dice_loss(pred, label == 1)
         elif self.mode == "iou":
-            pred = F.softmax(PL_List[0], dim=1)[:, 1, :, :]
-            loss += self.iou_loss(pred, label_List[0] == 1)
+            pred = F.softmax(output, dim=1)[:, 1, :, :]
+            loss += self.iou_loss(pred, label == 1)
         return loss
 
 # class Loss_net(nn.Module):
@@ -85,8 +85,8 @@ class Metrics_net():
         #         Label = label.cpu().numpy().flatten()
         #         cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
         #         self.CM_List[label_index][PLout_index] += cm
-        true_label = label_List[0].cpu().numpy().flatten()
-        Output = F.softmax(output_List[0], dim=1).cpu().numpy()
+        true_label = label_List.cpu().numpy().flatten()
+        Output = F.softmax(output_List, dim=1).cpu().numpy()
         pred_label = np.argmax(Output, axis=1).flatten()
         # show_images(final_prediction.cpu(), label.squeeze().cpu())
         TP = np.sum((true_label == 1) & (pred_label == 1))
