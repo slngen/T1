@@ -1,141 +1,122 @@
-'''
-Author: CT
-Date: 2022-12-09 10:36
-LastEditors: CT
-LastEditTime: 2023-08-29 09:34
-'''
 import os
-import cv2
-import numpy as np
-from PIL import Image
-import matplotlib.pyplot as plt
 import random
-random.seed(3)
-
-import torch
+from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
+from PIL import Image
+Image.MAX_IMAGE_PIXELS = None
+import numpy as np
+import torch
 
 from Config import config
-from Utilizes import task_info
 
-def compute_center_decreasing_weights(mask):
-    dist_transform = cv2.distanceTransform(mask, cv2.DIST_L2, 3)
-    weights = cv2.normalize(dist_transform, None, 0, 1, cv2.NORM_MINMAX, dtype=cv2.CV_32F)
-    weights = 1 - weights
-    weights *= mask / 255.0
-    return weights
-
-
-
-class Datasets(Dataset):
-    def __init__(self, speed_flag, mode, train_rate):
-        self.img_size = config.image_size
-        self.input_channels = config.input_dim
-        self.dataset_path_Dict = task_info.dataset_path_Dict
-        self.task_flag_List = task_info.get_task_list()
-        self.data_List = []
-        self.label_graph_mode = config.label_graph_mode
-        end_channel = 0
+class BuildingChangeDetectionDataset(Dataset):
+    def __init__(self, root, img_size=64, transform=None):
+        self.root = root
+        self.img_size = img_size
+        self.transform = transform
         
-        # torchvision transforms
-        if mode == "train":
-            self.transforms = transforms.Compose([
-                transforms.Resize((self.img_size, self.img_size)),
-                transforms.ToTensor()
-            ])
-        else:
-            self.transforms = transforms.Compose([
-                transforms.Resize((self.img_size, self.img_size)),
-                transforms.ToTensor()
-            ])
-
-        if "WHU-BCD" in self.task_flag_List:
-            # begin_channel = end_channel
-            # end_channel += config.task_channels_decoder["WHU-BCD"]
-            WHU_BCD_data_path = self.dataset_path_Dict["WHU-BCD"]
-            WHU_BCD_data_path = os.path.join(WHU_BCD_data_path, "Train" if mode == "train" else "Eval")
-            self.files = os.listdir(os.path.join(WHU_BCD_data_path, "Label"))
-
-            for file in self.files:
-                self.data_List.append({
-                    "path": {
-                        "A": os.path.join(WHU_BCD_data_path, "A", file), 
-                        "B": os.path.join(WHU_BCD_data_path, "B", file)
-                    },
-                    "label": os.path.join(WHU_BCD_data_path, "Label", file), 
-                    "task_flag": task_info.encode_task("WHU-BCD"),
-                    # "end_channel": end_channel,
-                    # "begin_channel": begin_channel
-                })
-
-        if "CDD-BCD" in self.task_flag_List:
-            # begin_channel = end_channel
-            # end_channel += config.task_channels_decoder["CDD-BCD"]
-            CDD_BCD_data_path = self.dataset_path_Dict["CDD-BCD"]
-            CDD_BCD_data_path = os.path.join(CDD_BCD_data_path, "train" if mode == "train" else "val")
-            self.files = os.listdir(os.path.join(CDD_BCD_data_path, "Label"))
-
-            for file in self.files:
-                self.data_List.append({
-                    "path": {
-                        "A": os.path.join(CDD_BCD_data_path, "A", file), 
-                        "B": os.path.join(CDD_BCD_data_path, "B", file)
-                    },
-                    "label": os.path.join(CDD_BCD_data_path, "Label", file), 
-                    "task_flag": task_info.encode_task("CDD-BCD"),
-                    # "end_channel": end_channel,
-                    # "begin_channel": begin_channel
-                })
-            
+        # 加载图像
+        self.before_image = Image.open(os.path.join(root, 'before', 'before.tif'))
+        self.after_image = Image.open(os.path.join(root, 'after', 'after.tif'))
+        self.label_image = Image.open(os.path.join(root, 'change label', 'change_label.tif'))
+        
+        # 计算有多少个patch
+        self.width, self.height = self.before_image.size
+        self.n_patches_x = (self.width + img_size - 1) // img_size
+        self.n_patches_y = (self.height + img_size - 1) // img_size
+        self.n_patches = self.n_patches_x * self.n_patches_y
+        
+        # 将before和after图像拼接
+        before_image = np.array(self.before_image)
+        after_image = np.array(self.after_image)
+        self.combined_image = np.concatenate([before_image, after_image], axis=-1)
+        
+        # 将图像转为numpy array
+        self.combined_image = np.array(self.combined_image)
+        self.label_image = np.array(self.label_image)
+        
     def __len__(self):
-        return len(self.data_List)
-
+        return self.n_patches
+    
     def __getitem__(self, idx):
-        data = self.data_List[idx]
+        # 计算patch的坐标
+        x = (idx % self.n_patches_x) * self.img_size
+        y = (idx // self.n_patches_x) * self.img_size
+        
+        # 提取patch
+        patch_image = self.extract_patch(self.combined_image, x, y)
+        patch_label = self.extract_patch(self.label_image, x, y, is_label=True)
+        
+        # 随机选择一个相邻的patch
+        direction = random.choice([0, 1, 2, 3])  # 0: up, 1: down, 2: left, 3: right
+        if direction == 0:
+            x_neighbor = x
+            y_neighbor = y - self.img_size
+        elif direction == 1:
+            x_neighbor = x
+            y_neighbor = y + self.img_size
+        elif direction == 2:
+            x_neighbor = x - self.img_size
+            y_neighbor = y
+        else:  # direction == 3
+            x_neighbor = x + self.img_size
+            y_neighbor = y
+        
+        neighbor_image = self.extract_patch(self.combined_image, x_neighbor, y_neighbor)
+        
+        if self.transform is not None:
+            patch_image = self.transform(patch_image)
+            neighbor_image = self.transform(neighbor_image)
+        
+        data = torch.stack([patch_image, neighbor_image])
+        return data, patch_label, direction
+    
+    def extract_patch(self, image, x, y, is_label=False):
+        if x < 0 or y < 0 or x + self.img_size > self.width or y + self.img_size > self.height:
+            if is_label:
+                patch = np.zeros((self.img_size, self.img_size), dtype=np.uint8)
+            else:
+                patch = np.zeros((self.img_size, self.img_size, 6), dtype=np.uint8)
+        else:
+            if is_label:
+                patch = image[y:y+self.img_size, x:x+self.img_size]
+            else:
+                patch = image[y:y+self.img_size, x:x+self.img_size]
+        return patch
 
-        # Load images using torchvision
-        image_A = self.transforms(Image.open(data["path"]["A"]).convert('RGB'))
-        image_B = self.transforms(Image.open(data["path"]["B"]).convert('RGB'))
-        image = torch.cat([image_A, image_B], dim=0)
-
-        label = self.transforms(Image.open(data["label"]).convert('RGB'))
-        white_mask = (label[0] > 0.9) & (label[1] > 0.9) & (label[2] > 0.9)
-        binary_label = white_mask.float()
-
-        label_List = []
-
-        if "full" in self.label_graph_mode:
-            label_List.append(binary_label.squeeze().long())
-
-        # Edge label
-        if "edge" in self.label_graph_mode:
-            white_mask_np = (white_mask.numpy() * 255).astype(np.uint8)
-            edge_label = compute_center_decreasing_weights(white_mask_np)
-            label_List.append(torch.Tensor(edge_label))
-            # # 可视化weights和原始label
-            # if (label.max()==1):
-            #     plt.figure(figsize=(10, 5))
-                
-            #     plt.subplot(1, 2, 1)
-            #     plt.imshow(white_mask_np, cmap='gray')
-            #     plt.title('Original Label')
-                
-            #     plt.subplot(1, 2, 2)
-            #     plt.imshow(edge_label, cmap='hot')
-            #     plt.title('Weights')
-                
-            #     plt.show()
-
-        return image, label_List, data["task_flag"]
-
-
-def create_Dataset(batch_size, shuffle=True, speed_flag=False, mode="train", train_rate=0.7):
-    datasets = Datasets(speed_flag, mode, train_rate)
-    datasets = DataLoader(datasets, batch_size=batch_size, shuffle=shuffle, num_workers=config.num_parallel_workers)
-    return datasets
+def create_Dataset(batch_size, mode="train", shuffle=True):
+    root = '/Code/T1/Dataset/WHU-BCD/Raw'  # 请将此路径改为你的数据根目录
+    img_size = 64
+    train_ratio = 0.7
+    
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+    ])
+    
+    dataset = BuildingChangeDetectionDataset(root, img_size, transform)
+    train_size = int(len(dataset) * train_ratio)
+    test_size = len(dataset) - train_size
+    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+    
+    if mode == "train":
+        dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
+    elif mode == "test":
+        dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
+    else:
+        raise ValueError("Mode must be 'train' or 'test'")
+    
+    return dataloader
 
 if __name__ == "__main__":
-    datasets = create_Dataset(batch_size=8, shuffle=True)
-    for data in datasets:
-        pass
+    train_dataloader = create_Dataset(batch_size=config.batch_size, mode="train")
+    test_dataloader = create_Dataset(batch_size=config.batch_size, mode="test")
+
+    for i, (data, patch_label, direction) in enumerate(train_dataloader):
+        print('Train:', data.size(), patch_label.size(), direction)
+        if i == 3:  # 读取四个batch后停止
+            break
+
+    for i, (data, patch_label, direction) in enumerate(test_dataloader):
+        print('Test:', data.size(), patch_label.size(), direction)
+        if i == 3:  # 读取四个batch后停止
+            break
