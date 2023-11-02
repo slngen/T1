@@ -19,7 +19,7 @@ if __name__=='__main__':
     Log
     '''
     # get time stamp with format "2021-01-01_00-00"
-    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice"+config.backbone_type + "x"+str(config.raw_size)+"tox"+str(config.image_size)+"CDD"
+    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice--unet--x"+str(config.features[0])
     # create log path
     log_path = os.path.join(config.log_path, time_stamp)
     os.makedirs(log_path, exist_ok=True)
@@ -107,7 +107,7 @@ if __name__=='__main__':
                 print("#"*10, "train dataset", "#"*10)
                 # write info log
                 info_log_file.write("\n"+"#"*10+"train dataset"+"#"*10+"\n")
-                for image, label, task_flag in train_dataset:
+                for image, label, direction in train_dataset:
                     # to device
                     image = image.to(config.device)
                     label = label.to(config.device)
@@ -116,20 +116,15 @@ if __name__=='__main__':
                     # metrics
                     metricNet.update(output, label)
                 # metrics
-                CM_List = metricNet.get()
-                # result_List = []
-                for PLout_index in range(len((output))):
-                    print("PLout index: ", PLout_index+2)
+                CM = metricNet.get()
+                result = Metrics(CM)
+                for key, value in result.items():
+                    print(key, "--> ", value)
                     # wirte info log
-                    info_log_file.write("PLout index: "+str(PLout_index+2)+"\n")
-                    info_log_file.flush()
-                    result = Metrics(CM_List[PLout_index])
-                    for key, value in result.items():
-                        print(key, "--> ", value)
-                        # wirte info log
-                        info_log_file.write(key+"--> "+str(value)+"\n")
-                        if key == "F1":
-                            f1_socre = value["F1"][0]
+                    info_log_file.write(key+"--> "+str(value)+"\n")
+                    if key == "F1":
+                        f1_socre = value["F1"][0]
+
                 # eval dataset
                 metricNet.clear()
                 print("#"*10, "eval dataset", "#"*10)
@@ -144,25 +139,19 @@ if __name__=='__main__':
                     # metrics
                     metricNet.update(output, label)
                 # metrics
-                CM_List = metricNet.get()
-                # result_List = []
-                for PLout_index in range(len((output))):
-                    result = Metrics(CM_List[PLout_index])
-                    print("PLout index: ", PLout_index+2)
+                CM = metricNet.get()
+                result = Metrics(CM)
+                for key, value in result.items():
+                    print(key, "--> ", value)
                     # wirte info log
-                    info_log_file.write("PLout index: "+str(PLout_index+2)+"\n")
+                    info_log_file.write(key+"--> "+str(value)+"\n")
                     info_log_file.flush()
-                    for key, value in result.items():
-                        print(key, "--> ", value)
-                        # wirte info log
-                        info_log_file.write(key+"--> "+str(value)+"\n")
-                        info_log_file.flush()
-                        if key == "F1":
-                            f1_socre = value["F1"][0]
-                            if f1_socre > best_f1:
-                                best_f1 = f1_socre
-                                torch.save(net.state_dict(), os.path.join(save_model_path,config.backbone_type+"-E{}-{:.4f}.ckpt".format(epoch,best_f1)))
-                                print("save model!")
-                                # write info log
-                                info_log_file.write("save model!\n")
-                                info_log_file.flush()
+                    if key == "F1":
+                        f1_socre = value["F1"][0]
+                        if f1_socre > best_f1:
+                            best_f1 = f1_socre
+                            torch.save(net.state_dict(), os.path.join(save_model_path,"unet-E{}-{:.4f}.ckpt".format(epoch,best_f1)))
+                            print("save model!")
+                            # write info log
+                            info_log_file.write("save model!\n")
+                            info_log_file.flush()

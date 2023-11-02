@@ -52,74 +52,32 @@ class Loss_net(nn.Module):
             loss += self.iou_loss(pred, label == 1)
         return loss
 
-# class Loss_net(nn.Module):
-#     def __init__(self):
-#         super(Loss_net, self).__init__()
-#         self.loss_ce = nn.CrossEntropyLoss()
-
-#     def forward(self, PL_List, label_List):
-#         loss = 0
-#         loss += self.loss_ce(PL_List[0], label_List[0])
-#         return loss
-
 class Metrics_net():
     def __init__(self):
         super().__init__()
         self.n_class = config.class_nums
         self.label_graph_mode = config.label_graph_mode
-        # self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(len(self.label_graph_mode))]
-        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(1)]
+        self.CM = np.zeros((self.n_class, self.n_class))
 
     def clear(self):
-        # self.CM_List = [[np.zeros((self.n_class, self.n_class)) for _ in range(6)] for _ in range(len(self.label_graph_mode))]
-        self.CM_List = [np.zeros((self.n_class, self.n_class)) for _ in range(1)]
+        self.CM = np.zeros((self.n_class, self.n_class))
 
     def get(self):
-        return self.CM_List
+        return self.CM
 
-    def update(self, output_List, label_List):
-        # for PLout_index, PLout in enumerate(output_List):
-        #     for label_index, label in enumerate(label_List):
-        #         Output = F.softmax(PLout[:,label_index*2:label_index*2+config.class_nums,:,:], dim=1).cpu().numpy()
-        #         Prediction = np.argmax(Output, axis=1).flatten()
-        #         Label = label.cpu().numpy().flatten()
-        #         cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        #         self.CM_List[label_index][PLout_index] += cm
-        true_label = label_List.cpu().numpy().flatten()
-        Output = F.softmax(output_List, dim=1).cpu().numpy()
+    def update(self, output, label):
+        true_label = label.cpu().numpy().flatten()
+        Output = F.softmax(output, dim=1).cpu().numpy()
         pred_label = np.argmax(Output, axis=1).flatten()
-        # show_images(final_prediction.cpu(), label.squeeze().cpu())
         TP = np.sum((true_label == 1) & (pred_label == 1))
         FP = np.sum((true_label == 0) & (pred_label == 1))
         FN = np.sum((true_label == 1) & (pred_label == 0))
         TN = np.sum((true_label == 0) & (pred_label == 0))
 
-        self.CM_List[0][0][1] += FP
-        self.CM_List[0][1][0] += FN
-        self.CM_List[0][1][1] += TP
-        self.CM_List[0][0][0] += TN
-
-        # # get cm0
-        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        # self.CM_List[0] += cm
-        # # get cm1
-        # Output = F.softmax(output_List[1], dim=1).cpu().numpy()
-        # Prediction = np.argmax(Output, axis=1).flatten()
-        # Label = label_List[0].cpu().numpy().flatten()
-        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        # self.CM_List[1] += cm
-        # # get cm2
-        # Output = F.softmax(output_List[2], dim=1).cpu().numpy()
-        # Prediction = np.argmax(Output, axis=1).flatten()
-        # Label = label_List[0].cpu().numpy().flatten()
-        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        # self.CM_List[2] += cm
-        # # get cm3
-        # Output = F.softmax(output_List[3], dim=1).cpu().numpy()
-        # Prediction = np.argmax(Output, axis=1).flatten()
-        # Label = label_List[0].cpu().numpy().flatten()
-        # cm = np.bincount(self.n_class * Label + Prediction, minlength=self.n_class*self.n_class).reshape(self.n_class, self.n_class)
-        # self.CM_List[3] += cm
+        self.CM[0][1] += FP
+        self.CM[1][0] += FN
+        self.CM[1][1] += TP
+        self.CM[0][0] += TN
 
 def Metrics(CM):
     result = {}
@@ -141,8 +99,6 @@ def Metrics(CM):
         for cls_index in range(config.class_nums):
             P[cls_index] = CM[cls_index, cls_index] / (CM[:,cls_index].sum()+smooth)
             R[cls_index] = CM[cls_index, cls_index] / (CM[cls_index,:].sum()+smooth)
-        # P = P.mean()
-        # R = R.mean()
         P = P[-1]
         R = R[-1]
         F1 = 2*P*R/(P+R+smooth)

@@ -107,9 +107,9 @@ class AttentionModule(nn.Module):
     def __init__(self):
         super(AttentionModule, self).__init__()
         self.layers = nn.ModuleList([
-            AttentionUnit(128),
-            AttentionUnit(256),
-            AttentionUnit(512),
+            AttentionUnit(2*config.features[0]),
+            AttentionUnit(2*config.features[1]),
+            AttentionUnit(2*config.features[2]),
         ])
 
     def forward(self, features):

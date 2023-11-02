@@ -45,10 +45,10 @@ config = ed({
     "pretrained":False,
     "resume":r"", 
     # Train & Eval
-    "eval_epochs":3,
+    "eval_epochs":10,
     "start_eval_epochs":0,
     "eval_traindata":True,
-    "epoch_size": 201,
+    "epoch_size": 501,
     "loss_monitor_step":50,
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
@@ -65,5 +65,5 @@ config = ed({
     "input_dim":6,
     "layer_nums":3,
     "backbone_dims":[8,16,32,64],
-    "features":[64, 128, 256]
+    "features":[32, 64, 128]
 })
