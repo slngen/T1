@@ -8,6 +8,7 @@ import os
 import time
 import torch
 from tqdm import tqdm
+from collections import OrderedDict
 
 from Config import config
 from Dataset import create_Dataset
@@ -44,8 +45,14 @@ if __name__=='__main__':
     if config.resume != "":
         net = Backbone()
         net_state = torch.load(config.resume)
+        # 创建一个新的状态字典，排除掉 PositionalEmbedding 层的参数
+        new_state_dict = OrderedDict()
+        for k, v in net_state.items():
+            # 检查键是否与 PositionalEmbedding 层的参数相关
+            if not k.startswith("embedding.embeddings."):
+                new_state_dict[k] = v
         print("### Load Checkpoint -> ",config.resume.split("/")[-1].split("\\")[-1])
-        net.load_state_dict(net_state)
+        net.load_state_dict(new_state_dict, strict=False)
     else:
         net = Backbone()
     lossNet = Loss_net()

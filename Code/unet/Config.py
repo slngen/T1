@@ -7,7 +7,7 @@ LastEditTime: 2023-10-31 21:54
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda",  # CPU or cuda
+    "device":"cuda:0",  # CPU or cuda
     "class_nums":2,
     # Task
     "task_flag_Dict":{
@@ -43,7 +43,7 @@ config = ed({
     "speed_up_nums":128,
     # Model
     "pretrained":False,
-    "resume":r"", 
+    "resume":r"/Code/T1/Models/2023-11-02_07-32--Dice--unet--x32/unet-E500-0.9457.ckpt", 
     # Train & Eval
     "eval_epochs":10,
     "start_eval_epochs":0,
