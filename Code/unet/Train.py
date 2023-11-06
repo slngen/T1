@@ -2,13 +2,14 @@
 Author: CT
 Date: 2023-04-03 21:24
 LastEditors: CT
-LastEditTime: 2023-09-06 14:11
+LastEditTime: 2023-11-06 10:35
 '''
 import os
 import time
 import torch
 from tqdm import tqdm
 from collections import OrderedDict
+from torch.utils.data import DataLoader, random_split
 
 from Config import config
 from Dataset import create_Dataset
@@ -36,19 +37,21 @@ if __name__=='__main__':
     '''
     Dataset
     '''
-    train_dataset = create_Dataset(batch_size=config.batch_size, shuffle=True, mode="train")
-    eval_dataset = create_Dataset(batch_size=config.batch_size, shuffle=False, mode="test")
-    # print(len(eval_dataset.dataset))
+    dataset = create_Dataset()
+    train_ratio = 0.7
+    train_size = int(len(dataset) * train_ratio)
+    train_dataset, eval_dataset = random_split(dataset, [train_size, len(dataset) - train_size])
+    train_dataset = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+    eval_dataset = DataLoader(eval_dataset, batch_size=config.batch_size, shuffle=False)
+    print("###Dataset eval:",len(eval_dataset.dataset),"train:",len(train_dataset.dataset))
     '''
     Network
     '''
     if config.resume != "":
         net = Backbone()
         net_state = torch.load(config.resume)
-        # 创建一个新的状态字典，排除掉 PositionalEmbedding 层的参数
         new_state_dict = OrderedDict()
         for k, v in net_state.items():
-            # 检查键是否与 PositionalEmbedding 层的参数相关
             if not k.startswith("embedding.embeddings."):
                 new_state_dict[k] = v
         print("### Load Checkpoint -> ",config.resume.split("/")[-1].split("\\")[-1])

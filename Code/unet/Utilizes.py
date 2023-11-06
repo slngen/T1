@@ -2,21 +2,11 @@
 Author: CT
 Date: 2023-08-15 10:10
 LastEditors: CT
-LastEditTime: 2023-09-06 14:09
-'''
-'''
-Author: CT
-Date: 2023-04-03 20:04
-LastEditors: CT
-LastEditTime: 2023-08-15 09:51
+LastEditTime: 2023-11-06 10:34
 '''
 from Config import config
 
 import numpy as np
-import torch.nn as nn
-import torch.nn.functional as F
-
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -56,7 +46,6 @@ class Metrics_net():
     def __init__(self):
         super().__init__()
         self.n_class = config.class_nums
-        self.label_graph_mode = config.label_graph_mode
         self.CM = np.zeros((self.n_class, self.n_class))
 
     def clear(self):
@@ -117,39 +106,3 @@ def Metrics(CM):
         kappa_List.append(kappa)
         result["kappa"] = kappa_List
     return result
-
-class Task_Info():
-    def __init__(self):
-        self.task_flag_Dict = config.task_flag_Dict
-        self.dataset_path_Dict = config.dataset_path_Dict
-        self.task_channels_decoder = config.task_channels_decoder
-        # Cal input channel nums. 
-        self.input_channels = 0
-        self.task_seq = []
-        for task_index, task_list in self.task_flag_Dict.items():
-            if len(task_list):
-                # print("{}:".format(task_index))
-                for task in task_list:
-                    self.task_seq.append(task)
-        self.task_str = "."+"-".join(self.task_seq)
-        # Task index encoder/decoder
-        self.task_encoder = {}
-        self.task_decoder = {}
-        for task_index, task in enumerate(self.task_seq):
-            self.task_encoder[task] = task_index
-            self.task_decoder[task_index] = task
-            
-
-    def encode_task(self, task):
-        return self.task_encoder[task]
-    
-    def decode_task(self, task_index):
-        return self.task_decoder[task_index]
-    
-    def get_task_list(self):
-        return self.task_seq
-
-    def get_task_str(self):
-        return self.task_str
-
-task_info = Task_Info()

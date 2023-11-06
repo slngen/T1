@@ -1,6 +1,6 @@
 import os
 import random
-from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.data import Dataset
 from torchvision import transforms
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
@@ -68,28 +68,16 @@ class BuildingChangeDetectionDataset(Dataset):
                 patch = image[y:y+self.img_size, x:x+self.img_size]
         return patch
 
-def create_Dataset(batch_size, mode="train", shuffle=True):
-    root = '/Code/T1/Dataset/WHU-BCD/Raw'
+def create_Dataset():
+    root = 'W:\T1\Dataset\WHU-BCD\Raw'
     img_size = 64
-    train_ratio = 0.7
     
     transform = transforms.Compose([
         transforms.ToTensor(),
     ])
     
     dataset = BuildingChangeDetectionDataset(root, img_size, transform)
-    train_size = int(len(dataset) * train_ratio)
-    test_size = len(dataset) - train_size
-    train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-    
-    if mode == "train":
-        dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle)
-    elif mode == "test":
-        dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=shuffle)
-    else:
-        raise ValueError("Mode must be 'train' or 'test'")
-    
-    return dataloader
+    return dataset
 
 if __name__ == "__main__":
     train_dataloader = create_Dataset(batch_size=config.batch_size, mode="train")
