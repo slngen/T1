@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-10-29 16:06
 LastEditors: CT
-LastEditTime: 2023-10-31 21:54
+LastEditTime: 2023-11-11 09:32
 '''
 import torch
 import torch.nn as nn
@@ -162,6 +162,12 @@ class Backbone(nn.Module):
         output = self.decoder(att_features)
         output = self.softmax(output)
         return output
+
+        # center_patch = x[:,0,:,:,:]
+        # center_features = self.encoder(center_patch)
+        # output = self.decoder(center_features)
+        # output = self.softmax(output)
+        # return output
 
 # 测试函数
 if __name__ == "__main__":

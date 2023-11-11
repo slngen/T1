@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-11-06 10:33
+LastEditTime: 2023-11-11 09:32
 '''
 from easydict import EasyDict as ed
 
@@ -26,9 +26,10 @@ config = ed({
     },
     # Dataset
     "image_size":64,
-    "num_parallel_workers":16,
+    "num_parallel_workers":4,
     "batch_size": 64,
     "input_dim": 6,
+    "seed": 33,
     # Model
     "pretrained":False,
     "resume":r"", 

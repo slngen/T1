@@ -1,3 +1,9 @@
+'''
+Author: CT
+Date: 2023-11-06 10:15
+LastEditors: CT
+LastEditTime: 2023-11-11 09:31
+'''
 import os
 import random
 from torch.utils.data import Dataset
@@ -8,6 +14,8 @@ import numpy as np
 import torch
 
 from Config import config
+
+random.seed(config.seed)
 
 class BuildingChangeDetectionDataset(Dataset):
     def __init__(self, root, img_size=64, transform=None):

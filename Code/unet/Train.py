@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-04-03 21:24
 LastEditors: CT
-LastEditTime: 2023-11-06 10:35
+LastEditTime: 2023-11-11 09:31
 '''
 import os
 import time
@@ -21,7 +21,7 @@ if __name__=='__main__':
     Log
     '''
     # get time stamp with format "2021-01-01_00-00"
-    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice--unet--x"+str(config.features[0])
+    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice--unet--x"+str(config.features[0])+"--r"+str(config.seed)
     # create log path
     log_path = os.path.join(config.log_path, time_stamp)
     os.makedirs(log_path, exist_ok=True)
