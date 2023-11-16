@@ -2,11 +2,11 @@
 Author: CT
 Date: 2023-11-06 10:15
 LastEditors: CT
-LastEditTime: 2023-11-11 09:31
+LastEditTime: 2023-11-16 15:32
 '''
 import os
 import random
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader, random_split
 from torchvision import transforms
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
@@ -31,37 +31,43 @@ class BuildingChangeDetectionDataset(Dataset):
         self.n_patches_x = (self.width + img_size - 1) // img_size
         self.n_patches_y = (self.height + img_size - 1) // img_size
         self.n_patches = self.n_patches_x * self.n_patches_y
-        
+
         before_image = np.array(self.before_image)
         after_image = np.array(self.after_image)
         self.combined_image = np.concatenate([before_image, after_image], axis=-1)
-        
+
         self.combined_image = np.array(self.combined_image)
         self.label_image = np.array(self.label_image)
-        
+
     def __len__(self):
         return self.n_patches
-    
+
     def __getitem__(self, idx):
         x = (idx % self.n_patches_x) * self.img_size
         y = (idx // self.n_patches_x) * self.img_size
         
         centerPatch = self.extract_patch(self.combined_image, x, y)
         patch_label = self.extract_patch(self.label_image, x, y, is_label=True)
-        
-        directions = torch.tensor([[0, -1], [0, 1], [-1, 0], [1, 0]])
-        direction = random.choice(directions)
-        x_neighbor = x + direction[0] * self.img_size
-        y_neighbor = y + direction[1] * self.img_size
-        
-        auxiliaryPatch = self.extract_patch(self.combined_image, x_neighbor, y_neighbor)
-        
         if self.transform is not None:
             centerPatch = self.transform(centerPatch)
-            auxiliaryPatch = self.transform(auxiliaryPatch)
+
+        directions = torch.tensor([[0, -1], [0, 1], [-1, 0], [1, 0]])
+        # direction = random.choice(directions)
+        auxiliaryPatchs = []
+        for direction in directions:
+            x_neighbor = x + direction[0] * self.img_size
+            y_neighbor = y + direction[1] * self.img_size
+            
+            auxiliaryPatch = self.extract_patch(self.combined_image, x_neighbor, y_neighbor)
+            if self.transform is not None:
+                auxiliaryPatch = self.transform(auxiliaryPatch)
+            auxiliaryPatchs.append(auxiliaryPatch)
         
-        data = torch.stack([centerPatch, auxiliaryPatch])
-        return data, patch_label, direction
+        auxiliaryPatchs = torch.stack(auxiliaryPatchs)
+
+        # data = torch.stack([centerPatch, auxiliaryPatch])
+        data = torch.cat([centerPatch.unsqueeze(0), auxiliaryPatchs], dim=0)
+        return data, patch_label, directions
     
     def extract_patch(self, image, x, y, is_label=False):
         if x < 0 or y < 0 or x + self.img_size > self.width or y + self.img_size > self.height:
@@ -88,15 +94,19 @@ def create_Dataset():
     return dataset
 
 if __name__ == "__main__":
-    train_dataloader = create_Dataset(batch_size=config.batch_size, mode="train")
-    test_dataloader = create_Dataset(batch_size=config.batch_size, mode="test")
+    dataset = create_Dataset()
+    train_ratio = 0.7
+    train_size = int(len(dataset) * train_ratio)
+    train_dataset, eval_dataset = random_split(dataset, [train_size, len(dataset) - train_size])
+    train_dataset = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+    eval_dataset = DataLoader(eval_dataset, batch_size=config.batch_size, shuffle=False)
 
-    for i, (data, patch_label, direction) in enumerate(train_dataloader):
+    for i, (data, patch_label, direction) in enumerate(train_dataset):
         print('Train:', data.size(), patch_label.size(), direction.size())
         if i == 3:
             break
 
-    for i, (data, patch_label, direction) in enumerate(test_dataloader):
+    for i, (data, patch_label, direction) in enumerate(eval_dataset):
         print('Test:', data.size(), patch_label.size(), direction.size())
         if i == 3:
             break
