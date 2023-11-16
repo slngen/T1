@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-11-06 10:15
 LastEditors: CT
-LastEditTime: 2023-11-16 14:36
+LastEditTime: 2023-11-16 15:39
 '''
 import os
 import random
@@ -16,6 +16,7 @@ import torch
 from Config import config
 
 random.seed(config.seed)
+torch.manual_seed(config.seed)
 
 class BuildingChangeDetectionDataset(Dataset):
     def __init__(self, root, img_size=64, transform=None):
