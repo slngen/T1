@@ -2,10 +2,11 @@
 Author: CT
 Date: 2023-11-16 14:23
 LastEditors: CT
-LastEditTime: 2023-11-16 15:24
+LastEditTime: 2023-11-17 19:07
 '''
 import os
 import torch
+import random
 from tqdm import tqdm
 from torch.utils.data import DataLoader, random_split
 
@@ -13,10 +14,13 @@ from Config import config
 from Backbone import Backbone
 from Dataset import create_Dataset
 from Utilizes import Metrics, Metrics_net
+
+random.seed(config.seed)
+torch.manual_seed(config.seed)
 '''
 Path
 '''
-ckpt_path = r"W:\T1\Models\2023-11-11_09-33--Dice--unet--x64--r33\unet-E450-0.9188.ckpt"
+ckpt_path = r"W:\T1\Models\2023-11-16_15-41--Dice--unet--x32--r33\unet-E500-0.9028.ckpt"
 log_path = os.path.join(os.path.dirname(ckpt_path).replace("Models","Logs"), "eval.log")
 
 '''

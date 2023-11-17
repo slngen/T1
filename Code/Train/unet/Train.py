@@ -2,11 +2,12 @@
 Author: CT
 Date: 2023-04-03 21:24
 LastEditors: CT
-LastEditTime: 2023-11-11 09:31
+LastEditTime: 2023-11-17 19:07
 '''
 import os
 import time
 import torch
+import random
 from tqdm import tqdm
 from collections import OrderedDict
 from torch.utils.data import DataLoader, random_split
@@ -15,6 +16,9 @@ from Config import config
 from Dataset import create_Dataset
 from Backbone import Backbone
 from Utilizes import Metrics, Metrics_net, Loss_net
+
+random.seed(config.seed)
+torch.manual_seed(config.seed)
 
 if __name__=='__main__':
     '''

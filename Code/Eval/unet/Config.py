@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-11-11 09:32
+LastEditTime: 2023-11-16 15:41
 '''
 from easydict import EasyDict as ed
 
@@ -50,5 +50,5 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "features":[64, 128, 256]
+    "features":[32, 64, 128]
 })

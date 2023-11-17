@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-10-29 16:06
 LastEditors: CT
-LastEditTime: 2023-11-16 15:23
+LastEditTime: 2023-11-17 19:02
 '''
 import torch
 import torch.nn as nn
@@ -127,18 +127,18 @@ class PositionalEmbedding(nn.Module):
         self.device = config.device
         # for eval
         eval_keys = [
-            "pos0_1_ch64_s64", 
-            "pos-1_0_ch64_s64", 
-            "pos1_0_ch64_s64", 
-            "pos0_-1_ch64_s64", 
-            "pos0_1_ch128_s32", 
-            "pos-1_0_ch128_s32", 
-            "pos1_0_ch128_s32", 
-            "pos0_-1_ch128_s32", 
-            "pos0_1_ch256_s16", 
-            "pos-1_0_ch256_s16", 
-            "pos1_0_ch256_s16", 
-            "pos0_-1_ch256_s16"
+            "pos0_1_ch32_s64", 
+            "pos-1_0_ch32_s64", 
+            "pos1_0_ch32_s64", 
+            "pos0_-1_ch32_s64", 
+            "pos0_1_ch64_s32", 
+            "pos-1_0_ch64_s32", 
+            "pos1_0_ch64_s32", 
+            "pos0_-1_ch64_s32", 
+            "pos0_1_ch128_s16", 
+            "pos-1_0_ch128_s16", 
+            "pos1_0_ch128_s16", 
+            "pos0_-1_ch128_s16"
         ]
         for key in eval_keys:
             channel = int(key.split("ch")[1].split("_")[0])
