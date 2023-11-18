@@ -7,7 +7,7 @@ LastEditTime: 2023-11-16 15:40
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda",  # CPU or cuda
+    "device":"cuda:1",  # CPU or cuda
     "class_nums":2,
     # Task
     "task_flag_Dict":{
@@ -25,7 +25,8 @@ config = ed({
         "CDD":6,
     },
     # Dataset
-    "image_size":64,
+    "data_path":"/Code/T1/Datasets/WHU-BCD",
+    "image_size":128,
     "num_parallel_workers":4,
     "batch_size": 64,
     "input_dim": 6,
@@ -42,8 +43,8 @@ config = ed({
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
-    "save_model_path":"W:\T1\Models",
-    "log_path":"W:\T1\Logs",
+    "save_model_path":"/Code/T1/Models",
+    "log_path":"/Code/T1/Logs",
     # LR
     "lr_init":5e-4,
     "lr_max":5e-4,

@@ -78,8 +78,8 @@ class BuildingChangeDetectionDataset(Dataset):
         return patch
 
 def create_Dataset():
-    root = 'W:\T1\Dataset\WHU-BCD\Raw'
-    img_size = 64
+    root = config.data_path
+    img_size = config.image_size
     
     transform = transforms.Compose([
         transforms.ToTensor(),

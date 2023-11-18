@@ -1,0 +1,1026 @@
+##########Config##########
+{'device': 'cuda:1', 'class_nums': 2, 'task_flag_Dict': {'SC': [], 'OD': [], 'CD': ['CDD-BCD'], 'SS': []}, 'task_channels_decoder': {'UCMLU': 3, 'RSOD-Aircraft': 3, 'GID': 3, 'WHU-BCD': 6, 'CDD': 6}, 'data_path': '/Code/T1/Datasets/WHU-BCD', 'image_size': 256, 'num_parallel_workers': 4, 'batch_size': 64, 'input_dim': 6, 'seed': 33, 'pretrained': False, 'resume': '', 'eval_epochs': 10, 'start_eval_epochs': 0, 'eval_traindata': True, 'epoch_size': 501, 'loss_monitor_step': 50, 'metrics_List': ['acc', 'F1'], 'save_metrics_List': ['F1'], 'save_model_path': '/Code/T1/Models', 'log_path': '/Code/T1/Logs', 'lr_init': 0.0005, 'lr_max': 0.0005, 'lr_end': 5e-05, 'warmup_epochs': 0, 'features': [32, 64, 128]}
+
+##########Network##########
+Backbone(
+  (encoder): Encoder(
+    (layers): ModuleList(
+      (0): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(6, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (1): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (2): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (3): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (4): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (5): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    )
+  )
+  (decoder): Decoder(
+    (layers): ModuleList(
+      (0): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
+      (1): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (2): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2))
+      (3): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+    (conv): Conv2d(32, 2, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (embedding): PositionalEmbedding(
+    (embeddings): ParameterDict()
+  )
+  (attention): AttentionModule(
+    (layers): ModuleList(
+      (0): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(64, 21, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(21, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+      (1): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(128, 42, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(42, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+      (2): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(256, 85, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(85, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (softmax): Softmax(dim=1)
+)
+
+##########Training##########
+step 51/84, epoch 1/501 --> loss:0.8923033607006073
+
+##########train dataset##########
+acc--> [78.37562489518298]
+F1--> {'F1': [0.2661081797209933], 'precision': [0.15551046606786656], 'recall': [0.9214591827397872]}
+##########eval dataset##########
+acc--> [78.4382310334935]
+F1--> {'F1': [0.26213852411720806], 'precision': [0.1528406743168564], 'recall': [0.9201986922220251]}
+save model!
+step 51/84, epoch 2/501 --> loss:0.8473481667041779
+step 51/84, epoch 3/501 --> loss:0.8389496159553528
+step 51/84, epoch 4/501 --> loss:0.845043170452118
+step 51/84, epoch 5/501 --> loss:0.8373152995109558
+step 51/84, epoch 6/501 --> loss:0.8389847540855407
+step 51/84, epoch 7/501 --> loss:0.8403438878059387
+step 51/84, epoch 8/501 --> loss:0.8336863243579864
+step 51/84, epoch 9/501 --> loss:0.8426536917686462
+step 51/84, epoch 10/501 --> loss:0.8349639856815338
+step 51/84, epoch 11/501 --> loss:0.8365153646469117
+
+##########train dataset##########
+acc--> [95.03646267009931]
+F1--> {'F1': [0.611100008494387], 'precision': [0.4583452647340543], 'recall': [0.916588987380646]}
+##########eval dataset##########
+acc--> [95.13422381115909]
+F1--> {'F1': [0.6109258701292952], 'precision': [0.457845262206485], 'recall': [0.9178086124003547]}
+save model!
+step 51/84, epoch 12/501 --> loss:0.8349404525756836
+step 51/84, epoch 13/501 --> loss:0.8381340515613556
+step 51/84, epoch 14/501 --> loss:0.8371124124526977
+step 51/84, epoch 15/501 --> loss:0.8306259953975678
+step 51/84, epoch 16/501 --> loss:0.8319889664649963
+step 51/84, epoch 17/501 --> loss:0.8193124520778656
+step 51/84, epoch 18/501 --> loss:0.8205775916576385
+step 51/84, epoch 19/501 --> loss:0.8305952727794648
+step 51/84, epoch 20/501 --> loss:0.826199461221695
+step 51/84, epoch 21/501 --> loss:0.8358192074298859
+
+##########train dataset##########
+acc--> [95.73087803111251]
+F1--> {'F1': [0.6522743767329442], 'precision': [0.4991013007745989], 'recall': [0.9411128935953309]}
+##########eval dataset##########
+acc--> [95.89507469250029]
+F1--> {'F1': [0.6555948846542117], 'precision': [0.503698935741804], 'recall': [0.9386759464526243]}
+save model!
+step 51/84, epoch 22/501 --> loss:0.8338088607788086
+step 51/84, epoch 23/501 --> loss:0.8330992770195007
+step 51/84, epoch 24/501 --> loss:0.8259715390205383
+step 51/84, epoch 25/501 --> loss:0.8387344336509704
+step 51/84, epoch 26/501 --> loss:0.8288321995735168
+step 51/84, epoch 27/501 --> loss:0.8312434709072113
+step 51/84, epoch 28/501 --> loss:0.8299746799468994
+step 51/84, epoch 29/501 --> loss:0.8319764530658722
+step 51/84, epoch 30/501 --> loss:0.8208065247535705
+step 51/84, epoch 31/501 --> loss:0.8317288517951965
+
+##########train dataset##########
+acc--> [92.5983530508672]
+F1--> {'F1': [0.5172633255148164], 'precision': [0.3579655589805567], 'recall': [0.932046537645812]}
+##########eval dataset##########
+acc--> [92.69893442655597]
+F1--> {'F1': [0.5139016457225701], 'precision': [0.35545732633572763], 'recall': [0.9272242824654078]}
+step 51/84, epoch 32/501 --> loss:0.8245196628570557
+step 51/84, epoch 33/501 --> loss:0.8321723914146424
+step 51/84, epoch 34/501 --> loss:0.8323013973236084
+step 51/84, epoch 35/501 --> loss:0.8337019968032837
+step 51/84, epoch 36/501 --> loss:0.8247160947322846
+step 51/84, epoch 37/501 --> loss:0.8315169775485992
+step 51/84, epoch 38/501 --> loss:0.8256386005878449
+step 51/84, epoch 39/501 --> loss:0.8303474223613739
+step 51/84, epoch 40/501 --> loss:0.824861490726471
+step 51/84, epoch 41/501 --> loss:0.8361348974704742
+
+##########train dataset##########
+acc--> [97.96813604399634]
+F1--> {'F1': [0.7907406544325137], 'precision': [0.703731408517818], 'recall': [0.9023138386559765]}
+##########eval dataset##########
+acc--> [97.99175112265586]
+F1--> {'F1': [0.7872591286003913], 'precision': [0.7040682357428694], 'recall': [0.8927560728203107]}
+save model!
+step 51/84, epoch 42/501 --> loss:0.8213656032085419
+step 51/84, epoch 43/501 --> loss:0.823648384809494
+step 51/84, epoch 44/501 --> loss:0.8293571770191193
+step 51/84, epoch 45/501 --> loss:0.8290497386455535
+step 51/84, epoch 46/501 --> loss:0.8261086750030517
+step 51/84, epoch 47/501 --> loss:0.8232836329936981
+step 51/84, epoch 48/501 --> loss:0.8356990349292756
+step 51/84, epoch 49/501 --> loss:0.8347702157497406
+step 51/84, epoch 50/501 --> loss:0.8260314309597016
+step 51/84, epoch 51/501 --> loss:0.8279412531852722
+
+##########train dataset##########
+acc--> [97.50634369708634]
+F1--> {'F1': [0.7629625628382549], 'precision': [0.6405327307871659], 'recall': [0.9432684601476063]}
+##########eval dataset##########
+acc--> [97.37377483804474]
+F1--> {'F1': [0.7456397937733988], 'precision': [0.6246271941598972], 'recall': [0.9248229770943872]}
+step 51/84, epoch 52/501 --> loss:0.8234353232383728
+step 51/84, epoch 53/501 --> loss:0.8281052732467651
+step 51/84, epoch 54/501 --> loss:0.8356767141819
+step 51/84, epoch 55/501 --> loss:0.8275124824047089
+step 51/84, epoch 56/501 --> loss:0.8214344120025635
+step 51/84, epoch 57/501 --> loss:0.830634149312973
+step 51/84, epoch 58/501 --> loss:0.8192153298854827
+step 51/84, epoch 59/501 --> loss:0.8241028749942779
+step 51/84, epoch 60/501 --> loss:0.8297013568878174
+step 51/84, epoch 61/501 --> loss:0.8264427483081818
+
+##########train dataset##########
+acc--> [96.89008142780703]
+F1--> {'F1': [0.7164134784094296], 'precision': [0.5852805669206743], 'recall': [0.9232901368368417]}
+##########eval dataset##########
+acc--> [96.7648276715285]
+F1--> {'F1': [0.7005250964045319], 'precision': [0.5698073487000481], 'recall': [0.9090886056650391]}
+step 51/84, epoch 62/501 --> loss:0.8307981646060943
+step 51/84, epoch 63/501 --> loss:0.8290732896327973
+step 51/84, epoch 64/501 --> loss:0.8233236622810364
+step 51/84, epoch 65/501 --> loss:0.8297918713092804
+step 51/84, epoch 66/501 --> loss:0.8170894813537598
+step 51/84, epoch 67/501 --> loss:0.8272535514831543
+step 51/84, epoch 68/501 --> loss:0.8270738685131073
+step 51/84, epoch 69/501 --> loss:0.8308679008483887
+step 51/84, epoch 70/501 --> loss:0.8213386785984039
+step 51/84, epoch 71/501 --> loss:0.8211537086963654
+
+##########train dataset##########
+acc--> [97.61498776275732]
+F1--> {'F1': [0.7734925345328517], 'precision': [0.648978539961434], 'recall': [0.9571434238404872]}
+##########eval dataset##########
+acc--> [97.4631422147911]
+F1--> {'F1': [0.753893037194077], 'precision': [0.6322399024257286], 'recall': [0.933531437550371]}
+step 51/84, epoch 72/501 --> loss:0.8237262964248657
+step 51/84, epoch 73/501 --> loss:0.8270594727993011
+step 51/84, epoch 74/501 --> loss:0.8278178215026856
+step 51/84, epoch 75/501 --> loss:0.823521101474762
+step 51/84, epoch 76/501 --> loss:0.8224607646465302
+step 51/84, epoch 77/501 --> loss:0.8254838585853577
+step 51/84, epoch 78/501 --> loss:0.8270387804508209
+step 51/84, epoch 79/501 --> loss:0.8229610359668732
+step 51/84, epoch 80/501 --> loss:0.8260698854923249
+step 51/84, epoch 81/501 --> loss:0.8238973665237427
+
+##########train dataset##########
+acc--> [96.38242203061743]
+F1--> {'F1': [0.689871774902165], 'precision': [0.5429893477255737], 'recall': [0.9457040620925901]}
+##########eval dataset##########
+acc--> [96.38145960742911]
+F1--> {'F1': [0.6803388964163963], 'precision': [0.5379844031591519], 'recall': [0.9251538100702397]}
+step 51/84, epoch 82/501 --> loss:0.8186407959461213
+step 51/84, epoch 83/501 --> loss:0.8260541844367981
+step 51/84, epoch 84/501 --> loss:0.8197875237464904
+step 51/84, epoch 85/501 --> loss:0.8238136196136474
+step 51/84, epoch 86/501 --> loss:0.8199516904354095
+step 51/84, epoch 87/501 --> loss:0.8167881751060486
+step 51/84, epoch 88/501 --> loss:0.8239171648025513
+step 51/84, epoch 89/501 --> loss:0.8301307427883148
+step 51/84, epoch 90/501 --> loss:0.833088059425354
+step 51/84, epoch 91/501 --> loss:0.8236880886554718
+
+##########train dataset##########
+acc--> [95.35974932378174]
+F1--> {'F1': [0.6402667511697236], 'precision': [0.4777000231277956], 'recall': [0.9705792732116929]}
+##########eval dataset##########
+acc--> [95.21460478908006]
+F1--> {'F1': [0.6232781459383397], 'precision': [0.4635219467608803], 'recall': [0.9510925265889949]}
+step 51/84, epoch 92/501 --> loss:0.8196852385997773
+step 51/84, epoch 93/501 --> loss:0.8263281178474426
+step 51/84, epoch 94/501 --> loss:0.8202935373783111
+step 51/84, epoch 95/501 --> loss:0.8243977642059326
+step 51/84, epoch 96/501 --> loss:0.82234792470932
+step 51/84, epoch 97/501 --> loss:0.8280535912513733
+step 51/84, epoch 98/501 --> loss:0.831189603805542
+step 51/84, epoch 99/501 --> loss:0.822140201330185
+step 51/84, epoch 100/501 --> loss:0.8285650300979615
+step 51/84, epoch 101/501 --> loss:0.8234667682647705
+
+##########train dataset##########
+acc--> [97.15080018073634]
+F1--> {'F1': [0.741752520106763], 'precision': [0.6036761697666667], 'recall': [0.9617395005210999]}
+##########eval dataset##########
+acc--> [96.98771612745756]
+F1--> {'F1': [0.7219611754686877], 'precision': [0.5861839932580143], 'recall': [0.9396156852982355]}
+step 51/84, epoch 102/501 --> loss:0.835325745344162
+step 51/84, epoch 103/501 --> loss:0.8290711855888366
+step 51/84, epoch 104/501 --> loss:0.8237319123744965
+step 51/84, epoch 105/501 --> loss:0.826648383140564
+step 51/84, epoch 106/501 --> loss:0.8254403817653656
+step 51/84, epoch 107/501 --> loss:0.8236341309547425
+step 51/84, epoch 108/501 --> loss:0.824602153301239
+step 51/84, epoch 109/501 --> loss:0.8248447680473328
+step 51/84, epoch 110/501 --> loss:0.8260106384754181
+step 51/84, epoch 111/501 --> loss:0.8250232577323914
+
+##########train dataset##########
+acc--> [95.12469503018393]
+F1--> {'F1': [0.5766479972673267], 'precision': [0.45726689808666776], 'recall': [0.7804051201087732]}
+##########eval dataset##########
+acc--> [95.17200767002487]
+F1--> {'F1': [0.5754811204401269], 'precision': [0.45384038605157245], 'recall': [0.7862209589012013]}
+step 51/84, epoch 112/501 --> loss:0.8240367007255555
+step 51/84, epoch 113/501 --> loss:0.8237538957595825
+step 51/84, epoch 114/501 --> loss:0.8278869462013244
+step 51/84, epoch 115/501 --> loss:0.8239160716533661
+step 51/84, epoch 116/501 --> loss:0.8180372393131257
+step 51/84, epoch 117/501 --> loss:0.817383635044098
+step 51/84, epoch 118/501 --> loss:0.8201432192325592
+step 51/84, epoch 119/501 --> loss:0.8165602624416352
+step 51/84, epoch 120/501 --> loss:0.8216040694713592
+step 51/84, epoch 121/501 --> loss:0.8279550039768219
+
+##########train dataset##########
+acc--> [98.59548711043405]
+F1--> {'F1': [0.851008608985419], 'precision': [0.7755180970605575], 'recall': [0.9427929714808038]}
+##########eval dataset##########
+acc--> [98.27204159446454]
+F1--> {'F1': [0.8137892973966732], 'precision': [0.7378444951525136], 'recall': [0.9071738476758588]}
+save model!
+step 51/84, epoch 122/501 --> loss:0.8265289032459259
+step 51/84, epoch 123/501 --> loss:0.8305799984931945
+step 51/84, epoch 124/501 --> loss:0.817450612783432
+step 51/84, epoch 125/501 --> loss:0.8259104061126709
+step 51/84, epoch 126/501 --> loss:0.8235107612609863
+step 51/84, epoch 127/501 --> loss:0.8249709737300873
+step 51/84, epoch 128/501 --> loss:0.8254060673713685
+step 51/84, epoch 129/501 --> loss:0.8207144212722778
+step 51/84, epoch 130/501 --> loss:0.815500955581665
+step 51/84, epoch 131/501 --> loss:0.8200826823711396
+
+##########train dataset##########
+acc--> [97.5525628952725]
+F1--> {'F1': [0.7726331107358945], 'precision': [0.6388113447047804], 'recall': [0.9773954624174501]}
+##########eval dataset##########
+acc--> [97.2543150734023]
+F1--> {'F1': [0.7417163785685466], 'precision': [0.6095035631802923], 'recall': [0.9471924500147181]}
+step 51/84, epoch 132/501 --> loss:0.8143311810493469
+step 51/84, epoch 133/501 --> loss:0.8262230706214905
+step 51/84, epoch 134/501 --> loss:0.8135760140419006
+step 51/84, epoch 135/501 --> loss:0.8222053897380829
+step 51/84, epoch 136/501 --> loss:0.8268889689445496
+step 51/84, epoch 137/501 --> loss:0.8209493708610535
+step 51/84, epoch 138/501 --> loss:0.8230639564990997
+step 51/84, epoch 139/501 --> loss:0.8270077896118164
+step 51/84, epoch 140/501 --> loss:0.821275999546051
+step 51/84, epoch 141/501 --> loss:0.8173371064662933
+
+##########train dataset##########
+acc--> [98.43567260696135]
+F1--> {'F1': [0.8413603474076529], 'precision': [0.739934023676685], 'recall': [0.9750227927960138]}
+##########eval dataset##########
+acc--> [98.11639326867544]
+F1--> {'F1': [0.8042221145287117], 'precision': [0.7087077283336211], 'recall': [0.9295053140933894]}
+step 51/84, epoch 142/501 --> loss:0.8233168530464172
+step 51/84, epoch 143/501 --> loss:0.8260957455635071
+step 51/84, epoch 144/501 --> loss:0.8138965427875519
+step 51/84, epoch 145/501 --> loss:0.8248406958580017
+step 51/84, epoch 146/501 --> loss:0.824980765581131
+step 51/84, epoch 147/501 --> loss:0.82302769780159
+step 51/84, epoch 148/501 --> loss:0.8208264684677125
+step 51/84, epoch 149/501 --> loss:0.8227485418319702
+step 51/84, epoch 150/501 --> loss:0.8232574081420898
+step 51/84, epoch 151/501 --> loss:0.8296827220916748
+
+##########train dataset##########
+acc--> [98.52310970207421]
+F1--> {'F1': [0.8488866043210238], 'precision': [0.7516586421447201], 'recall': [0.9750176156711067]}
+##########eval dataset##########
+acc--> [98.14103961720315]
+F1--> {'F1': [0.8067220845487153], 'precision': [0.7110837748785332], 'recall': [0.9320972934383744]}
+step 51/84, epoch 152/501 --> loss:0.8259932696819305
+step 51/84, epoch 153/501 --> loss:0.8227149248123169
+step 51/84, epoch 154/501 --> loss:0.8169069850444793
+step 51/84, epoch 155/501 --> loss:0.8214850926399231
+step 51/84, epoch 156/501 --> loss:0.8206893479824067
+step 51/84, epoch 157/501 --> loss:0.8316183400154114
+step 51/84, epoch 158/501 --> loss:0.8148620581626892
+step 51/84, epoch 159/501 --> loss:0.8263593888282776
+step 51/84, epoch 160/501 --> loss:0.8280658519268036
+step 51/84, epoch 161/501 --> loss:0.8144727540016174
+
+##########train dataset##########
+acc--> [97.75788457732176]
+F1--> {'F1': [0.7872740408154576], 'precision': [0.6600985717151944], 'recall': [0.9751619700500129]}
+##########eval dataset##########
+acc--> [97.41208534540442]
+F1--> {'F1': [0.7502454846579352], 'precision': [0.6269729068315362], 'recall': [0.9338709302357223]}
+step 51/84, epoch 162/501 --> loss:0.8191376054286956
+step 51/84, epoch 163/501 --> loss:0.8152003633975983
+step 51/84, epoch 164/501 --> loss:0.8262775015830993
+step 51/84, epoch 165/501 --> loss:0.8123346841335297
+step 51/84, epoch 166/501 --> loss:0.8221896958351135
+step 51/84, epoch 167/501 --> loss:0.8215746200084686
+step 51/84, epoch 168/501 --> loss:0.8231882297992706
+step 51/84, epoch 169/501 --> loss:0.8287990939617157
+step 51/84, epoch 170/501 --> loss:0.823051723241806
+step 51/84, epoch 171/501 --> loss:0.8142775237560272
+
+##########train dataset##########
+acc--> [98.57123381732762]
+F1--> {'F1': [0.8515629951662016], 'precision': [0.7630724302981274], 'recall': [0.963282283743449]}
+##########eval dataset##########
+acc--> [98.26891774788481]
+F1--> {'F1': [0.8149086743559629], 'precision': [0.7341984858663836], 'recall': [0.9155678323850435]}
+save model!
+step 51/84, epoch 172/501 --> loss:0.8244050681591034
+step 51/84, epoch 173/501 --> loss:0.8215441000461579
+step 51/84, epoch 174/501 --> loss:0.8211026108264923
+step 51/84, epoch 175/501 --> loss:0.8155648410320282
+step 51/84, epoch 176/501 --> loss:0.8212556540966034
+step 51/84, epoch 177/501 --> loss:0.8156238949298859
+step 51/84, epoch 178/501 --> loss:0.8249134683609008
+step 51/84, epoch 179/501 --> loss:0.8240648281574249
+step 51/84, epoch 180/501 --> loss:0.8194158005714417
+step 51/84, epoch 181/501 --> loss:0.8114102637767792
+
+##########train dataset##########
+acc--> [98.87290270890539]
+F1--> {'F1': [0.8760416329555732], 'precision': [0.8232191610119604], 'recall': [0.9361190523569122]}
+##########eval dataset##########
+acc--> [98.4682058098995]
+F1--> {'F1': [0.8272010377021277], 'precision': [0.7796902232861841], 'recall': [0.8808890635071329]}
+save model!
+step 51/84, epoch 182/501 --> loss:0.8221540594100952
+step 51/84, epoch 183/501 --> loss:0.8206821429729462
+step 51/84, epoch 184/501 --> loss:0.8193058371543884
+step 51/84, epoch 185/501 --> loss:0.8135331881046295
+step 51/84, epoch 186/501 --> loss:0.8278802561759949
+step 51/84, epoch 187/501 --> loss:0.8189594101905823
+step 51/84, epoch 188/501 --> loss:0.8197427189350128
+step 51/84, epoch 189/501 --> loss:0.8250861322879791
+step 51/84, epoch 190/501 --> loss:0.8261856961250306
+step 51/84, epoch 191/501 --> loss:0.8209707415103913
+
+##########train dataset##########
+acc--> [98.1003188085653]
+F1--> {'F1': [0.815569639564738], 'precision': [0.6947639991848842], 'recall': [0.9872433625217928]}
+##########eval dataset##########
+acc--> [97.59800361105333]
+F1--> {'F1': [0.7651920140898019], 'precision': [0.6450602442767028], 'recall': [0.9403235363672674]}
+step 51/84, epoch 192/501 --> loss:0.8187950849533081
+step 51/84, epoch 193/501 --> loss:0.8170194303989411
+step 51/84, epoch 194/501 --> loss:0.8239818990230561
+step 51/84, epoch 195/501 --> loss:0.8195366609096527
+step 51/84, epoch 196/501 --> loss:0.819061815738678
+step 51/84, epoch 197/501 --> loss:0.82354820728302
+step 51/84, epoch 198/501 --> loss:0.822951785326004
+step 51/84, epoch 199/501 --> loss:0.8227611923217774
+step 51/84, epoch 200/501 --> loss:0.8150967836380005
+step 51/84, epoch 201/501 --> loss:0.8315404176712036
+
+##########train dataset##########
+acc--> [98.35032007870072]
+F1--> {'F1': [0.8341758931810225], 'precision': [0.7287529439564626], 'recall': [0.9752723033223861]}
+##########eval dataset##########
+acc--> [97.86131317324914]
+F1--> {'F1': [0.7810936150093252], 'precision': [0.680429875765008], 'recall': [0.9167269505379577]}
+step 51/84, epoch 202/501 --> loss:0.8213652908802033
+step 51/84, epoch 203/501 --> loss:0.8249458706378937
+step 51/84, epoch 204/501 --> loss:0.8109512507915497
+step 51/84, epoch 205/501 --> loss:0.8136223816871643
+step 51/84, epoch 206/501 --> loss:0.8248232936859131
+step 51/84, epoch 207/501 --> loss:0.8161652088165283
+step 51/84, epoch 208/501 --> loss:0.8153981828689575
+step 51/84, epoch 209/501 --> loss:0.8264844655990601
+step 51/84, epoch 210/501 --> loss:0.8189980840682983
+step 51/84, epoch 211/501 --> loss:0.8171921837329864
+
+##########train dataset##########
+acc--> [98.5962549130183]
+F1--> {'F1': [0.856909812844074], 'precision': [0.7565726575464966], 'recall': [0.9879427450319852]}
+##########eval dataset##########
+acc--> [98.1346277218517]
+F1--> {'F1': [0.8064800935621738], 'precision': [0.7096850302530486], 'recall': [0.9338624308912142]}
+step 51/84, epoch 212/501 --> loss:0.8236557507514953
+step 51/84, epoch 213/501 --> loss:0.8231657075881958
+step 51/84, epoch 214/501 --> loss:0.8179021072387695
+step 51/84, epoch 215/501 --> loss:0.8199896872043609
+step 51/84, epoch 216/501 --> loss:0.8293583488464356
+step 51/84, epoch 217/501 --> loss:0.816620842218399
+step 51/84, epoch 218/501 --> loss:0.8203426015377044
+step 51/84, epoch 219/501 --> loss:0.8214151012897491
+step 51/84, epoch 220/501 --> loss:0.8193276476860046
+step 51/84, epoch 221/501 --> loss:0.820091632604599
+
+##########train dataset##########
+acc--> [99.06824724835748]
+F1--> {'F1': [0.8973490726859097], 'precision': [0.844515299698422], 'recall': [0.9572460250431938]}
+##########eval dataset##########
+acc--> [98.589045273448]
+F1--> {'F1': [0.8398559782787214], 'precision': [0.795939844634978], 'recall': [0.8889124447227668]}
+save model!
+step 51/84, epoch 222/501 --> loss:0.8186301743984222
+step 51/84, epoch 223/501 --> loss:0.8222872471809387
+step 51/84, epoch 224/501 --> loss:0.8230507063865662
+step 51/84, epoch 225/501 --> loss:0.8218501758575439
+step 51/84, epoch 226/501 --> loss:0.8185380625724793
+step 51/84, epoch 227/501 --> loss:0.8183998513221741
+step 51/84, epoch 228/501 --> loss:0.8147204160690308
+step 51/84, epoch 229/501 --> loss:0.8176883232593536
+step 51/84, epoch 230/501 --> loss:0.8112662005424499
+step 51/84, epoch 231/501 --> loss:0.8248543381690979
+
+##########train dataset##########
+acc--> [98.93139931070955]
+F1--> {'F1': [0.8874914668684836], 'precision': [0.8038046312430495], 'recall': [0.9906415735225759]}
+##########eval dataset##########
+acc--> [98.34884817101063]
+F1--> {'F1': [0.8234972669897014], 'precision': [0.7417932835121648], 'recall': [0.9254399012136817]}
+step 51/84, epoch 232/501 --> loss:0.8171358776092529
+step 51/84, epoch 233/501 --> loss:0.8211210823059082
+step 51/84, epoch 234/501 --> loss:0.8273453521728515
+step 51/84, epoch 235/501 --> loss:0.8194134676456452
+step 51/84, epoch 236/501 --> loss:0.8236702537536621
+step 51/84, epoch 237/501 --> loss:0.824134019613266
+step 51/84, epoch 238/501 --> loss:0.8188062500953674
+step 51/84, epoch 239/501 --> loss:0.8157361125946045
+step 51/84, epoch 240/501 --> loss:0.8153381311893463
+step 51/84, epoch 241/501 --> loss:0.8153755807876587
+
+##########train dataset##########
+acc--> [98.92156748991297]
+F1--> {'F1': [0.8866023130231302], 'precision': [0.8021626436562035], 'recall': [0.9909228863876638]}
+##########eval dataset##########
+acc--> [98.38243486165135]
+F1--> {'F1': [0.8259080776564733], 'precision': [0.7480547842090002], 'recall': [0.921861196080805]}
+step 51/84, epoch 242/501 --> loss:0.8088680028915405
+step 51/84, epoch 243/501 --> loss:0.8190937352180481
+step 51/84, epoch 244/501 --> loss:0.8288839590549469
+step 51/84, epoch 245/501 --> loss:0.8262033450603485
+step 51/84, epoch 246/501 --> loss:0.8186383867263793
+step 51/84, epoch 247/501 --> loss:0.8263894760608673
+step 51/84, epoch 248/501 --> loss:0.8212586307525634
+step 51/84, epoch 249/501 --> loss:0.8219228637218475
+step 51/84, epoch 250/501 --> loss:0.8140902400016785
+step 51/84, epoch 251/501 --> loss:0.8218391454219818
+
+##########train dataset##########
+acc--> [99.14488733417926]
+F1--> {'F1': [0.9078978702868905], 'precision': [0.8379182487623337], 'recall': [0.9906433216426743]}
+##########eval dataset##########
+acc--> [98.57245017223751]
+F1--> {'F1': [0.8423911150954576], 'precision': [0.7793121935000255], 'recall': [0.9165925646757355]}
+save model!
+step 51/84, epoch 252/501 --> loss:0.8298296058177947
+step 51/84, epoch 253/501 --> loss:0.8208288145065308
+step 51/84, epoch 254/501 --> loss:0.8218653321266174
+step 51/84, epoch 255/501 --> loss:0.8175242531299591
+step 51/84, epoch 256/501 --> loss:0.8181708765029907
+step 51/84, epoch 257/501 --> loss:0.819482352733612
+step 51/84, epoch 258/501 --> loss:0.818473435640335
+step 51/84, epoch 259/501 --> loss:0.8149763739109039
+step 51/84, epoch 260/501 --> loss:0.8215796923637391
+step 51/84, epoch 261/501 --> loss:0.8169365096092224
+
+##########train dataset##########
+acc--> [99.2380151509048]
+F1--> {'F1': [0.9166902472253883], 'precision': [0.8569642376089707], 'recall': [0.9853766391981068]}
+##########eval dataset##########
+acc--> [98.64708140348374]
+F1--> {'F1': [0.8475948593218258], 'precision': [0.7979141108451939], 'recall': [0.9038842806212478]}
+save model!
+step 51/84, epoch 262/501 --> loss:0.8150306379795075
+step 51/84, epoch 263/501 --> loss:0.8112241327762604
+step 51/84, epoch 264/501 --> loss:0.8193336200714111
+step 51/84, epoch 265/501 --> loss:0.8115447235107421
+step 51/84, epoch 266/501 --> loss:0.8198414349555969
+step 51/84, epoch 267/501 --> loss:0.8158536851406097
+step 51/84, epoch 268/501 --> loss:0.8138302981853485
+step 51/84, epoch 269/501 --> loss:0.8176540958881379
+step 51/84, epoch 270/501 --> loss:0.8134835946559906
+step 51/84, epoch 271/501 --> loss:0.8173365712165832
+
+##########train dataset##########
+acc--> [99.01513813763718]
+F1--> {'F1': [0.8949102370286808], 'precision': [0.8194847212127486], 'recall': [0.9856395968021601]}
+##########eval dataset##########
+acc--> [98.47950906160486]
+F1--> {'F1': [0.8322836592950783], 'precision': [0.7693638805677286], 'recall': [0.9064231791543049]}
+step 51/84, epoch 272/501 --> loss:0.8284874594211579
+step 51/84, epoch 273/501 --> loss:0.8155982995033264
+step 51/84, epoch 274/501 --> loss:0.8319152128696442
+step 51/84, epoch 275/501 --> loss:0.826783174276352
+step 51/84, epoch 276/501 --> loss:0.8223246204853057
+step 51/84, epoch 277/501 --> loss:0.8227064204216004
+step 51/84, epoch 278/501 --> loss:0.8135233747959137
+step 51/84, epoch 279/501 --> loss:0.818859601020813
+step 51/84, epoch 280/501 --> loss:0.8224994432926178
+step 51/84, epoch 281/501 --> loss:0.8153968691825867
+
+##########train dataset##########
+acc--> [99.28343622345385]
+F1--> {'F1': [0.9217534944630033], 'precision': [0.8607654861792162], 'recall': [0.9920544579745257]}
+##########eval dataset##########
+acc--> [98.66664949885366]
+F1--> {'F1': [0.8505781488690475], 'precision': [0.7970729891017979], 'recall': [0.9117949252484066]}
+save model!
+step 51/84, epoch 282/501 --> loss:0.8166239154338837
+step 51/84, epoch 283/501 --> loss:0.8176607799530029
+step 51/84, epoch 284/501 --> loss:0.8253277277946472
+step 51/84, epoch 285/501 --> loss:0.8196219694614411
+step 51/84, epoch 286/501 --> loss:0.8203470611572266
+step 51/84, epoch 287/501 --> loss:0.8147737431526184
+step 51/84, epoch 288/501 --> loss:0.823983678817749
+step 51/84, epoch 289/501 --> loss:0.8123353803157807
+step 51/84, epoch 290/501 --> loss:0.8185834681987763
+step 51/84, epoch 291/501 --> loss:0.8144079673290253
+
+##########train dataset##########
+acc--> [99.4145951558883]
+F1--> {'F1': [0.9349977598049308], 'precision': [0.8860868159140841], 'recall': [0.9896349925227594]}
+##########eval dataset##########
+acc--> [98.839754653617]
+F1--> {'F1': [0.8651630382903714], 'precision': [0.8378562117964363], 'recall': [0.8943204333047708]}
+save model!
+step 51/84, epoch 292/501 --> loss:0.8155469524860383
+step 51/84, epoch 293/501 --> loss:0.8329270422458649
+step 51/84, epoch 294/501 --> loss:0.8192620193958282
+step 51/84, epoch 295/501 --> loss:0.8210387456417084
+step 51/84, epoch 296/501 --> loss:0.8200191748142243
+step 51/84, epoch 297/501 --> loss:0.818759104013443
+step 51/84, epoch 298/501 --> loss:0.8241934788227081
+step 51/84, epoch 299/501 --> loss:0.8290773439407348
+step 51/84, epoch 300/501 --> loss:0.8120615446567535
+step 51/84, epoch 301/501 --> loss:0.8193615186214447
+
+##########train dataset##########
+acc--> [99.10363482320163]
+F1--> {'F1': [0.9011575102910597], 'precision': [0.8487820634282071], 'recall': [0.9604331841597725]}
+##########eval dataset##########
+acc--> [98.60522920168988]
+F1--> {'F1': [0.8411040126114793], 'precision': [0.7997862117252981], 'recall': [0.8869345029272434]}
+step 51/84, epoch 302/501 --> loss:0.8231123006343841
+step 51/84, epoch 303/501 --> loss:0.8154188621044159
+step 51/84, epoch 304/501 --> loss:0.827059930562973
+step 51/84, epoch 305/501 --> loss:0.81662073969841
+step 51/84, epoch 306/501 --> loss:0.8214828372001648
+step 51/84, epoch 307/501 --> loss:0.8137266230583191
+step 51/84, epoch 308/501 --> loss:0.8150495517253876
+step 51/84, epoch 309/501 --> loss:0.8116917562484741
+step 51/84, epoch 310/501 --> loss:0.8239590060710907
+step 51/84, epoch 311/501 --> loss:0.8208008861541748
+
+##########train dataset##########
+acc--> [99.22348468724451]
+F1--> {'F1': [0.9157272567831852], 'precision': [0.8506128238394662], 'recall': [0.991648759640888]}
+##########eval dataset##########
+acc--> [98.59548653829721]
+F1--> {'F1': [0.8432630486404011], 'precision': [0.7873340696798677], 'recall': [0.9077570951471025]}
+step 51/84, epoch 312/501 --> loss:0.8249220275878906
+step 51/84, epoch 313/501 --> loss:0.8221195185184479
+step 51/84, epoch 314/501 --> loss:0.8143470108509063
+step 51/84, epoch 315/501 --> loss:0.8207792747020721
+step 51/84, epoch 316/501 --> loss:0.8183828723430634
+step 51/84, epoch 317/501 --> loss:0.8158473694324493
+step 51/84, epoch 318/501 --> loss:0.8145747601985931
+step 51/84, epoch 319/501 --> loss:0.8191231107711792
+step 51/84, epoch 320/501 --> loss:0.8262816274166107
+step 51/84, epoch 321/501 --> loss:0.8163169372081757
+
+##########train dataset##########
+acc--> [99.25571551785723]
+F1--> {'F1': [0.9187992876669999], 'precision': [0.8573420966890958], 'recall': [0.9897593107559208]}
+##########eval dataset##########
+acc--> [98.65087674358038]
+F1--> {'F1': [0.8482528129856606], 'precision': [0.7974661137307073], 'recall': [0.9059595639661374]}
+step 51/84, epoch 322/501 --> loss:0.8184419739246368
+step 51/84, epoch 323/501 --> loss:0.8164847612380981
+step 51/84, epoch 324/501 --> loss:0.8128486287593841
+step 51/84, epoch 325/501 --> loss:0.8283437645435333
+step 51/84, epoch 326/501 --> loss:0.8231947946548462
+step 51/84, epoch 327/501 --> loss:0.818722585439682
+step 51/84, epoch 328/501 --> loss:0.8168871462345123
+step 51/84, epoch 329/501 --> loss:0.825278834104538
+step 51/84, epoch 330/501 --> loss:0.8167810213565826
+step 51/84, epoch 331/501 --> loss:0.8314136302471161
+
+##########train dataset##########
+acc--> [99.3218606806506]
+F1--> {'F1': [0.9254881946232667], 'precision': [0.8689456078146726], 'recall': [0.9899128091476502]}
+##########eval dataset##########
+acc--> [98.75741726665221]
+F1--> {'F1': [0.8573237734412968], 'precision': [0.8210533130118955], 'recall': [0.8969577959421292]}
+step 51/84, epoch 332/501 --> loss:0.817951534986496
+step 51/84, epoch 333/501 --> loss:0.8166735005378724
+step 51/84, epoch 334/501 --> loss:0.8145239984989167
+step 51/84, epoch 335/501 --> loss:0.8142952048778533
+step 51/84, epoch 336/501 --> loss:0.8161666858196258
+step 51/84, epoch 337/501 --> loss:0.8174736654758453
+step 51/84, epoch 338/501 --> loss:0.8221752071380615
+step 51/84, epoch 339/501 --> loss:0.819517822265625
+step 51/84, epoch 340/501 --> loss:0.8069894397258759
+step 51/84, epoch 341/501 --> loss:0.8163727605342865
+
+##########train dataset##########
+acc--> [99.25572867691791]
+F1--> {'F1': [0.9186468318180887], 'precision': [0.8586094715567488], 'recall': [0.9877230197826765]}
+##########eval dataset##########
+acc--> [98.6455141402852]
+F1--> {'F1': [0.8469371711656063], 'precision': [0.7995206300523466], 'recall': [0.9003437423561621]}
+step 51/84, epoch 342/501 --> loss:0.8154586327075958
+step 51/84, epoch 343/501 --> loss:0.8194565594196319
+step 51/84, epoch 344/501 --> loss:0.8256246531009674
+step 51/84, epoch 345/501 --> loss:0.8183916175365448
+step 51/84, epoch 346/501 --> loss:0.813466180562973
+step 51/84, epoch 347/501 --> loss:0.809738758802414
+step 51/84, epoch 348/501 --> loss:0.8197638618946076
+step 51/84, epoch 349/501 --> loss:0.8267484438419342
+step 51/84, epoch 350/501 --> loss:0.8268613302707672
+step 51/84, epoch 351/501 --> loss:0.814616208076477
+
+##########train dataset##########
+acc--> [99.04404544722763]
+F1--> {'F1': [0.8985157517135167], 'precision': [0.8193062651692535], 'recall': [0.9946923039678327]}
+##########eval dataset##########
+acc--> [98.40316972706856]
+F1--> {'F1': [0.8281189292464519], 'precision': [0.7501305163230332], 'recall': [0.9242175992544244]}
+step 51/84, epoch 352/501 --> loss:0.8240233075618744
+step 51/84, epoch 353/501 --> loss:0.8156287980079651
+step 51/84, epoch 354/501 --> loss:0.8207572269439697
+step 51/84, epoch 355/501 --> loss:0.8174306416511535
+step 51/84, epoch 356/501 --> loss:0.8180215811729431
+step 51/84, epoch 357/501 --> loss:0.8232529604434967
+step 51/84, epoch 358/501 --> loss:0.8236830925941467
+step 51/84, epoch 359/501 --> loss:0.8210959661006928
+step 51/84, epoch 360/501 --> loss:0.8141237545013428
+step 51/84, epoch 361/501 --> loss:0.8150053668022156
+
+##########train dataset##########
+acc--> [99.39091142125626]
+F1--> {'F1': [0.9329235737959939], 'precision': [0.8776672515238925], 'recall': [0.9956163871460758]}
+##########eval dataset##########
+acc--> [98.70850503809045]
+F1--> {'F1': [0.8552482414580268], 'precision': [0.8015475200545172], 'recall': [0.9166725868061041]}
+step 51/84, epoch 362/501 --> loss:0.822933863401413
+step 51/84, epoch 363/501 --> loss:0.816921226978302
+step 51/84, epoch 364/501 --> loss:0.8226855158805847
+step 51/84, epoch 365/501 --> loss:0.820332442522049
+step 51/84, epoch 366/501 --> loss:0.8194879961013793
+step 51/84, epoch 367/501 --> loss:0.8203164112567901
+step 51/84, epoch 368/501 --> loss:0.8277859246730804
+step 51/84, epoch 369/501 --> loss:0.8147194743156433
+step 51/84, epoch 370/501 --> loss:0.8220582330226898
+step 51/84, epoch 371/501 --> loss:0.8172093427181244
+
+##########train dataset##########
+acc--> [99.56632627723617]
+F1--> {'F1': [0.9512251557417511], 'precision': [0.9119664389893082], 'recall': [0.994026875328785]}
+##########eval dataset##########
+acc--> [98.91748837180823]
+F1--> {'F1': [0.8725660609082623], 'precision': [0.8554120609125505], 'recall': [0.8904325444697886]}
+save model!
+step 51/84, epoch 372/501 --> loss:0.8174566328525543
+step 51/84, epoch 373/501 --> loss:0.8150433397293091
+step 51/84, epoch 374/501 --> loss:0.8201106441020966
+step 51/84, epoch 375/501 --> loss:0.821176882982254
+step 51/84, epoch 376/501 --> loss:0.8132045221328735
+step 51/84, epoch 377/501 --> loss:0.8166031980514527
+step 51/84, epoch 378/501 --> loss:0.8105275428295136
+step 51/84, epoch 379/501 --> loss:0.8208646214008332
+step 51/84, epoch 380/501 --> loss:0.8160450696945191
+step 51/84, epoch 381/501 --> loss:0.8226369845867157
+
+##########train dataset##########
+acc--> [99.30885266309811]
+F1--> {'F1': [0.9239158259898267], 'precision': [0.8689074920499773], 'recall': [0.9863711178280102]}
+##########eval dataset##########
+acc--> [98.66908049228172]
+F1--> {'F1': [0.8483125068143803], 'precision': [0.8069543694659376], 'recall': [0.8941501256846276]}
+step 51/84, epoch 382/501 --> loss:0.8215954864025116
+step 51/84, epoch 383/501 --> loss:0.8135845863819122
+step 51/84, epoch 384/501 --> loss:0.8222266554832458
+step 51/84, epoch 385/501 --> loss:0.8206016027927399
+step 51/84, epoch 386/501 --> loss:0.8156282949447632
+step 51/84, epoch 387/501 --> loss:0.8110166954994201
+step 51/84, epoch 388/501 --> loss:0.817876409292221
+step 51/84, epoch 389/501 --> loss:0.8189280986785888
+step 51/84, epoch 390/501 --> loss:0.8144491708278656
+step 51/84, epoch 391/501 --> loss:0.8142739593982696
+
+##########train dataset##########
+acc--> [99.23296006913647]
+F1--> {'F1': [0.9160902643010468], 'precision': [0.8568239326288337], 'recall': [0.9841762185735177]}
+##########eval dataset##########
+acc--> [98.5939539845051]
+F1--> {'F1': [0.8422723327304503], 'precision': [0.7899886330538767], 'recall': [0.9019785030715477]}
+step 51/84, epoch 392/501 --> loss:0.8284415912628174
+step 51/84, epoch 393/501 --> loss:0.8099870228767395
+step 51/84, epoch 394/501 --> loss:0.8177413320541382
+step 51/84, epoch 395/501 --> loss:0.8163534486293793
+step 51/84, epoch 396/501 --> loss:0.820997703075409
+step 51/84, epoch 397/501 --> loss:0.8119698464870453
+step 51/84, epoch 398/501 --> loss:0.8158272361755371
+step 51/84, epoch 399/501 --> loss:0.8148004519939422
+step 51/84, epoch 400/501 --> loss:0.8154521977901459
+step 51/84, epoch 401/501 --> loss:0.8206915819644928
+
+##########train dataset##########
+acc--> [99.31507661273501]
+F1--> {'F1': [0.924859201952743], 'precision': [0.8671779270709394], 'recall': [0.990772144646859]}
+##########eval dataset##########
+acc--> [98.65189866860466]
+F1--> {'F1': [0.848120932910735], 'precision': [0.7984862564769308], 'recall': [0.9043466128894896]}
+step 51/84, epoch 402/501 --> loss:0.8243857896327973
+step 51/84, epoch 403/501 --> loss:0.8191431796550751
+step 51/84, epoch 404/501 --> loss:0.8199816918373108
+step 51/84, epoch 405/501 --> loss:0.814777489900589
+step 51/84, epoch 406/501 --> loss:0.8162168228626251
+step 51/84, epoch 407/501 --> loss:0.8151825940608979
+step 51/84, epoch 408/501 --> loss:0.8181497097015381
+step 51/84, epoch 409/501 --> loss:0.8118928253650666
+step 51/84, epoch 410/501 --> loss:0.8205063533782959
+step 51/84, epoch 411/501 --> loss:0.814459582567215
+
+##########train dataset##########
+acc--> [99.51134057003576]
+F1--> {'F1': [0.9454760601668112], 'precision': [0.8999272744500016], 'recall': [0.9958925228862566]}
+##########eval dataset##########
+acc--> [98.82433032738533]
+F1--> {'F1': [0.8646597530952846], 'precision': [0.8300312325916059], 'recall': [0.9023143073621125]}
+step 51/84, epoch 412/501 --> loss:0.8196868073940277
+step 51/84, epoch 413/501 --> loss:0.8258454239368439
+step 51/84, epoch 414/501 --> loss:0.8208384609222412
+step 51/84, epoch 415/501 --> loss:0.8192745935916901
+step 51/84, epoch 416/501 --> loss:0.8126128268241882
+step 51/84, epoch 417/501 --> loss:0.8130506837368011
+step 51/84, epoch 418/501 --> loss:0.8214416921138763
+step 51/84, epoch 419/501 --> loss:0.824073052406311
+step 51/84, epoch 420/501 --> loss:0.8127140772342681
+step 51/84, epoch 421/501 --> loss:0.815089567899704
+
+##########train dataset##########
+acc--> [99.56025279859752]
+F1--> {'F1': [0.9506530264014601], 'precision': [0.9095469877612159], 'recall': [0.9956613676209191]}
+##########eval dataset##########
+acc--> [98.87710931732238]
+F1--> {'F1': [0.8700173960979617], 'precision': [0.8394632358662413], 'recall': [0.9028904987737645]}
+step 51/84, epoch 422/501 --> loss:0.815608127117157
+step 51/84, epoch 423/501 --> loss:0.8184655058383942
+step 51/84, epoch 424/501 --> loss:0.8155432939529419
+step 51/84, epoch 425/501 --> loss:0.8286994993686676
+step 51/84, epoch 426/501 --> loss:0.8106365025043487
+step 51/84, epoch 427/501 --> loss:0.819097306728363
+step 51/84, epoch 428/501 --> loss:0.8198139464855194
+step 51/84, epoch 429/501 --> loss:0.8161971974372864
+step 51/84, epoch 430/501 --> loss:0.8142711174488068
+step 51/84, epoch 431/501 --> loss:0.8145021390914917
+
+##########train dataset##########
+acc--> [99.519552109969]
+F1--> {'F1': [0.9463685702695376], 'precision': [0.9011358787647841], 'recall': [0.9963932248237112]}
+##########eval dataset##########
+acc--> [98.8276944698558]
+F1--> {'F1': [0.8655894846053515], 'precision': [0.8278624235570221], 'recall': [0.9069302532549572]}
+step 51/84, epoch 432/501 --> loss:0.817991634607315
+step 51/84, epoch 433/501 --> loss:0.8170519375801086
+step 51/84, epoch 434/501 --> loss:0.8131891787052155
+step 51/84, epoch 435/501 --> loss:0.8158157908916474
+step 51/84, epoch 436/501 --> loss:0.8120925068855286
+step 51/84, epoch 437/501 --> loss:0.8189481461048126
+step 51/84, epoch 438/501 --> loss:0.8263983631134033
+step 51/84, epoch 439/501 --> loss:0.8201566076278687
+step 51/84, epoch 440/501 --> loss:0.8215645968914032
+step 51/84, epoch 441/501 --> loss:0.8210214817523956
+
+##########train dataset##########
+acc--> [99.48940842080734]
+F1--> {'F1': [0.943182294112149], 'precision': [0.8955680899667523], 'recall': [0.9961548753718142]}
+##########eval dataset##########
+acc--> [98.79395425684044]
+F1--> {'F1': [0.8623572054796532], 'precision': [0.8213223675320692], 'recall': [0.9077190886443022]}
+step 51/84, epoch 442/501 --> loss:0.8200024962425232
+step 51/84, epoch 443/501 --> loss:0.8144669950008392
+step 51/84, epoch 444/501 --> loss:0.8166207909584046
+step 51/84, epoch 445/501 --> loss:0.817029845714569
+step 51/84, epoch 446/501 --> loss:0.815673451423645
+step 51/84, epoch 447/501 --> loss:0.8114965665340423
+step 51/84, epoch 448/501 --> loss:0.8196146690845489
+step 51/84, epoch 449/501 --> loss:0.8155325186252594
+step 51/84, epoch 450/501 --> loss:0.8219181299209595
+step 51/84, epoch 451/501 --> loss:0.8183976471424103
+
+##########train dataset##########
+acc--> [99.5973301684734]
+F1--> {'F1': [0.9546516582859408], 'precision': [0.9163676138208664], 'recall': [0.9962849086129902]}
+##########eval dataset##########
+acc--> [98.94226955303021]
+F1--> {'F1': [0.876821704326755], 'precision': [0.8507976704248674], 'recall': [0.9044986389006908]}
+save model!
+step 51/84, epoch 452/501 --> loss:0.8148964548110962
+step 51/84, epoch 453/501 --> loss:0.8137760519981384
+step 51/84, epoch 454/501 --> loss:0.818068391084671
+step 51/84, epoch 455/501 --> loss:0.8132679200172425
+step 51/84, epoch 456/501 --> loss:0.8255358445644378
+step 51/84, epoch 457/501 --> loss:0.8133963537216187
+step 51/84, epoch 458/501 --> loss:0.8258527946472168
+step 51/84, epoch 459/501 --> loss:0.8214359223842621
+step 51/84, epoch 460/501 --> loss:0.8179189670085907
+step 51/84, epoch 461/501 --> loss:0.8277021133899689
+
+##########train dataset##########
+acc--> [99.60979752027171]
+F1--> {'F1': [0.9558160331970821], 'precision': [0.9221088461513229], 'recall': [0.9920917736150907]}
+##########eval dataset##########
+acc--> [98.96064217634365]
+F1--> {'F1': [0.8774332907812854], 'precision': [0.8616223196705053], 'recall': [0.8938457529322437]}
+save model!
+step 51/84, epoch 462/501 --> loss:0.809298380613327
+step 51/84, epoch 463/501 --> loss:0.8193165922164917
+step 51/84, epoch 464/501 --> loss:0.8126062452793121
+step 51/84, epoch 465/501 --> loss:0.8253595399856567
+step 51/84, epoch 466/501 --> loss:0.8203062772750854
+step 51/84, epoch 467/501 --> loss:0.8148875212669373
+step 51/84, epoch 468/501 --> loss:0.8182965791225434
+step 51/84, epoch 469/501 --> loss:0.8135592579841614
+step 51/84, epoch 470/501 --> loss:0.8111506605148315
+step 51/84, epoch 471/501 --> loss:0.8134475338459015
+
+##########train dataset##########
+acc--> [99.5868509791045]
+F1--> {'F1': [0.9534157109548633], 'precision': [0.916194129641306], 'recall': [0.9938005610114127]}
+##########eval dataset##########
+acc--> [98.90122167498177]
+F1--> {'F1': [0.8710406828320498], 'precision': [0.8514536706827678], 'recall': [0.8915605518145033]}
+step 51/84, epoch 472/501 --> loss:0.8176243829727173
+step 51/84, epoch 473/501 --> loss:0.8182912933826446
+step 51/84, epoch 474/501 --> loss:0.8152954041957855
+step 51/84, epoch 475/501 --> loss:0.8179727399349213
+step 51/84, epoch 476/501 --> loss:0.8169203388690949
+step 51/84, epoch 477/501 --> loss:0.8109172332286835
+step 51/84, epoch 478/501 --> loss:0.8209826993942261
+step 51/84, epoch 479/501 --> loss:0.812424008846283
+step 51/84, epoch 480/501 --> loss:0.8221319425106048
+step 51/84, epoch 481/501 --> loss:0.8202662122249603
+
+##########train dataset##########
+acc--> [99.58656405436828]
+F1--> {'F1': [0.9534661248366963], 'precision': [0.9147452246094602], 'recall': [0.995620891917099]}
+##########eval dataset##########
+acc--> [98.88717704765614]
+F1--> {'F1': [0.8707597395998671], 'precision': [0.8427527013749392], 'recall': [0.9007029599353719]}
+step 51/84, epoch 482/501 --> loss:0.8187068927288056
+step 51/84, epoch 483/501 --> loss:0.8203992176055909
+step 51/84, epoch 484/501 --> loss:0.8255186557769776
+step 51/84, epoch 485/501 --> loss:0.8178751063346863
+step 51/84, epoch 486/501 --> loss:0.8177610993385315
+step 51/84, epoch 487/501 --> loss:0.8143247127532959
+step 51/84, epoch 488/501 --> loss:0.8208222436904907
+step 51/84, epoch 489/501 --> loss:0.8136684846878052
+step 51/84, epoch 490/501 --> loss:0.8079234540462494
+step 51/84, epoch 491/501 --> loss:0.8199172294139863
+
+##########train dataset##########
+acc--> [99.60901112336259]
+F1--> {'F1': [0.9559438415137425], 'precision': [0.9180523700477605], 'recall': [0.9971086765917325]}
+##########eval dataset##########
+acc--> [98.9080881300599]
+F1--> {'F1': [0.8728241279579504], 'precision': [0.847026103129945], 'recall': [0.9002536172313783]}
+step 51/84, epoch 492/501 --> loss:0.821639142036438
+step 51/84, epoch 493/501 --> loss:0.8176929259300232
+step 51/84, epoch 494/501 --> loss:0.8280463194847107
+step 51/84, epoch 495/501 --> loss:0.8183171021938324
+step 51/84, epoch 496/501 --> loss:0.8209107053279877
+step 51/84, epoch 497/501 --> loss:0.8189107286930084
+step 51/84, epoch 498/501 --> loss:0.8298461186885834
+step 51/84, epoch 499/501 --> loss:0.8172237360477448
+step 51/84, epoch 500/501 --> loss:0.8200730562210083
+step 51/84, epoch 501/501 --> loss:0.8157704150676728
+
+##########train dataset##########
+acc--> [99.67019903914313]
+F1--> {'F1': [0.9625647200299019], 'precision': [0.9307047614019066], 'recall': [0.9966939687160483]}
+##########eval dataset##########
+acc--> [98.98858992341482]
+F1--> {'F1': [0.8797564544328489], 'precision': [0.8707474059995446], 'recall': [0.8889640822497782]}
+save model!

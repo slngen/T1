@@ -1,0 +1,155 @@
+##########Config##########
+{'device': 'cuda:1', 'class_nums': 2, 'task_flag_Dict': {'SC': [], 'OD': [], 'CD': ['CDD-BCD'], 'SS': []}, 'task_channels_decoder': {'UCMLU': 3, 'RSOD-Aircraft': 3, 'GID': 3, 'WHU-BCD': 6, 'CDD': 6}, 'data_path': '/Code/T1/Datasets/WHU-BCD', 'image_size': 128, 'num_parallel_workers': 4, 'batch_size': 64, 'input_dim': 6, 'seed': 33, 'pretrained': False, 'resume': '', 'eval_epochs': 10, 'start_eval_epochs': 0, 'eval_traindata': True, 'epoch_size': 501, 'loss_monitor_step': 50, 'metrics_List': ['acc', 'F1'], 'save_metrics_List': ['F1'], 'save_model_path': '/Code/T1/Models', 'log_path': '/Code/T1/Logs', 'lr_init': 0.0005, 'lr_max': 0.0005, 'lr_end': 5e-05, 'warmup_epochs': 0, 'features': [32, 64, 128]}
+
+##########Network##########
+Backbone(
+  (encoder): Encoder(
+    (layers): ModuleList(
+      (0): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(6, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (1): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (2): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (3): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (4): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (5): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    )
+  )
+  (decoder): Decoder(
+    (layers): ModuleList(
+      (0): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
+      (1): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (2): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2))
+      (3): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+    (conv): Conv2d(32, 2, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (embedding): PositionalEmbedding(
+    (embeddings): ParameterDict()
+  )
+  (attention): AttentionModule(
+    (layers): ModuleList(
+      (0): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(64, 21, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(21, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+      (1): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(128, 42, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(42, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+      (2): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(256, 85, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(85, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (softmax): Softmax(dim=1)
+)
+
+##########Training##########
+step 51/334, epoch 1/501 --> loss:0.8762366807460785
+step 101/334, epoch 1/501 --> loss:0.8704148674011231
+step 151/334, epoch 1/501 --> loss:0.8569784820079803
