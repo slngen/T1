@@ -6,7 +6,6 @@ LastEditTime: 2023-11-11 09:32
 '''
 import torch
 import torch.nn as nn
-from torchinfo import summary
 from Config import config
 
 class DoubleConv(nn.Module):
@@ -171,6 +170,8 @@ class Backbone(nn.Module):
 
 # 测试函数
 if __name__ == "__main__":
+    from torchinfo import summary
+    
     model = Backbone()
     summary(model, input_size=(2, config.batch_size, config.input_dim, config.image_size, config.image_size))
     print(model)
