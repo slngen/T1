@@ -20,7 +20,7 @@ torch.manual_seed(config.seed)
 '''
 Path
 '''
-ckpt_path = r"W:\T1\Models\2023-11-16_15-41--Dice--unet--x32--r33\unet-E500-0.9028.ckpt"
+ckpt_path = r"/Code/T1/Models/2023-11-18_11-10--Dice--unet--x64--r33/unet-E500-0.9162.ckpt"
 log_path = os.path.join(os.path.dirname(ckpt_path).replace("Models","Logs"), "eval.log")
 
 '''
