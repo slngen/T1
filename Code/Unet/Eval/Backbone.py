@@ -139,7 +139,21 @@ class PositionalEmbedding(nn.Module):
             "pos-1_0_ch128_s16", 
             "pos1_0_ch128_s16", 
             "pos0_-1_ch128_s16"
+        ] if config.features[0]==32 else [
+            "pos0_1_ch64_s64", 
+            "pos-1_0_ch64_s64", 
+            "pos1_0_ch64_s64", 
+            "pos0_-1_ch64_s64", 
+            "pos0_1_ch128_s32", 
+            "pos-1_0_ch128_s32", 
+            "pos1_0_ch128_s32", 
+            "pos0_-1_ch128_s32", 
+            "pos0_1_ch256_s16", 
+            "pos-1_0_ch256_s16", 
+            "pos1_0_ch256_s16", 
+            "pos0_-1_ch256_s16"
         ]
+
         for key in eval_keys:
             channel = int(key.split("ch")[1].split("_")[0])
             size = int(key.split("s")[-1])

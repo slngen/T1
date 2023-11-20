@@ -10,6 +10,7 @@ config = ed({
     "device":"cuda",  # CPU or cuda
     "class_nums":2,
     # Dataset
+    "data_path":"/Code/T1/Datasets/WHU-BCD",
     "image_size":64,
     "num_parallel_workers":4,
     "batch_size": 64,
@@ -35,5 +36,5 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "features":[32, 64, 128]
+    "features":[64, 128, 256]
 })
