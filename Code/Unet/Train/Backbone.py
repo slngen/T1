@@ -168,7 +168,6 @@ class Backbone(nn.Module):
         output = self.softmax(output)
         return output
 
-# 测试函数
 if __name__ == "__main__":
     from torchinfo import summary
     
