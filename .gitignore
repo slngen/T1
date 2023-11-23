@@ -167,7 +167,8 @@ vector_store/*
 llm/*
 embedding/*
 models/*
-Models/*
+Models/DeepLabv3/*
+Models/SegNet/*
 Dataset/*
 Datasets/*
 nohup*
