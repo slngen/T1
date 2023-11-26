@@ -2,14 +2,13 @@
 Author: CT
 Date: 2023-11-26 09:43
 LastEditors: CT
-LastEditTime: 2023-11-26 09:52
+LastEditTime: 2023-11-26 09:59
 '''
+import torch.nn.functional as F
 import torch.nn as nn
+import torch
 
 from Config import config
-    
-import torch
-import torch.nn as nn
  
 class BasicBlock(nn.Module):
     expansion: int = 4
@@ -216,10 +215,6 @@ class ResNet(nn.Module):
     
     def resnet101(pretrained_path=None, **kwargs):
         return ResNet._resnet(Bottleneck, [3, 4, 23, 3],pretrained_path,**kwargs)
-    
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
  
 class ResidualConvUnit(nn.ModuleList):
     def __init__(self, in_channels):
