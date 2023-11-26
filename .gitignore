@@ -166,7 +166,6 @@ vector_store/*
 
 llm/*
 embedding/*
-models/*
 Models/DeepLabv3/*
 Models/SegNet/*
 Dataset/*
