@@ -1,0 +1,3530 @@
+##########Config##########
+{'device': 'cuda:1', 'class_nums': 2, 'task_flag_Dict': {'SC': [], 'OD': [], 'CD': ['CDD-BCD'], 'SS': []}, 'task_channels_decoder': {'UCMLU': 3, 'RSOD-Aircraft': 3, 'GID': 3, 'WHU-BCD': 6, 'CDD': 6}, 'data_path': '/Code/T1/Datasets/WHU-BCD', 'image_size': 128, 'num_parallel_workers': 4, 'batch_size': 64, 'input_dim': 6, 'seed': 33, 'pretrained': False, 'resume': '', 'eval_epochs': 10, 'start_eval_epochs': 0, 'eval_traindata': True, 'epoch_size': 501, 'loss_monitor_step': 50, 'metrics_List': ['acc', 'F1'], 'save_metrics_List': ['F1'], 'save_model_path': '/Code/T1/Models', 'log_path': '/Code/T1/Logs', 'lr_init': 0.0005, 'lr_max': 0.0005, 'lr_end': 5e-05, 'warmup_epochs': 0, 'features': [32, 64, 128]}
+
+##########Network##########
+Backbone(
+  (encoder): Encoder(
+    (layers): ModuleList(
+      (0): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(6, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (1): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (2): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(32, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (3): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (4): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (5): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+    )
+  )
+  (decoder): Decoder(
+    (layers): ModuleList(
+      (0): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
+      (1): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+      (2): ConvTranspose2d(64, 32, kernel_size=(2, 2), stride=(2, 2))
+      (3): DoubleConv(
+        (conv): Sequential(
+          (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+    (conv): Conv2d(32, 2, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (embedding): PositionalEmbedding(
+    (embeddings): ParameterDict()
+  )
+  (attention): AttentionModule(
+    (layers): ModuleList(
+      (0): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(64, 21, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(21, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(64, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(32, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+      (1): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(128, 42, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(42, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+      (2): AttentionUnit(
+        (sa): SpatialAttention(
+          (conv1): Conv2d(2, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+          (sigmoid): Sigmoid()
+        )
+        (ca): ChannelAttention(
+          (avg_pool): AdaptiveAvgPool2d(output_size=1)
+          (max_pool): AdaptiveMaxPool2d(output_size=1)
+          (fc1): Conv2d(256, 85, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (relu): ReLU()
+          (fc2): Conv2d(85, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (sigmoid): Sigmoid()
+        )
+        (map): DoubleConv(
+          (conv): Sequential(
+            (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (2): ReLU(inplace=True)
+            (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+            (5): ReLU(inplace=True)
+          )
+        )
+      )
+    )
+  )
+  (softmax): Softmax(dim=1)
+)
+
+##########Training##########
+step 51/334, epoch 1/501 --> loss:0.8762366807460785
+step 101/334, epoch 1/501 --> loss:0.8704148674011231
+step 151/334, epoch 1/501 --> loss:0.8569784820079803
+step 201/334, epoch 1/501 --> loss:0.8627834451198578
+step 251/334, epoch 1/501 --> loss:0.8547799658775329
+step 301/334, epoch 1/501 --> loss:0.8519089674949646
+
+##########train dataset##########
+acc--> [88.41848098073791]
+F1--> {'F1': [0.40245846619512005], 'precision': [0.2571908599868148], 'recall': [0.9248539523270626]}
+##########eval dataset##########
+acc--> [88.574890243511]
+F1--> {'F1': [0.40710505421764404], 'precision': [0.2624108148367931], 'recall': [0.9075428811803595]}
+save model!
+step 51/334, epoch 2/501 --> loss:0.8334179651737214
+step 101/334, epoch 2/501 --> loss:0.8422615516185761
+step 151/334, epoch 2/501 --> loss:0.8434669077396393
+step 201/334, epoch 2/501 --> loss:0.8453896260261535
+step 251/334, epoch 2/501 --> loss:0.8432603478431702
+step 301/334, epoch 2/501 --> loss:0.8438138151168824
+step 51/334, epoch 3/501 --> loss:0.8471461188793182
+step 101/334, epoch 3/501 --> loss:0.8330387842655181
+step 151/334, epoch 3/501 --> loss:0.8441422152519226
+step 201/334, epoch 3/501 --> loss:0.8444696700572968
+step 251/334, epoch 3/501 --> loss:0.8464981770515442
+step 301/334, epoch 3/501 --> loss:0.8368302690982818
+step 51/334, epoch 4/501 --> loss:0.8497568202018738
+step 101/334, epoch 4/501 --> loss:0.827648423910141
+step 151/334, epoch 4/501 --> loss:0.8385470616817474
+step 201/334, epoch 4/501 --> loss:0.8404840064048767
+step 251/334, epoch 4/501 --> loss:0.8414853024482727
+step 301/334, epoch 4/501 --> loss:0.8464645040035248
+step 51/334, epoch 5/501 --> loss:0.8501881122589111
+step 101/334, epoch 5/501 --> loss:0.825461609363556
+step 151/334, epoch 5/501 --> loss:0.8446881926059723
+step 201/334, epoch 5/501 --> loss:0.8414983129501343
+step 251/334, epoch 5/501 --> loss:0.8280760896205902
+step 301/334, epoch 5/501 --> loss:0.8356328856945038
+step 51/334, epoch 6/501 --> loss:0.8415103662014007
+step 101/334, epoch 6/501 --> loss:0.830196340084076
+step 151/334, epoch 6/501 --> loss:0.8373248386383056
+step 201/334, epoch 6/501 --> loss:0.8419759559631348
+step 251/334, epoch 6/501 --> loss:0.8348059284687043
+step 301/334, epoch 6/501 --> loss:0.8448641419410705
+step 51/334, epoch 7/501 --> loss:0.8309058403968811
+step 101/334, epoch 7/501 --> loss:0.8460129082202912
+step 151/334, epoch 7/501 --> loss:0.8223152661323547
+step 201/334, epoch 7/501 --> loss:0.8359328591823578
+step 251/334, epoch 7/501 --> loss:0.8558243668079376
+step 301/334, epoch 7/501 --> loss:0.8366919052600861
+step 51/334, epoch 8/501 --> loss:0.8382407069206238
+step 101/334, epoch 8/501 --> loss:0.8302599918842316
+step 151/334, epoch 8/501 --> loss:0.8392688357830047
+step 201/334, epoch 8/501 --> loss:0.837831437587738
+step 251/334, epoch 8/501 --> loss:0.8572808456420898
+step 301/334, epoch 8/501 --> loss:0.8347652721405029
+step 51/334, epoch 9/501 --> loss:0.8414390885829925
+step 101/334, epoch 9/501 --> loss:0.8360136663913726
+step 151/334, epoch 9/501 --> loss:0.8415325939655304
+step 201/334, epoch 9/501 --> loss:0.8185019421577454
+step 251/334, epoch 9/501 --> loss:0.8373433673381805
+step 301/334, epoch 9/501 --> loss:0.8398497033119202
+step 51/334, epoch 10/501 --> loss:0.8328995192050934
+step 101/334, epoch 10/501 --> loss:0.842916294336319
+step 151/334, epoch 10/501 --> loss:0.8533455038070679
+step 201/334, epoch 10/501 --> loss:0.8344051492214203
+step 251/334, epoch 10/501 --> loss:0.8290761923789978
+step 301/334, epoch 10/501 --> loss:0.8265318596363067
+step 51/334, epoch 11/501 --> loss:0.8447854280471802
+step 101/334, epoch 11/501 --> loss:0.8289847087860107
+step 151/334, epoch 11/501 --> loss:0.8260754513740539
+step 201/334, epoch 11/501 --> loss:0.8350133037567139
+step 251/334, epoch 11/501 --> loss:0.8440106427669525
+step 301/334, epoch 11/501 --> loss:0.8377425515651703
+
+##########train dataset##########
+acc--> [97.80807523723561]
+F1--> {'F1': [0.7614673395972271], 'precision': [0.7036564329130779], 'recall': [0.8296395730459298]}
+##########eval dataset##########
+acc--> [97.80090946120094]
+F1--> {'F1': [0.7661360175174557], 'precision': [0.7089052873328027], 'recall': [0.8334306273536529]}
+save model!
+step 51/334, epoch 12/501 --> loss:0.8384172260761261
+step 101/334, epoch 12/501 --> loss:0.826973249912262
+step 151/334, epoch 12/501 --> loss:0.8223767805099488
+step 201/334, epoch 12/501 --> loss:0.8455060648918152
+step 251/334, epoch 12/501 --> loss:0.8244265282154083
+step 301/334, epoch 12/501 --> loss:0.8415095615386963
+step 51/334, epoch 13/501 --> loss:0.834406623840332
+step 101/334, epoch 13/501 --> loss:0.8374950015544891
+step 151/334, epoch 13/501 --> loss:0.8305194687843322
+step 201/334, epoch 13/501 --> loss:0.8325832438468933
+step 251/334, epoch 13/501 --> loss:0.8489783775806427
+step 301/334, epoch 13/501 --> loss:0.81783456325531
+step 51/334, epoch 14/501 --> loss:0.8243376588821412
+step 101/334, epoch 14/501 --> loss:0.8340426731109619
+step 151/334, epoch 14/501 --> loss:0.8388744449615478
+step 201/334, epoch 14/501 --> loss:0.825700227022171
+step 251/334, epoch 14/501 --> loss:0.8468188345432281
+step 301/334, epoch 14/501 --> loss:0.8319572579860687
+step 51/334, epoch 15/501 --> loss:0.8348222041130066
+step 101/334, epoch 15/501 --> loss:0.8272350144386291
+step 151/334, epoch 15/501 --> loss:0.8426824486255646
+step 201/334, epoch 15/501 --> loss:0.8208618986606598
+step 251/334, epoch 15/501 --> loss:0.8354023444652557
+step 301/334, epoch 15/501 --> loss:0.834852020740509
+step 51/334, epoch 16/501 --> loss:0.8310021650791168
+step 101/334, epoch 16/501 --> loss:0.8203961253166199
+step 151/334, epoch 16/501 --> loss:0.8458302438259124
+step 201/334, epoch 16/501 --> loss:0.8360068953037262
+step 251/334, epoch 16/501 --> loss:0.8401646721363067
+step 301/334, epoch 16/501 --> loss:0.8228601765632629
+step 51/334, epoch 17/501 --> loss:0.8247909688949585
+step 101/334, epoch 17/501 --> loss:0.8294445300102233
+step 151/334, epoch 17/501 --> loss:0.8378980815410614
+step 201/334, epoch 17/501 --> loss:0.8298708724975586
+step 251/334, epoch 17/501 --> loss:0.8358132386207581
+step 301/334, epoch 17/501 --> loss:0.8506671798229217
+step 51/334, epoch 18/501 --> loss:0.8349727666378022
+step 101/334, epoch 18/501 --> loss:0.834379152059555
+step 151/334, epoch 18/501 --> loss:0.844044896364212
+step 201/334, epoch 18/501 --> loss:0.8371451103687286
+step 251/334, epoch 18/501 --> loss:0.8269640445709229
+step 301/334, epoch 18/501 --> loss:0.8308145296573639
+step 51/334, epoch 19/501 --> loss:0.8339448189735412
+step 101/334, epoch 19/501 --> loss:0.8211993646621704
+step 151/334, epoch 19/501 --> loss:0.8343324708938599
+step 201/334, epoch 19/501 --> loss:0.833586243391037
+step 251/334, epoch 19/501 --> loss:0.8351181304454803
+step 301/334, epoch 19/501 --> loss:0.841623295545578
+step 51/334, epoch 20/501 --> loss:0.8302756035327912
+step 101/334, epoch 20/501 --> loss:0.831953376531601
+step 151/334, epoch 20/501 --> loss:0.8316625356674194
+step 201/334, epoch 20/501 --> loss:0.8331835448741913
+step 251/334, epoch 20/501 --> loss:0.8350401198863984
+step 301/334, epoch 20/501 --> loss:0.841431827545166
+step 51/334, epoch 21/501 --> loss:0.8143726336956024
+step 101/334, epoch 21/501 --> loss:0.8394771373271942
+step 151/334, epoch 21/501 --> loss:0.8263980412483215
+step 201/334, epoch 21/501 --> loss:0.8455811738967896
+step 251/334, epoch 21/501 --> loss:0.8335029828548431
+step 301/334, epoch 21/501 --> loss:0.8367029535770416
+
+##########train dataset##########
+acc--> [96.85162922215622]
+F1--> {'F1': [0.7104518078614311], 'precision': [0.5802839075909704], 'recall': [0.915921338130545]}
+##########eval dataset##########
+acc--> [97.031628199026]
+F1--> {'F1': [0.7225899669736591], 'precision': [0.6061215688595067], 'recall': [0.8944792283427454]}
+step 51/334, epoch 22/501 --> loss:0.8345061242580414
+step 101/334, epoch 22/501 --> loss:0.8243873429298401
+step 151/334, epoch 22/501 --> loss:0.8376216816902161
+step 201/334, epoch 22/501 --> loss:0.8312117958068848
+step 251/334, epoch 22/501 --> loss:0.8369415509700775
+step 301/334, epoch 22/501 --> loss:0.835116355419159
+step 51/334, epoch 23/501 --> loss:0.8187001609802246
+step 101/334, epoch 23/501 --> loss:0.8389601516723633
+step 151/334, epoch 23/501 --> loss:0.8232521021366119
+step 201/334, epoch 23/501 --> loss:0.8364789688587189
+step 251/334, epoch 23/501 --> loss:0.8373515200614929
+step 301/334, epoch 23/501 --> loss:0.8294671988487243
+step 51/334, epoch 24/501 --> loss:0.8339936256408691
+step 101/334, epoch 24/501 --> loss:0.8366985654830933
+step 151/334, epoch 24/501 --> loss:0.8277295291423797
+step 201/334, epoch 24/501 --> loss:0.8352032363414764
+step 251/334, epoch 24/501 --> loss:0.8299469995498657
+step 301/334, epoch 24/501 --> loss:0.8299407613277435
+step 51/334, epoch 25/501 --> loss:0.8282925581932068
+step 101/334, epoch 25/501 --> loss:0.8352683043479919
+step 151/334, epoch 25/501 --> loss:0.8210919451713562
+step 201/334, epoch 25/501 --> loss:0.8497653579711915
+step 251/334, epoch 25/501 --> loss:0.8181765854358674
+step 301/334, epoch 25/501 --> loss:0.8384396135807037
+step 51/334, epoch 26/501 --> loss:0.8293159699440003
+step 101/334, epoch 26/501 --> loss:0.8246233975887298
+step 151/334, epoch 26/501 --> loss:0.8344825112819672
+step 201/334, epoch 26/501 --> loss:0.8472539365291596
+step 251/334, epoch 26/501 --> loss:0.8304975402355194
+step 301/334, epoch 26/501 --> loss:0.8398493480682373
+step 51/334, epoch 27/501 --> loss:0.8321711874008179
+step 101/334, epoch 27/501 --> loss:0.8119815170764924
+step 151/334, epoch 27/501 --> loss:0.8332982361316681
+step 201/334, epoch 27/501 --> loss:0.8405884492397309
+step 251/334, epoch 27/501 --> loss:0.8243970763683319
+step 301/334, epoch 27/501 --> loss:0.8331675839424133
+step 51/334, epoch 28/501 --> loss:0.84120361328125
+step 101/334, epoch 28/501 --> loss:0.8298739802837372
+step 151/334, epoch 28/501 --> loss:0.8339847028255463
+step 201/334, epoch 28/501 --> loss:0.8191410982608796
+step 251/334, epoch 28/501 --> loss:0.8209358215332031
+step 301/334, epoch 28/501 --> loss:0.8369589304924011
+step 51/334, epoch 29/501 --> loss:0.8349514710903168
+step 101/334, epoch 29/501 --> loss:0.8159635806083679
+step 151/334, epoch 29/501 --> loss:0.834222663640976
+step 201/334, epoch 29/501 --> loss:0.830190771818161
+step 251/334, epoch 29/501 --> loss:0.8559779131412506
+step 301/334, epoch 29/501 --> loss:0.8311428165435791
+step 51/334, epoch 30/501 --> loss:0.8279089748859405
+step 101/334, epoch 30/501 --> loss:0.8349724531173706
+step 151/334, epoch 30/501 --> loss:0.8437047159671783
+step 201/334, epoch 30/501 --> loss:0.8240751338005066
+step 251/334, epoch 30/501 --> loss:0.8440129339694977
+step 301/334, epoch 30/501 --> loss:0.819207216501236
+step 51/334, epoch 31/501 --> loss:0.8368803679943084
+step 101/334, epoch 31/501 --> loss:0.8297481858730316
+step 151/334, epoch 31/501 --> loss:0.83876558303833
+step 201/334, epoch 31/501 --> loss:0.8078590869903565
+step 251/334, epoch 31/501 --> loss:0.835461082458496
+step 301/334, epoch 31/501 --> loss:0.8315122628211975
+
+##########train dataset##########
+acc--> [96.17832414121177]
+F1--> {'F1': [0.6791169370129104], 'precision': [0.5257054917690672], 'recall': [0.9589793278798927]}
+##########eval dataset##########
+acc--> [96.19542920369784]
+F1--> {'F1': [0.6800506497246754], 'precision': [0.534188755117002], 'recall': [0.9355062640347622]}
+step 51/334, epoch 32/501 --> loss:0.829526299238205
+step 101/334, epoch 32/501 --> loss:0.8307894468307495
+step 151/334, epoch 32/501 --> loss:0.8437947940826416
+step 201/334, epoch 32/501 --> loss:0.8224429607391357
+step 251/334, epoch 32/501 --> loss:0.8246781086921692
+step 301/334, epoch 32/501 --> loss:0.8224976837635041
+step 51/334, epoch 33/501 --> loss:0.8201606142520904
+step 101/334, epoch 33/501 --> loss:0.8287496590614318
+step 151/334, epoch 33/501 --> loss:0.852193067073822
+step 201/334, epoch 33/501 --> loss:0.8294003868103027
+step 251/334, epoch 33/501 --> loss:0.8283807790279388
+step 301/334, epoch 33/501 --> loss:0.8298926270008087
+step 51/334, epoch 34/501 --> loss:0.8106301069259644
+step 101/334, epoch 34/501 --> loss:0.833402132987976
+step 151/334, epoch 34/501 --> loss:0.8425203084945678
+step 201/334, epoch 34/501 --> loss:0.8330713665485382
+step 251/334, epoch 34/501 --> loss:0.835338122844696
+step 301/334, epoch 34/501 --> loss:0.8294748747348786
+step 51/334, epoch 35/501 --> loss:0.8353421175479889
+step 101/334, epoch 35/501 --> loss:0.8288880443572998
+step 151/334, epoch 35/501 --> loss:0.8504661703109742
+step 201/334, epoch 35/501 --> loss:0.8185688650608063
+step 251/334, epoch 35/501 --> loss:0.816497209072113
+step 301/334, epoch 35/501 --> loss:0.8350870788097382
+step 51/334, epoch 36/501 --> loss:0.8354473876953125
+step 101/334, epoch 36/501 --> loss:0.832894275188446
+step 151/334, epoch 36/501 --> loss:0.8376593625545502
+step 201/334, epoch 36/501 --> loss:0.820576524734497
+step 251/334, epoch 36/501 --> loss:0.8315351951122284
+step 301/334, epoch 36/501 --> loss:0.8243620526790619
+step 51/334, epoch 37/501 --> loss:0.8254967653751373
+step 101/334, epoch 37/501 --> loss:0.8255144464969635
+step 151/334, epoch 37/501 --> loss:0.8388805246353149
+step 201/334, epoch 37/501 --> loss:0.8333982634544372
+step 251/334, epoch 37/501 --> loss:0.8219243550300598
+step 301/334, epoch 37/501 --> loss:0.8354903101921082
+step 51/334, epoch 38/501 --> loss:0.8158331620693207
+step 101/334, epoch 38/501 --> loss:0.8261832058429718
+step 151/334, epoch 38/501 --> loss:0.8309597897529603
+step 201/334, epoch 38/501 --> loss:0.8266807317733764
+step 251/334, epoch 38/501 --> loss:0.8395372474193573
+step 301/334, epoch 38/501 --> loss:0.84128781914711
+step 51/334, epoch 39/501 --> loss:0.8283477735519409
+step 101/334, epoch 39/501 --> loss:0.8212777483463287
+step 151/334, epoch 39/501 --> loss:0.8175477254390716
+step 201/334, epoch 39/501 --> loss:0.8380105602741241
+step 251/334, epoch 39/501 --> loss:0.829251880645752
+step 301/334, epoch 39/501 --> loss:0.8411824977397919
+step 51/334, epoch 40/501 --> loss:0.8181028175354004
+step 101/334, epoch 40/501 --> loss:0.8305287790298462
+step 151/334, epoch 40/501 --> loss:0.8346653342247009
+step 201/334, epoch 40/501 --> loss:0.818143447637558
+step 251/334, epoch 40/501 --> loss:0.8316168212890624
+step 301/334, epoch 40/501 --> loss:0.8363308107852936
+step 51/334, epoch 41/501 --> loss:0.8297816252708435
+step 101/334, epoch 41/501 --> loss:0.8336071503162384
+step 151/334, epoch 41/501 --> loss:0.8288890254497528
+step 201/334, epoch 41/501 --> loss:0.8211251330375672
+step 251/334, epoch 41/501 --> loss:0.8226834297180176
+step 301/334, epoch 41/501 --> loss:0.8292349326610565
+
+##########train dataset##########
+acc--> [97.47496591688576]
+F1--> {'F1': [0.7616157940705819], 'precision': [0.6327100289288707], 'recall': [0.9565015659744509]}
+##########eval dataset##########
+acc--> [97.41316467444702]
+F1--> {'F1': [0.7562538242399676], 'precision': [0.6379213369584363], 'recall': [0.9284995501295424]}
+step 51/334, epoch 42/501 --> loss:0.8356754410266877
+step 101/334, epoch 42/501 --> loss:0.8382479989528656
+step 151/334, epoch 42/501 --> loss:0.8218629479408264
+step 201/334, epoch 42/501 --> loss:0.8344261944293976
+step 251/334, epoch 42/501 --> loss:0.82681804895401
+step 301/334, epoch 42/501 --> loss:0.8276992762088775
+step 51/334, epoch 43/501 --> loss:0.8166809678077698
+step 101/334, epoch 43/501 --> loss:0.8343775427341461
+step 151/334, epoch 43/501 --> loss:0.8241322541236877
+step 201/334, epoch 43/501 --> loss:0.8329938721656799
+step 251/334, epoch 43/501 --> loss:0.838518785238266
+step 301/334, epoch 43/501 --> loss:0.8323764276504516
+step 51/334, epoch 44/501 --> loss:0.8236745703220367
+step 101/334, epoch 44/501 --> loss:0.8409308540821075
+step 151/334, epoch 44/501 --> loss:0.8275510954856873
+step 201/334, epoch 44/501 --> loss:0.8366004860401154
+step 251/334, epoch 44/501 --> loss:0.8182052338123321
+step 301/334, epoch 44/501 --> loss:0.8383066689968109
+step 51/334, epoch 45/501 --> loss:0.829875899553299
+step 101/334, epoch 45/501 --> loss:0.8351738202571869
+step 151/334, epoch 45/501 --> loss:0.8197327899932861
+step 201/334, epoch 45/501 --> loss:0.8299110901355743
+step 251/334, epoch 45/501 --> loss:0.8427987039089203
+step 301/334, epoch 45/501 --> loss:0.8351922869682312
+step 51/334, epoch 46/501 --> loss:0.8188180994987487
+step 101/334, epoch 46/501 --> loss:0.8458635747432709
+step 151/334, epoch 46/501 --> loss:0.829773360490799
+step 201/334, epoch 46/501 --> loss:0.8172413730621337
+step 251/334, epoch 46/501 --> loss:0.8332659947872162
+step 301/334, epoch 46/501 --> loss:0.84096435546875
+step 51/334, epoch 47/501 --> loss:0.8226057136058808
+step 101/334, epoch 47/501 --> loss:0.8273488628864288
+step 151/334, epoch 47/501 --> loss:0.8381271553039551
+step 201/334, epoch 47/501 --> loss:0.8272100675106049
+step 251/334, epoch 47/501 --> loss:0.8239099192619324
+step 301/334, epoch 47/501 --> loss:0.8400094878673553
+step 51/334, epoch 48/501 --> loss:0.8403491866588593
+step 101/334, epoch 48/501 --> loss:0.8270162653923034
+step 151/334, epoch 48/501 --> loss:0.8227626025676728
+step 201/334, epoch 48/501 --> loss:0.8353951513767243
+step 251/334, epoch 48/501 --> loss:0.8211918568611145
+step 301/334, epoch 48/501 --> loss:0.8238816034793853
+step 51/334, epoch 49/501 --> loss:0.8368587124347687
+step 101/334, epoch 49/501 --> loss:0.8052489078044891
+step 151/334, epoch 49/501 --> loss:0.8341684663295745
+step 201/334, epoch 49/501 --> loss:0.8257197785377502
+step 251/334, epoch 49/501 --> loss:0.8312792289257049
+step 301/334, epoch 49/501 --> loss:0.8339842426776886
+step 51/334, epoch 50/501 --> loss:0.8261658239364624
+step 101/334, epoch 50/501 --> loss:0.8313918924331665
+step 151/334, epoch 50/501 --> loss:0.8176822471618652
+step 201/334, epoch 50/501 --> loss:0.8341895890235901
+step 251/334, epoch 50/501 --> loss:0.8359055483341217
+step 301/334, epoch 50/501 --> loss:0.8238690626621247
+step 51/334, epoch 51/501 --> loss:0.8332255268096924
+step 101/334, epoch 51/501 --> loss:0.8188897502422333
+step 151/334, epoch 51/501 --> loss:0.818283976316452
+step 201/334, epoch 51/501 --> loss:0.8343690073490143
+step 251/334, epoch 51/501 --> loss:0.8249309277534485
+step 301/334, epoch 51/501 --> loss:0.8393052017688751
+
+##########train dataset##########
+acc--> [96.35414034854254]
+F1--> {'F1': [0.6913678060854165], 'precision': [0.5376064342546834], 'recall': [0.96833522442344]}
+##########eval dataset##########
+acc--> [96.36567416987272]
+F1--> {'F1': [0.6911681578367407], 'precision': [0.5461863068197091], 'recall': [0.9409504050659901]}
+step 51/334, epoch 52/501 --> loss:0.8223404920101166
+step 101/334, epoch 52/501 --> loss:0.820915013551712
+step 151/334, epoch 52/501 --> loss:0.8319396841526031
+step 201/334, epoch 52/501 --> loss:0.8328435373306274
+step 251/334, epoch 52/501 --> loss:0.8392584228515625
+step 301/334, epoch 52/501 --> loss:0.8178750503063202
+step 51/334, epoch 53/501 --> loss:0.8273536550998688
+step 101/334, epoch 53/501 --> loss:0.832047986984253
+step 151/334, epoch 53/501 --> loss:0.8249032592773438
+step 201/334, epoch 53/501 --> loss:0.8245059537887574
+step 251/334, epoch 53/501 --> loss:0.8270246243476868
+step 301/334, epoch 53/501 --> loss:0.8289005017280578
+step 51/334, epoch 54/501 --> loss:0.8110929656028748
+step 101/334, epoch 54/501 --> loss:0.8412766635417939
+step 151/334, epoch 54/501 --> loss:0.8314656174182892
+step 201/334, epoch 54/501 --> loss:0.8187654280662536
+step 251/334, epoch 54/501 --> loss:0.8303129255771637
+step 301/334, epoch 54/501 --> loss:0.8283328008651734
+step 51/334, epoch 55/501 --> loss:0.8425430691242218
+step 101/334, epoch 55/501 --> loss:0.8187436890602112
+step 151/334, epoch 55/501 --> loss:0.8351396477222442
+step 201/334, epoch 55/501 --> loss:0.8291117763519287
+step 251/334, epoch 55/501 --> loss:0.8155917763710022
+step 301/334, epoch 55/501 --> loss:0.8184345841407776
+step 51/334, epoch 56/501 --> loss:0.8283858525753022
+step 101/334, epoch 56/501 --> loss:0.8287833392620086
+step 151/334, epoch 56/501 --> loss:0.8246445262432098
+step 201/334, epoch 56/501 --> loss:0.8175615489482879
+step 251/334, epoch 56/501 --> loss:0.8279017329216003
+step 301/334, epoch 56/501 --> loss:0.8351776278018952
+step 51/334, epoch 57/501 --> loss:0.836444034576416
+step 101/334, epoch 57/501 --> loss:0.8368713819980621
+step 151/334, epoch 57/501 --> loss:0.823324521780014
+step 201/334, epoch 57/501 --> loss:0.8243098616600036
+step 251/334, epoch 57/501 --> loss:0.8249201858043671
+step 301/334, epoch 57/501 --> loss:0.8214272928237915
+step 51/334, epoch 58/501 --> loss:0.8229791331291199
+step 101/334, epoch 58/501 --> loss:0.8369809651374817
+step 151/334, epoch 58/501 --> loss:0.8296799337863923
+step 201/334, epoch 58/501 --> loss:0.8286952257156373
+step 251/334, epoch 58/501 --> loss:0.8198110222816467
+step 301/334, epoch 58/501 --> loss:0.8254545795917511
+step 51/334, epoch 59/501 --> loss:0.8433478307723999
+step 101/334, epoch 59/501 --> loss:0.8127563416957855
+step 151/334, epoch 59/501 --> loss:0.8282641863822937
+step 201/334, epoch 59/501 --> loss:0.836591020822525
+step 251/334, epoch 59/501 --> loss:0.8172868144512176
+step 301/334, epoch 59/501 --> loss:0.8291224277019501
+step 51/334, epoch 60/501 --> loss:0.8304481554031372
+step 101/334, epoch 60/501 --> loss:0.8322467219829559
+step 151/334, epoch 60/501 --> loss:0.8267617917060852
+step 201/334, epoch 60/501 --> loss:0.8237730157375336
+step 251/334, epoch 60/501 --> loss:0.8434042429924011
+step 301/334, epoch 60/501 --> loss:0.8279016780853271
+step 51/334, epoch 61/501 --> loss:0.8285163068771362
+step 101/334, epoch 61/501 --> loss:0.8193988692760468
+step 151/334, epoch 61/501 --> loss:0.8253887605667114
+step 201/334, epoch 61/501 --> loss:0.8215592336654663
+step 251/334, epoch 61/501 --> loss:0.8309312069416046
+step 301/334, epoch 61/501 --> loss:0.8320675277709961
+
+##########train dataset##########
+acc--> [98.22257620858025]
+F1--> {'F1': [0.816284201249113], 'precision': [0.7235046204594183], 'recall': [0.9363724553619011]}
+##########eval dataset##########
+acc--> [98.04640508802932]
+F1--> {'F1': [0.800064934554413], 'precision': [0.7173269216249885], 'recall': [0.9043904004453528]}
+save model!
+step 51/334, epoch 62/501 --> loss:0.8255568420886994
+step 101/334, epoch 62/501 --> loss:0.824590791463852
+step 151/334, epoch 62/501 --> loss:0.8250411164760589
+step 201/334, epoch 62/501 --> loss:0.823394638299942
+step 251/334, epoch 62/501 --> loss:0.8375051343441009
+step 301/334, epoch 62/501 --> loss:0.8260775828361511
+step 51/334, epoch 63/501 --> loss:0.8412278747558594
+step 101/334, epoch 63/501 --> loss:0.8370901608467102
+step 151/334, epoch 63/501 --> loss:0.8268062007427216
+step 201/334, epoch 63/501 --> loss:0.8195864641666413
+step 251/334, epoch 63/501 --> loss:0.8262824642658234
+step 301/334, epoch 63/501 --> loss:0.8299610483646392
+step 51/334, epoch 64/501 --> loss:0.8303079998493195
+step 101/334, epoch 64/501 --> loss:0.8244442212581634
+step 151/334, epoch 64/501 --> loss:0.8258299624919891
+step 201/334, epoch 64/501 --> loss:0.8445061159133911
+step 251/334, epoch 64/501 --> loss:0.814709974527359
+step 301/334, epoch 64/501 --> loss:0.8233913886547088
+step 51/334, epoch 65/501 --> loss:0.8499252474308014
+step 101/334, epoch 65/501 --> loss:0.8245176327228546
+step 151/334, epoch 65/501 --> loss:0.8279638874530793
+step 201/334, epoch 65/501 --> loss:0.8149911105632782
+step 251/334, epoch 65/501 --> loss:0.8206572890281677
+step 301/334, epoch 65/501 --> loss:0.8313500392436981
+step 51/334, epoch 66/501 --> loss:0.8290699827671051
+step 101/334, epoch 66/501 --> loss:0.8341016387939453
+step 151/334, epoch 66/501 --> loss:0.8263611316680908
+step 201/334, epoch 66/501 --> loss:0.8139970219135284
+step 251/334, epoch 66/501 --> loss:0.8323626089096069
+step 301/334, epoch 66/501 --> loss:0.8362460017204285
+step 51/334, epoch 67/501 --> loss:0.8297711205482483
+step 101/334, epoch 67/501 --> loss:0.8320868265628815
+step 151/334, epoch 67/501 --> loss:0.8406776809692382
+step 201/334, epoch 67/501 --> loss:0.8186718106269837
+step 251/334, epoch 67/501 --> loss:0.830955902338028
+step 301/334, epoch 67/501 --> loss:0.8225118064880371
+step 51/334, epoch 68/501 --> loss:0.8258203077316284
+step 101/334, epoch 68/501 --> loss:0.83435142993927
+step 151/334, epoch 68/501 --> loss:0.8278323423862457
+step 201/334, epoch 68/501 --> loss:0.8141731321811676
+step 251/334, epoch 68/501 --> loss:0.8250970661640167
+step 301/334, epoch 68/501 --> loss:0.8342426776885986
+step 51/334, epoch 69/501 --> loss:0.8255244338512421
+step 101/334, epoch 69/501 --> loss:0.8353629672527313
+step 151/334, epoch 69/501 --> loss:0.8143909549713135
+step 201/334, epoch 69/501 --> loss:0.8219557547569275
+step 251/334, epoch 69/501 --> loss:0.8322091698646545
+step 301/334, epoch 69/501 --> loss:0.8203191101551056
+step 51/334, epoch 70/501 --> loss:0.8322728168964386
+step 101/334, epoch 70/501 --> loss:0.8263381540775299
+step 151/334, epoch 70/501 --> loss:0.8119020128250122
+step 201/334, epoch 70/501 --> loss:0.8310623323917389
+step 251/334, epoch 70/501 --> loss:0.8313601350784302
+step 301/334, epoch 70/501 --> loss:0.8329055166244507
+step 51/334, epoch 71/501 --> loss:0.8258745229244232
+step 101/334, epoch 71/501 --> loss:0.8274115109443665
+step 151/334, epoch 71/501 --> loss:0.8113420295715332
+step 201/334, epoch 71/501 --> loss:0.8291294348239898
+step 251/334, epoch 71/501 --> loss:0.8295715188980103
+step 301/334, epoch 71/501 --> loss:0.8372068631649018
+
+##########train dataset##########
+acc--> [85.98370832765531]
+F1--> {'F1': [0.36160012304427636], 'precision': [0.22378615038358582], 'recall': [0.9412895852932303]}
+##########eval dataset##########
+acc--> [86.39629961415379]
+F1--> {'F1': [0.3699827104906901], 'precision': [0.23128933832946835], 'recall': [0.9241952935006603]}
+step 51/334, epoch 72/501 --> loss:0.8201245617866516
+step 101/334, epoch 72/501 --> loss:0.8093553864955902
+step 151/334, epoch 72/501 --> loss:0.834597440958023
+step 201/334, epoch 72/501 --> loss:0.8359106349945068
+step 251/334, epoch 72/501 --> loss:0.826426339149475
+step 301/334, epoch 72/501 --> loss:0.8301192939281463
+step 51/334, epoch 73/501 --> loss:0.8279293978214264
+step 101/334, epoch 73/501 --> loss:0.8150552952289581
+step 151/334, epoch 73/501 --> loss:0.832813880443573
+step 201/334, epoch 73/501 --> loss:0.8200268423557282
+step 251/334, epoch 73/501 --> loss:0.8240084648132324
+step 301/334, epoch 73/501 --> loss:0.8308050584793091
+step 51/334, epoch 74/501 --> loss:0.8223134040832519
+step 101/334, epoch 74/501 --> loss:0.8277734017372131
+step 151/334, epoch 74/501 --> loss:0.8196264719963073
+step 201/334, epoch 74/501 --> loss:0.8299165916442871
+step 251/334, epoch 74/501 --> loss:0.8353298783302308
+step 301/334, epoch 74/501 --> loss:0.828009957075119
+step 51/334, epoch 75/501 --> loss:0.8199115204811096
+step 101/334, epoch 75/501 --> loss:0.8156587660312653
+step 151/334, epoch 75/501 --> loss:0.8233948981761933
+step 201/334, epoch 75/501 --> loss:0.8340889203548432
+step 251/334, epoch 75/501 --> loss:0.8316350865364075
+step 301/334, epoch 75/501 --> loss:0.8390135610103607
+step 51/334, epoch 76/501 --> loss:0.8064249801635742
+step 101/334, epoch 76/501 --> loss:0.8244760823249817
+step 151/334, epoch 76/501 --> loss:0.8332521080970764
+step 201/334, epoch 76/501 --> loss:0.8248937797546386
+step 251/334, epoch 76/501 --> loss:0.832716373205185
+step 301/334, epoch 76/501 --> loss:0.8269081246852875
+step 51/334, epoch 77/501 --> loss:0.810215677022934
+step 101/334, epoch 77/501 --> loss:0.82356773853302
+step 151/334, epoch 77/501 --> loss:0.838894020318985
+step 201/334, epoch 77/501 --> loss:0.8075850582122803
+step 251/334, epoch 77/501 --> loss:0.8292542922496796
+step 301/334, epoch 77/501 --> loss:0.8436050641536713
+step 51/334, epoch 78/501 --> loss:0.8231691145896911
+step 101/334, epoch 78/501 --> loss:0.8141245567798614
+step 151/334, epoch 78/501 --> loss:0.8341513442993164
+step 201/334, epoch 78/501 --> loss:0.8377941370010376
+step 251/334, epoch 78/501 --> loss:0.821604917049408
+step 301/334, epoch 78/501 --> loss:0.821172742843628
+step 51/334, epoch 79/501 --> loss:0.8220149266719818
+step 101/334, epoch 79/501 --> loss:0.8236101961135864
+step 151/334, epoch 79/501 --> loss:0.8196938037872314
+step 201/334, epoch 79/501 --> loss:0.8350499403476715
+step 251/334, epoch 79/501 --> loss:0.823053115606308
+step 301/334, epoch 79/501 --> loss:0.8273049235343933
+step 51/334, epoch 80/501 --> loss:0.8196317422389984
+step 101/334, epoch 80/501 --> loss:0.8291574382781982
+step 151/334, epoch 80/501 --> loss:0.8317592144012451
+step 201/334, epoch 80/501 --> loss:0.8242461919784546
+step 251/334, epoch 80/501 --> loss:0.8253773522377014
+step 301/334, epoch 80/501 --> loss:0.8249518287181854
+step 51/334, epoch 81/501 --> loss:0.8153900122642517
+step 101/334, epoch 81/501 --> loss:0.8245088732242585
+step 151/334, epoch 81/501 --> loss:0.84181018948555
+step 201/334, epoch 81/501 --> loss:0.8279785573482513
+step 251/334, epoch 81/501 --> loss:0.8318717992305755
+step 301/334, epoch 81/501 --> loss:0.8219577836990356
+
+##########train dataset##########
+acc--> [98.13942696478455]
+F1--> {'F1': [0.8154256497964114], 'precision': [0.7009572928554355], 'recall': [0.9745907812761225]}
+##########eval dataset##########
+acc--> [97.82552911018526]
+F1--> {'F1': [0.7877706640652054], 'precision': [0.6812693464955447], 'recall': [0.9337538906011601]}
+step 51/334, epoch 82/501 --> loss:0.82010427236557
+step 101/334, epoch 82/501 --> loss:0.8271818518638611
+step 151/334, epoch 82/501 --> loss:0.8319500231742859
+step 201/334, epoch 82/501 --> loss:0.8331104671955109
+step 251/334, epoch 82/501 --> loss:0.8283279573917389
+step 301/334, epoch 82/501 --> loss:0.8119259214401245
+step 51/334, epoch 83/501 --> loss:0.8082110965251923
+step 101/334, epoch 83/501 --> loss:0.8219488406181336
+step 151/334, epoch 83/501 --> loss:0.8273976278305054
+step 201/334, epoch 83/501 --> loss:0.8177376806735992
+step 251/334, epoch 83/501 --> loss:0.8278451025485992
+step 301/334, epoch 83/501 --> loss:0.8375241410732269
+step 51/334, epoch 84/501 --> loss:0.8234233546257019
+step 101/334, epoch 84/501 --> loss:0.8178742933273315
+step 151/334, epoch 84/501 --> loss:0.8328442049026489
+step 201/334, epoch 84/501 --> loss:0.8236409604549408
+step 251/334, epoch 84/501 --> loss:0.8289823842048645
+step 301/334, epoch 84/501 --> loss:0.826412113904953
+step 51/334, epoch 85/501 --> loss:0.8297635412216187
+step 101/334, epoch 85/501 --> loss:0.827240777015686
+step 151/334, epoch 85/501 --> loss:0.8281786787509918
+step 201/334, epoch 85/501 --> loss:0.838031780719757
+step 251/334, epoch 85/501 --> loss:0.8245124578475952
+step 301/334, epoch 85/501 --> loss:0.8077001202106476
+step 51/334, epoch 86/501 --> loss:0.8210352683067321
+step 101/334, epoch 86/501 --> loss:0.8446930432319641
+step 151/334, epoch 86/501 --> loss:0.8062829530239105
+step 201/334, epoch 86/501 --> loss:0.8315099084377289
+step 251/334, epoch 86/501 --> loss:0.8239058196544647
+step 301/334, epoch 86/501 --> loss:0.8237154066562653
+step 51/334, epoch 87/501 --> loss:0.8349805998802186
+step 101/334, epoch 87/501 --> loss:0.8360972690582276
+step 151/334, epoch 87/501 --> loss:0.8203031742572784
+step 201/334, epoch 87/501 --> loss:0.8178036677837371
+step 251/334, epoch 87/501 --> loss:0.8198264253139496
+step 301/334, epoch 87/501 --> loss:0.8276972889900207
+step 51/334, epoch 88/501 --> loss:0.8418523359298706
+step 101/334, epoch 88/501 --> loss:0.8434956800937653
+step 151/334, epoch 88/501 --> loss:0.8264620304107666
+step 201/334, epoch 88/501 --> loss:0.8162529754638672
+step 251/334, epoch 88/501 --> loss:0.821674976348877
+step 301/334, epoch 88/501 --> loss:0.8078653681278228
+step 51/334, epoch 89/501 --> loss:0.8260350346565246
+step 101/334, epoch 89/501 --> loss:0.8280536758899689
+step 151/334, epoch 89/501 --> loss:0.806527019739151
+step 201/334, epoch 89/501 --> loss:0.8274197649955749
+step 251/334, epoch 89/501 --> loss:0.839049881696701
+step 301/334, epoch 89/501 --> loss:0.8310120379924775
+step 51/334, epoch 90/501 --> loss:0.8238422167301178
+step 101/334, epoch 90/501 --> loss:0.8249194395542144
+step 151/334, epoch 90/501 --> loss:0.8135716140270233
+step 201/334, epoch 90/501 --> loss:0.8295542538166046
+step 251/334, epoch 90/501 --> loss:0.8213814926147461
+step 301/334, epoch 90/501 --> loss:0.8455374658107757
+step 51/334, epoch 91/501 --> loss:0.8196026134490967
+step 101/334, epoch 91/501 --> loss:0.8364375305175781
+step 151/334, epoch 91/501 --> loss:0.8190999591350555
+step 201/334, epoch 91/501 --> loss:0.8110470187664032
+step 251/334, epoch 91/501 --> loss:0.8141812920570374
+step 301/334, epoch 91/501 --> loss:0.8492361080646514
+
+##########train dataset##########
+acc--> [98.27980238889535]
+F1--> {'F1': [0.8266021196710951], 'precision': [0.7188936428753792], 'recall': [0.9722868093343171]}
+##########eval dataset##########
+acc--> [98.0382210104836]
+F1--> {'F1': [0.8035100789263403], 'precision': [0.7084296104092901], 'recall': [0.9280821124463638]}
+save model!
+step 51/334, epoch 92/501 --> loss:0.8255508685112
+step 101/334, epoch 92/501 --> loss:0.8233202433586121
+step 151/334, epoch 92/501 --> loss:0.8345804989337922
+step 201/334, epoch 92/501 --> loss:0.8062625670433045
+step 251/334, epoch 92/501 --> loss:0.8388226270675659
+step 301/334, epoch 92/501 --> loss:0.8266565835475922
+step 51/334, epoch 93/501 --> loss:0.8195227837562561
+step 101/334, epoch 93/501 --> loss:0.8226192545890808
+step 151/334, epoch 93/501 --> loss:0.827715779542923
+step 201/334, epoch 93/501 --> loss:0.8223529994487763
+step 251/334, epoch 93/501 --> loss:0.821233161687851
+step 301/334, epoch 93/501 --> loss:0.8238766479492188
+step 51/334, epoch 94/501 --> loss:0.8161072719097138
+step 101/334, epoch 94/501 --> loss:0.8322262763977051
+step 151/334, epoch 94/501 --> loss:0.8211240315437317
+step 201/334, epoch 94/501 --> loss:0.8327442395687104
+step 251/334, epoch 94/501 --> loss:0.8154043567180633
+step 301/334, epoch 94/501 --> loss:0.8278059601783753
+step 51/334, epoch 95/501 --> loss:0.8088970339298248
+step 101/334, epoch 95/501 --> loss:0.8473554408550262
+step 151/334, epoch 95/501 --> loss:0.8320156466960907
+step 201/334, epoch 95/501 --> loss:0.826262686252594
+step 251/334, epoch 95/501 --> loss:0.8173653149604797
+step 301/334, epoch 95/501 --> loss:0.8287196218967438
+step 51/334, epoch 96/501 --> loss:0.8257024908065795
+step 101/334, epoch 96/501 --> loss:0.8253107523918152
+step 151/334, epoch 96/501 --> loss:0.8206675744056702
+step 201/334, epoch 96/501 --> loss:0.8388802599906922
+step 251/334, epoch 96/501 --> loss:0.8217693293094634
+step 301/334, epoch 96/501 --> loss:0.8215004622936248
+step 51/334, epoch 97/501 --> loss:0.8251996469497681
+step 101/334, epoch 97/501 --> loss:0.824230227470398
+step 151/334, epoch 97/501 --> loss:0.8184096908569336
+step 201/334, epoch 97/501 --> loss:0.8289444530010224
+step 251/334, epoch 97/501 --> loss:0.8157133185863494
+step 301/334, epoch 97/501 --> loss:0.8285356032848358
+step 51/334, epoch 98/501 --> loss:0.8299845123291015
+step 101/334, epoch 98/501 --> loss:0.825613294839859
+step 151/334, epoch 98/501 --> loss:0.8288310861587525
+step 201/334, epoch 98/501 --> loss:0.8116256403923034
+step 251/334, epoch 98/501 --> loss:0.8319894480705261
+step 301/334, epoch 98/501 --> loss:0.8178045213222503
+step 51/334, epoch 99/501 --> loss:0.8357077074050904
+step 101/334, epoch 99/501 --> loss:0.8227745699882507
+step 151/334, epoch 99/501 --> loss:0.8181890785694123
+step 201/334, epoch 99/501 --> loss:0.8327278268337249
+step 251/334, epoch 99/501 --> loss:0.8275756525993347
+step 301/334, epoch 99/501 --> loss:0.8232322907447815
+step 51/334, epoch 100/501 --> loss:0.8113956940174103
+step 101/334, epoch 100/501 --> loss:0.8227556777000428
+step 151/334, epoch 100/501 --> loss:0.8296745645999909
+step 201/334, epoch 100/501 --> loss:0.8271488440036774
+step 251/334, epoch 100/501 --> loss:0.8285527455806733
+step 301/334, epoch 100/501 --> loss:0.8321682369709015
+step 51/334, epoch 101/501 --> loss:0.8227746045589447
+step 101/334, epoch 101/501 --> loss:0.8222886526584625
+step 151/334, epoch 101/501 --> loss:0.8278667759895325
+step 201/334, epoch 101/501 --> loss:0.8160284090042115
+step 251/334, epoch 101/501 --> loss:0.8180115187168121
+step 301/334, epoch 101/501 --> loss:0.8256525826454163
+
+##########train dataset##########
+acc--> [98.30363401992682]
+F1--> {'F1': [0.8296850118643163], 'precision': [0.719457138660028], 'recall': [0.9798135699022782]}
+##########eval dataset##########
+acc--> [98.00912651802268]
+F1--> {'F1': [0.8026073472986771], 'precision': [0.7022269845807461], 'recall': [0.9364853816490248]}
+step 51/334, epoch 102/501 --> loss:0.8247937381267547
+step 101/334, epoch 102/501 --> loss:0.8302277624607086
+step 151/334, epoch 102/501 --> loss:0.8174767005443573
+step 201/334, epoch 102/501 --> loss:0.8228720712661743
+step 251/334, epoch 102/501 --> loss:0.8251023983955383
+step 301/334, epoch 102/501 --> loss:0.8297154653072357
+step 51/334, epoch 103/501 --> loss:0.831962732076645
+step 101/334, epoch 103/501 --> loss:0.8087270581722259
+step 151/334, epoch 103/501 --> loss:0.831721773147583
+step 201/334, epoch 103/501 --> loss:0.8288270163536072
+step 251/334, epoch 103/501 --> loss:0.8236533010005951
+step 301/334, epoch 103/501 --> loss:0.8249532043933868
+step 51/334, epoch 104/501 --> loss:0.828717474937439
+step 101/334, epoch 104/501 --> loss:0.8089838123321533
+step 151/334, epoch 104/501 --> loss:0.835591424703598
+step 201/334, epoch 104/501 --> loss:0.8293910813331604
+step 251/334, epoch 104/501 --> loss:0.8123861026763916
+step 301/334, epoch 104/501 --> loss:0.8332698810100555
+step 51/334, epoch 105/501 --> loss:0.8157897579669953
+step 101/334, epoch 105/501 --> loss:0.8205242431163788
+step 151/334, epoch 105/501 --> loss:0.8494663381576538
+step 201/334, epoch 105/501 --> loss:0.8155928349494934
+step 251/334, epoch 105/501 --> loss:0.8385773873329163
+step 301/334, epoch 105/501 --> loss:0.8224721336364746
+step 51/334, epoch 106/501 --> loss:0.825424451828003
+step 101/334, epoch 106/501 --> loss:0.8206949508190156
+step 151/334, epoch 106/501 --> loss:0.8283775150775909
+step 201/334, epoch 106/501 --> loss:0.8169757091999054
+step 251/334, epoch 106/501 --> loss:0.8295368683338166
+step 301/334, epoch 106/501 --> loss:0.8275691318511963
+step 51/334, epoch 107/501 --> loss:0.8321871948242188
+step 101/334, epoch 107/501 --> loss:0.8329549443721771
+step 151/334, epoch 107/501 --> loss:0.8236649560928345
+step 201/334, epoch 107/501 --> loss:0.8266235780715943
+step 251/334, epoch 107/501 --> loss:0.8240859258174896
+step 301/334, epoch 107/501 --> loss:0.8123173332214355
+step 51/334, epoch 108/501 --> loss:0.8144200873374939
+step 101/334, epoch 108/501 --> loss:0.8383810698986054
+step 151/334, epoch 108/501 --> loss:0.8180797529220581
+step 201/334, epoch 108/501 --> loss:0.8268215191364289
+step 251/334, epoch 108/501 --> loss:0.830404235124588
+step 301/334, epoch 108/501 --> loss:0.8165253329277039
+step 51/334, epoch 109/501 --> loss:0.8238098692893981
+step 101/334, epoch 109/501 --> loss:0.8070796811580658
+step 151/334, epoch 109/501 --> loss:0.844148051738739
+step 201/334, epoch 109/501 --> loss:0.8356320142745972
+step 251/334, epoch 109/501 --> loss:0.8211030149459839
+step 301/334, epoch 109/501 --> loss:0.8147085595130921
+step 51/334, epoch 110/501 --> loss:0.8336681342124939
+step 101/334, epoch 110/501 --> loss:0.8349426066875458
+step 151/334, epoch 110/501 --> loss:0.8263571095466614
+step 201/334, epoch 110/501 --> loss:0.8131568813323975
+step 251/334, epoch 110/501 --> loss:0.8112169408798218
+step 301/334, epoch 110/501 --> loss:0.830930540561676
+step 51/334, epoch 111/501 --> loss:0.8431053566932678
+step 101/334, epoch 111/501 --> loss:0.8109353172779084
+step 151/334, epoch 111/501 --> loss:0.8106926369667053
+step 201/334, epoch 111/501 --> loss:0.8316073048114777
+step 251/334, epoch 111/501 --> loss:0.8346382439136505
+step 301/334, epoch 111/501 --> loss:0.8148518967628479
+
+##########train dataset##########
+acc--> [99.07060643908486]
+F1--> {'F1': [0.8974179164405303], 'precision': [0.8394177673931623], 'recall': [0.9640395869381824]}
+##########eval dataset##########
+acc--> [98.68683969358517]
+F1--> {'F1': [0.8557669328733942], 'precision': [0.8145741984698657], 'recall': [0.9013588422800571]}
+save model!
+step 51/334, epoch 112/501 --> loss:0.8234675848484039
+step 101/334, epoch 112/501 --> loss:0.8288764786720276
+step 151/334, epoch 112/501 --> loss:0.8077520120143891
+step 201/334, epoch 112/501 --> loss:0.8160575735569
+step 251/334, epoch 112/501 --> loss:0.8259280359745026
+step 301/334, epoch 112/501 --> loss:0.8315790641307831
+step 51/334, epoch 113/501 --> loss:0.813613121509552
+step 101/334, epoch 113/501 --> loss:0.8353064155578613
+step 151/334, epoch 113/501 --> loss:0.8253290843963623
+step 201/334, epoch 113/501 --> loss:0.8073086631298065
+step 251/334, epoch 113/501 --> loss:0.8273430991172791
+step 301/334, epoch 113/501 --> loss:0.8303403747081757
+step 51/334, epoch 114/501 --> loss:0.821642677783966
+step 101/334, epoch 114/501 --> loss:0.8196758103370666
+step 151/334, epoch 114/501 --> loss:0.8229420447349548
+step 201/334, epoch 114/501 --> loss:0.8203196501731873
+step 251/334, epoch 114/501 --> loss:0.8412038671970368
+step 301/334, epoch 114/501 --> loss:0.8083634865283966
+step 51/334, epoch 115/501 --> loss:0.8160823976993561
+step 101/334, epoch 115/501 --> loss:0.8339387691020965
+step 151/334, epoch 115/501 --> loss:0.832679592370987
+step 201/334, epoch 115/501 --> loss:0.8284109771251679
+step 251/334, epoch 115/501 --> loss:0.8172564613819122
+step 301/334, epoch 115/501 --> loss:0.8248292756080627
+step 51/334, epoch 116/501 --> loss:0.8183877074718475
+step 101/334, epoch 116/501 --> loss:0.8139533829689026
+step 151/334, epoch 116/501 --> loss:0.824068751335144
+step 201/334, epoch 116/501 --> loss:0.8366107022762299
+step 251/334, epoch 116/501 --> loss:0.8234016835689545
+step 301/334, epoch 116/501 --> loss:0.8200823271274567
+step 51/334, epoch 117/501 --> loss:0.8157576739788055
+step 101/334, epoch 117/501 --> loss:0.8268708145618439
+step 151/334, epoch 117/501 --> loss:0.8194274389743805
+step 201/334, epoch 117/501 --> loss:0.8236602890491486
+step 251/334, epoch 117/501 --> loss:0.8291511285305023
+step 301/334, epoch 117/501 --> loss:0.8312563824653626
+step 51/334, epoch 118/501 --> loss:0.8167656803131104
+step 101/334, epoch 118/501 --> loss:0.8168017637729644
+step 151/334, epoch 118/501 --> loss:0.8136762547492981
+step 201/334, epoch 118/501 --> loss:0.8257415592670441
+step 251/334, epoch 118/501 --> loss:0.8305466723442078
+step 301/334, epoch 118/501 --> loss:0.8306151401996612
+step 51/334, epoch 119/501 --> loss:0.8180706191062928
+step 101/334, epoch 119/501 --> loss:0.8341017436981201
+step 151/334, epoch 119/501 --> loss:0.8175915479660034
+step 201/334, epoch 119/501 --> loss:0.8213757824897766
+step 251/334, epoch 119/501 --> loss:0.8246425521373749
+step 301/334, epoch 119/501 --> loss:0.8290222680568695
+step 51/334, epoch 120/501 --> loss:0.8229248356819153
+step 101/334, epoch 120/501 --> loss:0.8163911128044128
+step 151/334, epoch 120/501 --> loss:0.821238499879837
+step 201/334, epoch 120/501 --> loss:0.8334955096244812
+step 251/334, epoch 120/501 --> loss:0.8315527892112732
+step 301/334, epoch 120/501 --> loss:0.8180808925628662
+step 51/334, epoch 121/501 --> loss:0.8274043345451355
+step 101/334, epoch 121/501 --> loss:0.8288451385498047
+step 151/334, epoch 121/501 --> loss:0.8194878590106964
+step 201/334, epoch 121/501 --> loss:0.8168608486652374
+step 251/334, epoch 121/501 --> loss:0.840032877922058
+step 301/334, epoch 121/501 --> loss:0.8188158869743347
+
+##########train dataset##########
+acc--> [98.53210134545277]
+F1--> {'F1': [0.8491662358402405], 'precision': [0.7492524977598538], 'recall': [0.9798404998849337]}
+##########eval dataset##########
+acc--> [98.14129726779713]
+F1--> {'F1': [0.810988512203019], 'precision': [0.7234635731546518], 'recall': [0.9226185126108146]}
+step 51/334, epoch 122/501 --> loss:0.8295077204704284
+step 101/334, epoch 122/501 --> loss:0.8244211745262146
+step 151/334, epoch 122/501 --> loss:0.8150045490264892
+step 201/334, epoch 122/501 --> loss:0.8186353397369385
+step 251/334, epoch 122/501 --> loss:0.818239129781723
+step 301/334, epoch 122/501 --> loss:0.8359893035888671
+step 51/334, epoch 123/501 --> loss:0.809947589635849
+step 101/334, epoch 123/501 --> loss:0.8234594333171844
+step 151/334, epoch 123/501 --> loss:0.8274477124214172
+step 201/334, epoch 123/501 --> loss:0.8366816711425781
+step 251/334, epoch 123/501 --> loss:0.8213216853141785
+step 301/334, epoch 123/501 --> loss:0.8264602112770081
+step 51/334, epoch 124/501 --> loss:0.8288529586791992
+step 101/334, epoch 124/501 --> loss:0.8129525923728943
+step 151/334, epoch 124/501 --> loss:0.823624793291092
+step 201/334, epoch 124/501 --> loss:0.8257498967647553
+step 251/334, epoch 124/501 --> loss:0.8328357756137847
+step 301/334, epoch 124/501 --> loss:0.8225773978233337
+step 51/334, epoch 125/501 --> loss:0.8148010146617889
+step 101/334, epoch 125/501 --> loss:0.8269847476482391
+step 151/334, epoch 125/501 --> loss:0.8182694435119628
+step 201/334, epoch 125/501 --> loss:0.8309806191921234
+step 251/334, epoch 125/501 --> loss:0.826946793794632
+step 301/334, epoch 125/501 --> loss:0.8177307450771332
+step 51/334, epoch 126/501 --> loss:0.8282507479190826
+step 101/334, epoch 126/501 --> loss:0.8206377470493317
+step 151/334, epoch 126/501 --> loss:0.8224056220054626
+step 201/334, epoch 126/501 --> loss:0.8255370545387268
+step 251/334, epoch 126/501 --> loss:0.8239684617519378
+step 301/334, epoch 126/501 --> loss:0.8252073216438294
+step 51/334, epoch 127/501 --> loss:0.832442034482956
+step 101/334, epoch 127/501 --> loss:0.8253357017040253
+step 151/334, epoch 127/501 --> loss:0.8250978076457978
+step 201/334, epoch 127/501 --> loss:0.8221897280216217
+step 251/334, epoch 127/501 --> loss:0.8293404591083526
+step 301/334, epoch 127/501 --> loss:0.8152954137325287
+step 51/334, epoch 128/501 --> loss:0.8361284148693084
+step 101/334, epoch 128/501 --> loss:0.7960528659820557
+step 151/334, epoch 128/501 --> loss:0.823379454612732
+step 201/334, epoch 128/501 --> loss:0.817795740365982
+step 251/334, epoch 128/501 --> loss:0.8206322014331817
+step 301/334, epoch 128/501 --> loss:0.847485966682434
+step 51/334, epoch 129/501 --> loss:0.8299593579769134
+step 101/334, epoch 129/501 --> loss:0.8360595870018005
+step 151/334, epoch 129/501 --> loss:0.8080549991130829
+step 201/334, epoch 129/501 --> loss:0.8168666565418243
+step 251/334, epoch 129/501 --> loss:0.8320491421222687
+step 301/334, epoch 129/501 --> loss:0.8247093641757965
+step 51/334, epoch 130/501 --> loss:0.8254240119457245
+step 101/334, epoch 130/501 --> loss:0.8154667568206787
+step 151/334, epoch 130/501 --> loss:0.8274879086017609
+step 201/334, epoch 130/501 --> loss:0.8175155913829804
+step 251/334, epoch 130/501 --> loss:0.8265975606441498
+step 301/334, epoch 130/501 --> loss:0.8148635613918305
+step 51/334, epoch 131/501 --> loss:0.8249152421951294
+step 101/334, epoch 131/501 --> loss:0.8020850539207458
+step 151/334, epoch 131/501 --> loss:0.8222864770889282
+step 201/334, epoch 131/501 --> loss:0.8223126721382141
+step 251/334, epoch 131/501 --> loss:0.8200657856464386
+step 301/334, epoch 131/501 --> loss:0.8435545134544372
+
+##########train dataset##########
+acc--> [98.46153416613657]
+F1--> {'F1': [0.8426649122310439], 'precision': [0.7408300672468299], 'recall': [0.9769712018084894]}
+##########eval dataset##########
+acc--> [98.14135133437254]
+F1--> {'F1': [0.8109219760112342], 'precision': [0.7236204787571414], 'recall': [0.9221913455254755]}
+step 51/334, epoch 132/501 --> loss:0.8374298787117005
+step 101/334, epoch 132/501 --> loss:0.8303744196891785
+step 151/334, epoch 132/501 --> loss:0.8158039140701294
+step 201/334, epoch 132/501 --> loss:0.8137228751182556
+step 251/334, epoch 132/501 --> loss:0.8310495173931122
+step 301/334, epoch 132/501 --> loss:0.8186149764060974
+step 51/334, epoch 133/501 --> loss:0.8314339733123779
+step 101/334, epoch 133/501 --> loss:0.8105239629745483
+step 151/334, epoch 133/501 --> loss:0.8264632380008697
+step 201/334, epoch 133/501 --> loss:0.8188862645626068
+step 251/334, epoch 133/501 --> loss:0.8242121243476868
+step 301/334, epoch 133/501 --> loss:0.8206605923175812
+step 51/334, epoch 134/501 --> loss:0.832683471441269
+step 101/334, epoch 134/501 --> loss:0.8184024465084075
+step 151/334, epoch 134/501 --> loss:0.8194310665130615
+step 201/334, epoch 134/501 --> loss:0.8307413077354431
+step 251/334, epoch 134/501 --> loss:0.8306806206703186
+step 301/334, epoch 134/501 --> loss:0.8217129933834076
+step 51/334, epoch 135/501 --> loss:0.8195917344093323
+step 101/334, epoch 135/501 --> loss:0.8352217829227447
+step 151/334, epoch 135/501 --> loss:0.8171375119686126
+step 201/334, epoch 135/501 --> loss:0.8202570307254792
+step 251/334, epoch 135/501 --> loss:0.8024587094783783
+step 301/334, epoch 135/501 --> loss:0.8365743672847747
+step 51/334, epoch 136/501 --> loss:0.8178677809238434
+step 101/334, epoch 136/501 --> loss:0.8207312595844268
+step 151/334, epoch 136/501 --> loss:0.828101087808609
+step 201/334, epoch 136/501 --> loss:0.8315582072734833
+step 251/334, epoch 136/501 --> loss:0.8251091980934143
+step 301/334, epoch 136/501 --> loss:0.8226490938663482
+step 51/334, epoch 137/501 --> loss:0.8288694047927856
+step 101/334, epoch 137/501 --> loss:0.826983494758606
+step 151/334, epoch 137/501 --> loss:0.8232824039459229
+step 201/334, epoch 137/501 --> loss:0.8325725424289704
+step 251/334, epoch 137/501 --> loss:0.8133288764953613
+step 301/334, epoch 137/501 --> loss:0.8113943481445313
+step 51/334, epoch 138/501 --> loss:0.8167134928703308
+step 101/334, epoch 138/501 --> loss:0.817941130399704
+step 151/334, epoch 138/501 --> loss:0.8289993786811829
+step 201/334, epoch 138/501 --> loss:0.8112282907962799
+step 251/334, epoch 138/501 --> loss:0.8258610379695892
+step 301/334, epoch 138/501 --> loss:0.8350708651542663
+step 51/334, epoch 139/501 --> loss:0.8215958988666534
+step 101/334, epoch 139/501 --> loss:0.8186325550079345
+step 151/334, epoch 139/501 --> loss:0.8231910061836243
+step 201/334, epoch 139/501 --> loss:0.8269911301136017
+step 251/334, epoch 139/501 --> loss:0.8300998651981354
+step 301/334, epoch 139/501 --> loss:0.8280012321472168
+step 51/334, epoch 140/501 --> loss:0.8303271305561065
+step 101/334, epoch 140/501 --> loss:0.8189641952514648
+step 151/334, epoch 140/501 --> loss:0.8445848166942597
+step 201/334, epoch 140/501 --> loss:0.8434092772006988
+step 251/334, epoch 140/501 --> loss:0.8107515025138855
+step 301/334, epoch 140/501 --> loss:0.814437061548233
+step 51/334, epoch 141/501 --> loss:0.8303273260593415
+step 101/334, epoch 141/501 --> loss:0.8321103489398957
+step 151/334, epoch 141/501 --> loss:0.8314619541168213
+step 201/334, epoch 141/501 --> loss:0.7996606242656707
+step 251/334, epoch 141/501 --> loss:0.834167662858963
+step 301/334, epoch 141/501 --> loss:0.8136871337890625
+
+##########train dataset##########
+acc--> [98.90721495963844]
+F1--> {'F1': [0.8833479380452032], 'precision': [0.8032724303935304], 'recall': [0.9811682769139018]}
+##########eval dataset##########
+acc--> [98.44811106603571]
+F1--> {'F1': [0.8360315501527074], 'precision': [0.7693370698174611], 'recall': [0.9153991417726548]}
+step 51/334, epoch 142/501 --> loss:0.8163579106330872
+step 101/334, epoch 142/501 --> loss:0.8138379585742951
+step 151/334, epoch 142/501 --> loss:0.828823847770691
+step 201/334, epoch 142/501 --> loss:0.828740998506546
+step 251/334, epoch 142/501 --> loss:0.823070433139801
+step 301/334, epoch 142/501 --> loss:0.8197320580482483
+step 51/334, epoch 143/501 --> loss:0.8284832096099853
+step 101/334, epoch 143/501 --> loss:0.8027732074260712
+step 151/334, epoch 143/501 --> loss:0.8301570880413055
+step 201/334, epoch 143/501 --> loss:0.8187713646888732
+step 251/334, epoch 143/501 --> loss:0.8143992674350738
+step 301/334, epoch 143/501 --> loss:0.8342739951610565
+step 51/334, epoch 144/501 --> loss:0.8346926760673523
+step 101/334, epoch 144/501 --> loss:0.8211364507675171
+step 151/334, epoch 144/501 --> loss:0.8301275658607483
+step 201/334, epoch 144/501 --> loss:0.8073496556282044
+step 251/334, epoch 144/501 --> loss:0.8254123878479004
+step 301/334, epoch 144/501 --> loss:0.8144914984703064
+step 51/334, epoch 145/501 --> loss:0.830632038116455
+step 101/334, epoch 145/501 --> loss:0.8108110058307648
+step 151/334, epoch 145/501 --> loss:0.8270220470428467
+step 201/334, epoch 145/501 --> loss:0.8244010829925537
+step 251/334, epoch 145/501 --> loss:0.832307904958725
+step 301/334, epoch 145/501 --> loss:0.8238826417922973
+step 51/334, epoch 146/501 --> loss:0.8230710852146149
+step 101/334, epoch 146/501 --> loss:0.8189963459968567
+step 151/334, epoch 146/501 --> loss:0.8076334893703461
+step 201/334, epoch 146/501 --> loss:0.8404709410667419
+step 251/334, epoch 146/501 --> loss:0.8188624727725983
+step 301/334, epoch 146/501 --> loss:0.8267035639286041
+step 51/334, epoch 147/501 --> loss:0.8259006142616272
+step 101/334, epoch 147/501 --> loss:0.8143320906162262
+step 151/334, epoch 147/501 --> loss:0.8385682725906372
+step 201/334, epoch 147/501 --> loss:0.8269053244590759
+step 251/334, epoch 147/501 --> loss:0.8255521392822266
+step 301/334, epoch 147/501 --> loss:0.8085124051570892
+step 51/334, epoch 148/501 --> loss:0.8301435565948486
+step 101/334, epoch 148/501 --> loss:0.823135005235672
+step 151/334, epoch 148/501 --> loss:0.8282510924339295
+step 201/334, epoch 148/501 --> loss:0.8237938094139099
+step 251/334, epoch 148/501 --> loss:0.821203693151474
+step 301/334, epoch 148/501 --> loss:0.8169973313808441
+step 51/334, epoch 149/501 --> loss:0.8289272081851959
+step 101/334, epoch 149/501 --> loss:0.8295161271095276
+step 151/334, epoch 149/501 --> loss:0.8171189093589782
+step 201/334, epoch 149/501 --> loss:0.8249580657482147
+step 251/334, epoch 149/501 --> loss:0.8148518991470337
+step 301/334, epoch 149/501 --> loss:0.8279796779155731
+step 51/334, epoch 150/501 --> loss:0.8192196679115296
+step 101/334, epoch 150/501 --> loss:0.8294976305961609
+step 151/334, epoch 150/501 --> loss:0.8088997948169708
+step 201/334, epoch 150/501 --> loss:0.8209921789169311
+step 251/334, epoch 150/501 --> loss:0.8158195745944977
+step 301/334, epoch 150/501 --> loss:0.8290440309047699
+step 51/334, epoch 151/501 --> loss:0.8268540322780609
+step 101/334, epoch 151/501 --> loss:0.8411999475955964
+step 151/334, epoch 151/501 --> loss:0.817588541507721
+step 201/334, epoch 151/501 --> loss:0.8309289169311523
+step 251/334, epoch 151/501 --> loss:0.805233668088913
+step 301/334, epoch 151/501 --> loss:0.8194739270210266
+
+##########train dataset##########
+acc--> [98.8910118649386]
+F1--> {'F1': [0.8825521116482259], 'precision': [0.7973994022475822], 'recall': [0.9880780898943252]}
+##########eval dataset##########
+acc--> [98.39717768203732]
+F1--> {'F1': [0.8335316290753153], 'precision': [0.7562226014520531], 'recall': [0.9284595514762153]}
+step 51/334, epoch 152/501 --> loss:0.8221211636066437
+step 101/334, epoch 152/501 --> loss:0.833712375164032
+step 151/334, epoch 152/501 --> loss:0.8346280300617218
+step 201/334, epoch 152/501 --> loss:0.8206930720806122
+step 251/334, epoch 152/501 --> loss:0.813843549489975
+step 301/334, epoch 152/501 --> loss:0.8138797819614411
+step 51/334, epoch 153/501 --> loss:0.8257701468467712
+step 101/334, epoch 153/501 --> loss:0.8340202498435975
+step 151/334, epoch 153/501 --> loss:0.8194734263420105
+step 201/334, epoch 153/501 --> loss:0.8297165870666504
+step 251/334, epoch 153/501 --> loss:0.8151703298091888
+step 301/334, epoch 153/501 --> loss:0.8142072987556458
+step 51/334, epoch 154/501 --> loss:0.8249218678474426
+step 101/334, epoch 154/501 --> loss:0.8307486581802368
+step 151/334, epoch 154/501 --> loss:0.8191132402420044
+step 201/334, epoch 154/501 --> loss:0.8147754526138306
+step 251/334, epoch 154/501 --> loss:0.8336503171920776
+step 301/334, epoch 154/501 --> loss:0.8170268595218658
+step 51/334, epoch 155/501 --> loss:0.8333969271183014
+step 101/334, epoch 155/501 --> loss:0.8269956111907959
+step 151/334, epoch 155/501 --> loss:0.8222864735126495
+step 201/334, epoch 155/501 --> loss:0.8132915472984314
+step 251/334, epoch 155/501 --> loss:0.8210553753376008
+step 301/334, epoch 155/501 --> loss:0.8237451493740082
+step 51/334, epoch 156/501 --> loss:0.8269017660617828
+step 101/334, epoch 156/501 --> loss:0.8357802569866181
+step 151/334, epoch 156/501 --> loss:0.8224592852592468
+step 201/334, epoch 156/501 --> loss:0.8220554363727569
+step 251/334, epoch 156/501 --> loss:0.8022237741947174
+step 301/334, epoch 156/501 --> loss:0.8217839860916137
+step 51/334, epoch 157/501 --> loss:0.8227917218208313
+step 101/334, epoch 157/501 --> loss:0.8273604393005372
+step 151/334, epoch 157/501 --> loss:0.8210844004154205
+step 201/334, epoch 157/501 --> loss:0.8180784261226655
+step 251/334, epoch 157/501 --> loss:0.8234135055541992
+step 301/334, epoch 157/501 --> loss:0.8256927657127381
+step 51/334, epoch 158/501 --> loss:0.8079638671875
+step 101/334, epoch 158/501 --> loss:0.8187287974357605
+step 151/334, epoch 158/501 --> loss:0.8294811713695526
+step 201/334, epoch 158/501 --> loss:0.8279381561279296
+step 251/334, epoch 158/501 --> loss:0.8257527756690979
+step 301/334, epoch 158/501 --> loss:0.8161993908882141
+step 51/334, epoch 159/501 --> loss:0.8154884111881257
+step 101/334, epoch 159/501 --> loss:0.8177138137817382
+step 151/334, epoch 159/501 --> loss:0.820819833278656
+step 201/334, epoch 159/501 --> loss:0.8190661704540253
+step 251/334, epoch 159/501 --> loss:0.816135493516922
+step 301/334, epoch 159/501 --> loss:0.8339472019672394
+step 51/334, epoch 160/501 --> loss:0.8292816734313965
+step 101/334, epoch 160/501 --> loss:0.8261052751541138
+step 151/334, epoch 160/501 --> loss:0.8218665802478791
+step 201/334, epoch 160/501 --> loss:0.8133705353736878
+step 251/334, epoch 160/501 --> loss:0.8379521405696869
+step 301/334, epoch 160/501 --> loss:0.8056572651863099
+step 51/334, epoch 161/501 --> loss:0.823055489063263
+step 101/334, epoch 161/501 --> loss:0.8392183542251587
+step 151/334, epoch 161/501 --> loss:0.8146583437919617
+step 201/334, epoch 161/501 --> loss:0.8140668797492981
+step 251/334, epoch 161/501 --> loss:0.8135602962970734
+step 301/334, epoch 161/501 --> loss:0.8339986824989318
+
+##########train dataset##########
+acc--> [98.3005773989832]
+F1--> {'F1': [0.8297511109757345], 'precision': [0.7183613762903317], 'recall': [0.982038379905144]}
+##########eval dataset##########
+acc--> [97.93215106686449]
+F1--> {'F1': [0.7938641184513139], 'precision': [0.6974122025683706], 'recall': [0.9212895998236333]}
+step 51/334, epoch 162/501 --> loss:0.8174374651908874
+step 101/334, epoch 162/501 --> loss:0.8365105211734771
+step 151/334, epoch 162/501 --> loss:0.8101760995388031
+step 201/334, epoch 162/501 --> loss:0.8309776675701142
+step 251/334, epoch 162/501 --> loss:0.8254076385498047
+step 301/334, epoch 162/501 --> loss:0.8090667486190796
+step 51/334, epoch 163/501 --> loss:0.8190245211124421
+step 101/334, epoch 163/501 --> loss:0.8173492932319641
+step 151/334, epoch 163/501 --> loss:0.8222358572483063
+step 201/334, epoch 163/501 --> loss:0.824802770614624
+step 251/334, epoch 163/501 --> loss:0.8227856135368348
+step 301/334, epoch 163/501 --> loss:0.8264421510696411
+step 51/334, epoch 164/501 --> loss:0.8244054460525513
+step 101/334, epoch 164/501 --> loss:0.8116161060333252
+step 151/334, epoch 164/501 --> loss:0.8233232653141022
+step 201/334, epoch 164/501 --> loss:0.8230477213859558
+step 251/334, epoch 164/501 --> loss:0.8345547616481781
+step 301/334, epoch 164/501 --> loss:0.8242257750034332
+step 51/334, epoch 165/501 --> loss:0.8309251534938812
+step 101/334, epoch 165/501 --> loss:0.8180444931983948
+step 151/334, epoch 165/501 --> loss:0.8270153951644897
+step 201/334, epoch 165/501 --> loss:0.8253588879108429
+step 251/334, epoch 165/501 --> loss:0.8174668800830841
+step 301/334, epoch 165/501 --> loss:0.8178941237926484
+step 51/334, epoch 166/501 --> loss:0.8174393403530121
+step 101/334, epoch 166/501 --> loss:0.8225217986106873
+step 151/334, epoch 166/501 --> loss:0.826341199874878
+step 201/334, epoch 166/501 --> loss:0.8072012269496918
+step 251/334, epoch 166/501 --> loss:0.8169169676303863
+step 301/334, epoch 166/501 --> loss:0.8249970853328705
+step 51/334, epoch 167/501 --> loss:0.8228378450870514
+step 101/334, epoch 167/501 --> loss:0.8242712342739105
+step 151/334, epoch 167/501 --> loss:0.8208709228038787
+step 201/334, epoch 167/501 --> loss:0.8145828604698181
+step 251/334, epoch 167/501 --> loss:0.8280789482593537
+step 301/334, epoch 167/501 --> loss:0.8212756013870239
+step 51/334, epoch 168/501 --> loss:0.8289253699779511
+step 101/334, epoch 168/501 --> loss:0.8245765364170075
+step 151/334, epoch 168/501 --> loss:0.8261101138591767
+step 201/334, epoch 168/501 --> loss:0.8134831619262696
+step 251/334, epoch 168/501 --> loss:0.8189826202392578
+step 301/334, epoch 168/501 --> loss:0.8248836362361908
+step 51/334, epoch 169/501 --> loss:0.8145332634449005
+step 101/334, epoch 169/501 --> loss:0.8148249459266662
+step 151/334, epoch 169/501 --> loss:0.8266916835308075
+step 201/334, epoch 169/501 --> loss:0.8296302556991577
+step 251/334, epoch 169/501 --> loss:0.8208442676067352
+step 301/334, epoch 169/501 --> loss:0.8219594144821167
+step 51/334, epoch 170/501 --> loss:0.8116982412338257
+step 101/334, epoch 170/501 --> loss:0.8164192295074463
+step 151/334, epoch 170/501 --> loss:0.8406019461154938
+step 201/334, epoch 170/501 --> loss:0.8147142779827118
+step 251/334, epoch 170/501 --> loss:0.8198735570907593
+step 301/334, epoch 170/501 --> loss:0.8216617608070373
+step 51/334, epoch 171/501 --> loss:0.8136933326721192
+step 101/334, epoch 171/501 --> loss:0.8333544206619262
+step 151/334, epoch 171/501 --> loss:0.8167366147041321
+step 201/334, epoch 171/501 --> loss:0.8194274008274078
+step 251/334, epoch 171/501 --> loss:0.8197666299343109
+step 301/334, epoch 171/501 --> loss:0.8212792646884918
+
+##########train dataset##########
+acc--> [98.76110361540218]
+F1--> {'F1': [0.8705036134902161], 'precision': [0.7783319749750006], 'recall': [0.9874506959155306]}
+##########eval dataset##########
+acc--> [98.31828720612758]
+F1--> {'F1': [0.8260771956922189], 'precision': [0.7468861767997415], 'recall': [0.9240652592686084]}
+step 51/334, epoch 172/501 --> loss:0.8314940237998962
+step 101/334, epoch 172/501 --> loss:0.8043039631843567
+step 151/334, epoch 172/501 --> loss:0.8239753031730652
+step 201/334, epoch 172/501 --> loss:0.8197071921825408
+step 251/334, epoch 172/501 --> loss:0.823353990316391
+step 301/334, epoch 172/501 --> loss:0.8271517169475555
+step 51/334, epoch 173/501 --> loss:0.8325316548347473
+step 101/334, epoch 173/501 --> loss:0.8021716821193695
+step 151/334, epoch 173/501 --> loss:0.8165167129039764
+step 201/334, epoch 173/501 --> loss:0.8297565972805023
+step 251/334, epoch 173/501 --> loss:0.8322699737548828
+step 301/334, epoch 173/501 --> loss:0.8196321594715118
+step 51/334, epoch 174/501 --> loss:0.8135685288906097
+step 101/334, epoch 174/501 --> loss:0.8157891857624054
+step 151/334, epoch 174/501 --> loss:0.8163811433315277
+step 201/334, epoch 174/501 --> loss:0.8253997051715851
+step 251/334, epoch 174/501 --> loss:0.8137898409366607
+step 301/334, epoch 174/501 --> loss:0.8311314976215363
+step 51/334, epoch 175/501 --> loss:0.8078963220119476
+step 101/334, epoch 175/501 --> loss:0.8252424395084381
+step 151/334, epoch 175/501 --> loss:0.8261882150173188
+step 201/334, epoch 175/501 --> loss:0.8108123624324799
+step 251/334, epoch 175/501 --> loss:0.8227075660228729
+step 301/334, epoch 175/501 --> loss:0.8223537981510163
+step 51/334, epoch 176/501 --> loss:0.8354241836071015
+step 101/334, epoch 176/501 --> loss:0.8107131087779998
+step 151/334, epoch 176/501 --> loss:0.8266674160957337
+step 201/334, epoch 176/501 --> loss:0.8181468951702118
+step 251/334, epoch 176/501 --> loss:0.8271001899242401
+step 301/334, epoch 176/501 --> loss:0.8142765128612518
+step 51/334, epoch 177/501 --> loss:0.819862152338028
+step 101/334, epoch 177/501 --> loss:0.8238211107254029
+step 151/334, epoch 177/501 --> loss:0.826882973909378
+step 201/334, epoch 177/501 --> loss:0.8325953197479248
+step 251/334, epoch 177/501 --> loss:0.8190062260627746
+step 301/334, epoch 177/501 --> loss:0.8160111391544342
+step 51/334, epoch 178/501 --> loss:0.8273988831043243
+step 101/334, epoch 178/501 --> loss:0.8148453545570373
+step 151/334, epoch 178/501 --> loss:0.825022554397583
+step 201/334, epoch 178/501 --> loss:0.8136084234714508
+step 251/334, epoch 178/501 --> loss:0.8140243101119995
+step 301/334, epoch 178/501 --> loss:0.833629058599472
+step 51/334, epoch 179/501 --> loss:0.8270975482463837
+step 101/334, epoch 179/501 --> loss:0.8215322208404541
+step 151/334, epoch 179/501 --> loss:0.8307571768760681
+step 201/334, epoch 179/501 --> loss:0.8126274192333222
+step 251/334, epoch 179/501 --> loss:0.8351697409152985
+step 301/334, epoch 179/501 --> loss:0.8044770658016205
+step 51/334, epoch 180/501 --> loss:0.8185939526557923
+step 101/334, epoch 180/501 --> loss:0.8278346014022827
+step 151/334, epoch 180/501 --> loss:0.8074395847320557
+step 201/334, epoch 180/501 --> loss:0.81696941614151
+step 251/334, epoch 180/501 --> loss:0.8251767230033874
+step 301/334, epoch 180/501 --> loss:0.8368076944351196
+step 51/334, epoch 181/501 --> loss:0.8244103157520294
+step 101/334, epoch 181/501 --> loss:0.8335229849815369
+step 151/334, epoch 181/501 --> loss:0.8197890043258667
+step 201/334, epoch 181/501 --> loss:0.8141935110092163
+step 251/334, epoch 181/501 --> loss:0.8364726555347443
+step 301/334, epoch 181/501 --> loss:0.8098347568511963
+
+##########train dataset##########
+acc--> [98.06144408263994]
+F1--> {'F1': [0.8117191047899809], 'precision': [0.6874117684922476], 'recall': [0.9909234426713301]}
+##########eval dataset##########
+acc--> [97.68588182076563]
+F1--> {'F1': [0.7783613165031104], 'precision': [0.6640792349901338], 'recall': [0.9401674198444899]}
+step 51/334, epoch 182/501 --> loss:0.8108042669296265
+step 101/334, epoch 182/501 --> loss:0.8291064476966858
+step 151/334, epoch 182/501 --> loss:0.8258340585231781
+step 201/334, epoch 182/501 --> loss:0.8249296069145202
+step 251/334, epoch 182/501 --> loss:0.8169924473762512
+step 301/334, epoch 182/501 --> loss:0.8224450767040252
+step 51/334, epoch 183/501 --> loss:0.8323818731307984
+step 101/334, epoch 183/501 --> loss:0.8153152537345886
+step 151/334, epoch 183/501 --> loss:0.8247233366966248
+step 201/334, epoch 183/501 --> loss:0.8267866170406342
+step 251/334, epoch 183/501 --> loss:0.8040742337703705
+step 301/334, epoch 183/501 --> loss:0.8245613837242126
+step 51/334, epoch 184/501 --> loss:0.8102525722980499
+step 101/334, epoch 184/501 --> loss:0.8248373496532441
+step 151/334, epoch 184/501 --> loss:0.8249533379077911
+step 201/334, epoch 184/501 --> loss:0.824523173570633
+step 251/334, epoch 184/501 --> loss:0.8256241965293885
+step 301/334, epoch 184/501 --> loss:0.8147209477424622
+step 51/334, epoch 185/501 --> loss:0.8125736367702484
+step 101/334, epoch 185/501 --> loss:0.8254464995861054
+step 151/334, epoch 185/501 --> loss:0.8222184836864471
+step 201/334, epoch 185/501 --> loss:0.8206875109672547
+step 251/334, epoch 185/501 --> loss:0.8379199707508087
+step 301/334, epoch 185/501 --> loss:0.8080829024314881
+step 51/334, epoch 186/501 --> loss:0.8168090796470642
+step 101/334, epoch 186/501 --> loss:0.828702586889267
+step 151/334, epoch 186/501 --> loss:0.8200432944297791
+step 201/334, epoch 186/501 --> loss:0.8258772957324981
+step 251/334, epoch 186/501 --> loss:0.8248401618003846
+step 301/334, epoch 186/501 --> loss:0.8122194743156433
+step 51/334, epoch 187/501 --> loss:0.821062228679657
+step 101/334, epoch 187/501 --> loss:0.832744847536087
+step 151/334, epoch 187/501 --> loss:0.8145771944522857
+step 201/334, epoch 187/501 --> loss:0.8101553463935852
+step 251/334, epoch 187/501 --> loss:0.8252706825733185
+step 301/334, epoch 187/501 --> loss:0.828372346162796
+step 51/334, epoch 188/501 --> loss:0.823112256526947
+step 101/334, epoch 188/501 --> loss:0.8188067495822906
+step 151/334, epoch 188/501 --> loss:0.8214741003513336
+step 201/334, epoch 188/501 --> loss:0.8309797179698944
+step 251/334, epoch 188/501 --> loss:0.8242675852775574
+step 301/334, epoch 188/501 --> loss:0.8152665722370148
+step 51/334, epoch 189/501 --> loss:0.8208977377414703
+step 101/334, epoch 189/501 --> loss:0.8136718583106994
+step 151/334, epoch 189/501 --> loss:0.830465407371521
+step 201/334, epoch 189/501 --> loss:0.8140997076034546
+step 251/334, epoch 189/501 --> loss:0.820808629989624
+step 301/334, epoch 189/501 --> loss:0.82623690366745
+step 51/334, epoch 190/501 --> loss:0.8143390727043152
+step 101/334, epoch 190/501 --> loss:0.8267152440547944
+step 151/334, epoch 190/501 --> loss:0.8170765805244445
+step 201/334, epoch 190/501 --> loss:0.8188450181484223
+step 251/334, epoch 190/501 --> loss:0.8312491929531097
+step 301/334, epoch 190/501 --> loss:0.8178055620193482
+step 51/334, epoch 191/501 --> loss:0.8082779741287232
+step 101/334, epoch 191/501 --> loss:0.8226435160636902
+step 151/334, epoch 191/501 --> loss:0.8272503542900086
+step 201/334, epoch 191/501 --> loss:0.8172600531578064
+step 251/334, epoch 191/501 --> loss:0.8217367255687713
+step 301/334, epoch 191/501 --> loss:0.8309622311592102
+
+##########train dataset##########
+acc--> [99.20734853211424]
+F1--> {'F1': [0.9134794537148208], 'precision': [0.8462767065558899], 'recall': [0.9922877142359877]}
+##########eval dataset##########
+acc--> [98.67498042388817]
+F1--> {'F1': [0.8573128507719309], 'precision': [0.8018621033479973], 'recall': [0.9210139334290814]}
+save model!
+step 51/334, epoch 192/501 --> loss:0.8146921038627625
+step 101/334, epoch 192/501 --> loss:0.8224300217628479
+step 151/334, epoch 192/501 --> loss:0.8178494942188262
+step 201/334, epoch 192/501 --> loss:0.8264721345901489
+step 251/334, epoch 192/501 --> loss:0.8235984659194946
+step 301/334, epoch 192/501 --> loss:0.8183230173587799
+step 51/334, epoch 193/501 --> loss:0.8280343031883239
+step 101/334, epoch 193/501 --> loss:0.8145989763736725
+step 151/334, epoch 193/501 --> loss:0.8130560529232025
+step 201/334, epoch 193/501 --> loss:0.8140742158889771
+step 251/334, epoch 193/501 --> loss:0.8218425583839416
+step 301/334, epoch 193/501 --> loss:0.8321457922458648
+step 51/334, epoch 194/501 --> loss:0.8240249526500701
+step 101/334, epoch 194/501 --> loss:0.8293505930900573
+step 151/334, epoch 194/501 --> loss:0.8147385013103485
+step 201/334, epoch 194/501 --> loss:0.8366441392898559
+step 251/334, epoch 194/501 --> loss:0.8096817255020141
+step 301/334, epoch 194/501 --> loss:0.8268024361133576
+step 51/334, epoch 195/501 --> loss:0.830177264213562
+step 101/334, epoch 195/501 --> loss:0.8225345802307129
+step 151/334, epoch 195/501 --> loss:0.8261231935024261
+step 201/334, epoch 195/501 --> loss:0.8139955508708954
+step 251/334, epoch 195/501 --> loss:0.8219218742847443
+step 301/334, epoch 195/501 --> loss:0.8153239989280701
+step 51/334, epoch 196/501 --> loss:0.8141629707813263
+step 101/334, epoch 196/501 --> loss:0.8232803845405579
+step 151/334, epoch 196/501 --> loss:0.8301254284381866
+step 201/334, epoch 196/501 --> loss:0.8239029264450073
+step 251/334, epoch 196/501 --> loss:0.8213220274448395
+step 301/334, epoch 196/501 --> loss:0.8175354421138763
+step 51/334, epoch 197/501 --> loss:0.8260933351516724
+step 101/334, epoch 197/501 --> loss:0.8195404481887817
+step 151/334, epoch 197/501 --> loss:0.8390253412723542
+step 201/334, epoch 197/501 --> loss:0.8140877091884613
+step 251/334, epoch 197/501 --> loss:0.8227485346794129
+step 301/334, epoch 197/501 --> loss:0.809937117099762
+step 51/334, epoch 198/501 --> loss:0.82873752951622
+step 101/334, epoch 198/501 --> loss:0.8344487619400024
+step 151/334, epoch 198/501 --> loss:0.8255575895309448
+step 201/334, epoch 198/501 --> loss:0.8324263405799865
+step 251/334, epoch 198/501 --> loss:0.8134908103942871
+step 301/334, epoch 198/501 --> loss:0.7986000430583954
+step 51/334, epoch 199/501 --> loss:0.8208187544345855
+step 101/334, epoch 199/501 --> loss:0.8229271388053894
+step 151/334, epoch 199/501 --> loss:0.8130105614662171
+step 201/334, epoch 199/501 --> loss:0.839399837255478
+step 251/334, epoch 199/501 --> loss:0.8216060292720795
+step 301/334, epoch 199/501 --> loss:0.8100195133686066
+step 51/334, epoch 200/501 --> loss:0.8254639720916748
+step 101/334, epoch 200/501 --> loss:0.8230360555648804
+step 151/334, epoch 200/501 --> loss:0.8198920500278473
+step 201/334, epoch 200/501 --> loss:0.8214674186706543
+step 251/334, epoch 200/501 --> loss:0.8153149616718293
+step 301/334, epoch 200/501 --> loss:0.8250206768512726
+step 51/334, epoch 201/501 --> loss:0.8281826376914978
+step 101/334, epoch 201/501 --> loss:0.8230111622810363
+step 151/334, epoch 201/501 --> loss:0.813515751361847
+step 201/334, epoch 201/501 --> loss:0.8222210228443145
+step 251/334, epoch 201/501 --> loss:0.8192873787879944
+step 301/334, epoch 201/501 --> loss:0.8233579552173614
+
+##########train dataset##########
+acc--> [99.35713239854744]
+F1--> {'F1': [0.9266814868247095], 'precision': [0.8926452551188117], 'recall': [0.96342698070805]}
+##########eval dataset##########
+acc--> [98.86087198999367]
+F1--> {'F1': [0.8692824919235941], 'precision': [0.8623125310738256], 'recall': [0.8763762084907777]}
+save model!
+step 51/334, epoch 202/501 --> loss:0.8033224666118621
+step 101/334, epoch 202/501 --> loss:0.8208673977851868
+step 151/334, epoch 202/501 --> loss:0.8301152694225311
+step 201/334, epoch 202/501 --> loss:0.8236946833133697
+step 251/334, epoch 202/501 --> loss:0.826960860490799
+step 301/334, epoch 202/501 --> loss:0.817067664861679
+step 51/334, epoch 203/501 --> loss:0.8246598637104035
+step 101/334, epoch 203/501 --> loss:0.821493947505951
+step 151/334, epoch 203/501 --> loss:0.8198829865455628
+step 201/334, epoch 203/501 --> loss:0.8227430927753449
+step 251/334, epoch 203/501 --> loss:0.8351848220825195
+step 301/334, epoch 203/501 --> loss:0.8064116013050079
+step 51/334, epoch 204/501 --> loss:0.8295295977592468
+step 101/334, epoch 204/501 --> loss:0.8283991312980652
+step 151/334, epoch 204/501 --> loss:0.8081698286533355
+step 201/334, epoch 204/501 --> loss:0.8310573995113373
+step 251/334, epoch 204/501 --> loss:0.8196286702156067
+step 301/334, epoch 204/501 --> loss:0.815747721195221
+step 51/334, epoch 205/501 --> loss:0.8215009927749634
+step 101/334, epoch 205/501 --> loss:0.805595611333847
+step 151/334, epoch 205/501 --> loss:0.8250169849395752
+step 201/334, epoch 205/501 --> loss:0.8378127789497376
+step 251/334, epoch 205/501 --> loss:0.8240999257564545
+step 301/334, epoch 205/501 --> loss:0.8096717357635498
+step 51/334, epoch 206/501 --> loss:0.8212593626976014
+step 101/334, epoch 206/501 --> loss:0.8298318135738373
+step 151/334, epoch 206/501 --> loss:0.8144791543483734
+step 201/334, epoch 206/501 --> loss:0.8408280479907989
+step 251/334, epoch 206/501 --> loss:0.7978710067272187
+step 301/334, epoch 206/501 --> loss:0.8207866096496582
+step 51/334, epoch 207/501 --> loss:0.8182320892810822
+step 101/334, epoch 207/501 --> loss:0.8214115059375763
+step 151/334, epoch 207/501 --> loss:0.8238456547260284
+step 201/334, epoch 207/501 --> loss:0.8125643408298493
+step 251/334, epoch 207/501 --> loss:0.8186767661571502
+step 301/334, epoch 207/501 --> loss:0.8253191208839417
+step 51/334, epoch 208/501 --> loss:0.8194430088996887
+step 101/334, epoch 208/501 --> loss:0.8383780252933503
+step 151/334, epoch 208/501 --> loss:0.8238682162761688
+step 201/334, epoch 208/501 --> loss:0.811355186700821
+step 251/334, epoch 208/501 --> loss:0.8211941301822663
+step 301/334, epoch 208/501 --> loss:0.8166560351848602
+step 51/334, epoch 209/501 --> loss:0.8306299090385437
+step 101/334, epoch 209/501 --> loss:0.8137190306186676
+step 151/334, epoch 209/501 --> loss:0.8273074162006379
+step 201/334, epoch 209/501 --> loss:0.829834166765213
+step 251/334, epoch 209/501 --> loss:0.8280895912647247
+step 301/334, epoch 209/501 --> loss:0.8074691951274872
+step 51/334, epoch 210/501 --> loss:0.8113696682453155
+step 101/334, epoch 210/501 --> loss:0.8329662442207336
+step 151/334, epoch 210/501 --> loss:0.8300552928447723
+step 201/334, epoch 210/501 --> loss:0.825637663602829
+step 251/334, epoch 210/501 --> loss:0.8167404758930207
+step 301/334, epoch 210/501 --> loss:0.8164193630218506
+step 51/334, epoch 211/501 --> loss:0.8128168034553528
+step 101/334, epoch 211/501 --> loss:0.8216334748268127
+step 151/334, epoch 211/501 --> loss:0.8274494397640229
+step 201/334, epoch 211/501 --> loss:0.8247744119167328
+step 251/334, epoch 211/501 --> loss:0.819906793832779
+step 301/334, epoch 211/501 --> loss:0.8191637146472931
+
+##########train dataset##########
+acc--> [99.04073594346565]
+F1--> {'F1': [0.8954877587843894], 'precision': [0.8283026322741156], 'recall': [0.9745457396930413]}
+##########eval dataset##########
+acc--> [98.57314502785492]
+F1--> {'F1': [0.8438944206073694], 'precision': [0.8004350297274465], 'recall': [0.8923551299726243]}
+step 51/334, epoch 212/501 --> loss:0.8200014686584473
+step 101/334, epoch 212/501 --> loss:0.8258034706115722
+step 151/334, epoch 212/501 --> loss:0.817084801197052
+step 201/334, epoch 212/501 --> loss:0.832501710653305
+step 251/334, epoch 212/501 --> loss:0.816687445640564
+step 301/334, epoch 212/501 --> loss:0.8246305859088898
+step 51/334, epoch 213/501 --> loss:0.8339947998523712
+step 101/334, epoch 213/501 --> loss:0.8274047136306762
+step 151/334, epoch 213/501 --> loss:0.8104513001441955
+step 201/334, epoch 213/501 --> loss:0.8218491542339325
+step 251/334, epoch 213/501 --> loss:0.8180778658390045
+step 301/334, epoch 213/501 --> loss:0.8238228917121887
+step 51/334, epoch 214/501 --> loss:0.8163859069347381
+step 101/334, epoch 214/501 --> loss:0.8163695669174195
+step 151/334, epoch 214/501 --> loss:0.8303474485874176
+step 201/334, epoch 214/501 --> loss:0.8253984475135803
+step 251/334, epoch 214/501 --> loss:0.8211077320575714
+step 301/334, epoch 214/501 --> loss:0.8235142385959625
+step 51/334, epoch 215/501 --> loss:0.8086245632171631
+step 101/334, epoch 215/501 --> loss:0.8183420312404632
+step 151/334, epoch 215/501 --> loss:0.8230788207054138
+step 201/334, epoch 215/501 --> loss:0.834465183019638
+step 251/334, epoch 215/501 --> loss:0.8169287991523743
+step 301/334, epoch 215/501 --> loss:0.8206317973136902
+step 51/334, epoch 216/501 --> loss:0.8224554324150085
+step 101/334, epoch 216/501 --> loss:0.8194381868839264
+step 151/334, epoch 216/501 --> loss:0.8283357334136963
+step 201/334, epoch 216/501 --> loss:0.8142907118797302
+step 251/334, epoch 216/501 --> loss:0.8157748258113862
+step 301/334, epoch 216/501 --> loss:0.8144404685497284
+step 51/334, epoch 217/501 --> loss:0.8218579769134522
+step 101/334, epoch 217/501 --> loss:0.8246876907348633
+step 151/334, epoch 217/501 --> loss:0.8195535016059875
+step 201/334, epoch 217/501 --> loss:0.8121907508373261
+step 251/334, epoch 217/501 --> loss:0.8105968272686005
+step 301/334, epoch 217/501 --> loss:0.8271271133422852
+step 51/334, epoch 218/501 --> loss:0.815536093711853
+step 101/334, epoch 218/501 --> loss:0.8090189826488495
+step 151/334, epoch 218/501 --> loss:0.8259713864326477
+step 201/334, epoch 218/501 --> loss:0.8276677691936493
+step 251/334, epoch 218/501 --> loss:0.821908266544342
+step 301/334, epoch 218/501 --> loss:0.8212920677661896
+step 51/334, epoch 219/501 --> loss:0.8209733688831329
+step 101/334, epoch 219/501 --> loss:0.8227878248691559
+step 151/334, epoch 219/501 --> loss:0.8232494974136353
+step 201/334, epoch 219/501 --> loss:0.8212514078617096
+step 251/334, epoch 219/501 --> loss:0.8175903272628784
+step 301/334, epoch 219/501 --> loss:0.8245536363124848
+step 51/334, epoch 220/501 --> loss:0.8172685503959656
+step 101/334, epoch 220/501 --> loss:0.8227238595485687
+step 151/334, epoch 220/501 --> loss:0.8122617399692535
+step 201/334, epoch 220/501 --> loss:0.8406694781780243
+step 251/334, epoch 220/501 --> loss:0.7983945441246033
+step 301/334, epoch 220/501 --> loss:0.8361578595638275
+step 51/334, epoch 221/501 --> loss:0.8173405373096466
+step 101/334, epoch 221/501 --> loss:0.8195350408554077
+step 151/334, epoch 221/501 --> loss:0.8152035582065582
+step 201/334, epoch 221/501 --> loss:0.8204546988010406
+step 251/334, epoch 221/501 --> loss:0.8283564388751984
+step 301/334, epoch 221/501 --> loss:0.8301745200157166
+
+##########train dataset##########
+acc--> [98.45883941936175]
+F1--> {'F1': [0.8445854541827299], 'precision': [0.7347549525079008], 'recall': [0.9930349025456885]}
+##########eval dataset##########
+acc--> [97.95279381885692]
+F1--> {'F1': [0.7981952049198461], 'precision': [0.6953533038080131], 'recall': [0.9367510097715062]}
+step 51/334, epoch 222/501 --> loss:0.8260227346420288
+step 101/334, epoch 222/501 --> loss:0.8346808886528015
+step 151/334, epoch 222/501 --> loss:0.8209739530086517
+step 201/334, epoch 222/501 --> loss:0.8229609823226929
+step 251/334, epoch 222/501 --> loss:0.8174503982067108
+step 301/334, epoch 222/501 --> loss:0.8151042318344116
+step 51/334, epoch 223/501 --> loss:0.8234161138534546
+step 101/334, epoch 223/501 --> loss:0.8190306961536408
+step 151/334, epoch 223/501 --> loss:0.8232218599319459
+step 201/334, epoch 223/501 --> loss:0.8201898121833802
+step 251/334, epoch 223/501 --> loss:0.8219507253170013
+step 301/334, epoch 223/501 --> loss:0.8154207277297973
+step 51/334, epoch 224/501 --> loss:0.8323141109943389
+step 101/334, epoch 224/501 --> loss:0.8100336813926696
+step 151/334, epoch 224/501 --> loss:0.8163671255111694
+step 201/334, epoch 224/501 --> loss:0.8329196655750275
+step 251/334, epoch 224/501 --> loss:0.8268845891952514
+step 301/334, epoch 224/501 --> loss:0.8250727629661561
+step 51/334, epoch 225/501 --> loss:0.8292697393894195
+step 101/334, epoch 225/501 --> loss:0.8210087251663208
+step 151/334, epoch 225/501 --> loss:0.8197670614719391
+step 201/334, epoch 225/501 --> loss:0.8190555965900421
+step 251/334, epoch 225/501 --> loss:0.8001463603973389
+step 301/334, epoch 225/501 --> loss:0.8365010750293732
+step 51/334, epoch 226/501 --> loss:0.8224587273597718
+step 101/334, epoch 226/501 --> loss:0.8242790293693543
+step 151/334, epoch 226/501 --> loss:0.8169655394554138
+step 201/334, epoch 226/501 --> loss:0.8154028487205506
+step 251/334, epoch 226/501 --> loss:0.82639608502388
+step 301/334, epoch 226/501 --> loss:0.8158972704410553
+step 51/334, epoch 227/501 --> loss:0.8117100441455841
+step 101/334, epoch 227/501 --> loss:0.8173513603210449
+step 151/334, epoch 227/501 --> loss:0.8355738401412964
+step 201/334, epoch 227/501 --> loss:0.814510498046875
+step 251/334, epoch 227/501 --> loss:0.8233071053028107
+step 301/334, epoch 227/501 --> loss:0.8262507092952728
+step 51/334, epoch 228/501 --> loss:0.8189055395126342
+step 101/334, epoch 228/501 --> loss:0.8214884734153748
+step 151/334, epoch 228/501 --> loss:0.8060213601589203
+step 201/334, epoch 228/501 --> loss:0.8301745045185089
+step 251/334, epoch 228/501 --> loss:0.814769983291626
+step 301/334, epoch 228/501 --> loss:0.8314787721633912
+step 51/334, epoch 229/501 --> loss:0.8353466403484344
+step 101/334, epoch 229/501 --> loss:0.8238369297981262
+step 151/334, epoch 229/501 --> loss:0.8105022680759429
+step 201/334, epoch 229/501 --> loss:0.8286882030963898
+step 251/334, epoch 229/501 --> loss:0.8154239618778228
+step 301/334, epoch 229/501 --> loss:0.8113572704792023
+step 51/334, epoch 230/501 --> loss:0.8283583343029022
+step 101/334, epoch 230/501 --> loss:0.8143701112270355
+step 151/334, epoch 230/501 --> loss:0.8344091165065766
+step 201/334, epoch 230/501 --> loss:0.8134243130683899
+step 251/334, epoch 230/501 --> loss:0.8091306698322296
+step 301/334, epoch 230/501 --> loss:0.8329993879795075
+step 51/334, epoch 231/501 --> loss:0.8259511709213256
+step 101/334, epoch 231/501 --> loss:0.8430256962776184
+step 151/334, epoch 231/501 --> loss:0.8185352921485901
+step 201/334, epoch 231/501 --> loss:0.8192008471488953
+step 251/334, epoch 231/501 --> loss:0.810703637599945
+step 301/334, epoch 231/501 --> loss:0.8102966439723969
+
+##########train dataset##########
+acc--> [99.4262660984487]
+F1--> {'F1': [0.9357900522315891], 'precision': [0.8860557128878234], 'recall': [0.9914507819286714]}
+##########eval dataset##########
+acc--> [98.84462932275628]
+F1--> {'F1': [0.8720972292920537], 'precision': [0.8360736074275623], 'recall': [0.9113758023267922]}
+save model!
+step 51/334, epoch 232/501 --> loss:0.837271580696106
+step 101/334, epoch 232/501 --> loss:0.8138032031059265
+step 151/334, epoch 232/501 --> loss:0.8317812466621399
+step 201/334, epoch 232/501 --> loss:0.8077343165874481
+step 251/334, epoch 232/501 --> loss:0.8072966361045837
+step 301/334, epoch 232/501 --> loss:0.8296361184120178
+step 51/334, epoch 233/501 --> loss:0.817773368358612
+step 101/334, epoch 233/501 --> loss:0.8210598695278167
+step 151/334, epoch 233/501 --> loss:0.837785326242447
+step 201/334, epoch 233/501 --> loss:0.8122797381877899
+step 251/334, epoch 233/501 --> loss:0.8163463294506073
+step 301/334, epoch 233/501 --> loss:0.8260190176963806
+step 51/334, epoch 234/501 --> loss:0.8293872082233429
+step 101/334, epoch 234/501 --> loss:0.8190804767608643
+step 151/334, epoch 234/501 --> loss:0.807685786485672
+step 201/334, epoch 234/501 --> loss:0.8280975949764252
+step 251/334, epoch 234/501 --> loss:0.816244148015976
+step 301/334, epoch 234/501 --> loss:0.8262504160404205
+step 51/334, epoch 235/501 --> loss:0.8080412316322326
+step 101/334, epoch 235/501 --> loss:0.8189880478382111
+step 151/334, epoch 235/501 --> loss:0.8203781497478485
+step 201/334, epoch 235/501 --> loss:0.8313510632514953
+step 251/334, epoch 235/501 --> loss:0.8163863956928253
+step 301/334, epoch 235/501 --> loss:0.8208899772167206
+step 51/334, epoch 236/501 --> loss:0.8298117351531983
+step 101/334, epoch 236/501 --> loss:0.8143018484115601
+step 151/334, epoch 236/501 --> loss:0.8153150177001953
+step 201/334, epoch 236/501 --> loss:0.823980827331543
+step 251/334, epoch 236/501 --> loss:0.8188692617416382
+step 301/334, epoch 236/501 --> loss:0.8271919572353363
+step 51/334, epoch 237/501 --> loss:0.8436475229263306
+step 101/334, epoch 237/501 --> loss:0.8069409370422364
+step 151/334, epoch 237/501 --> loss:0.8126048994064331
+step 201/334, epoch 237/501 --> loss:0.8190677428245544
+step 251/334, epoch 237/501 --> loss:0.824725022315979
+step 301/334, epoch 237/501 --> loss:0.8233500695228577
+step 51/334, epoch 238/501 --> loss:0.8230633664131165
+step 101/334, epoch 238/501 --> loss:0.8176474153995514
+step 151/334, epoch 238/501 --> loss:0.8245062446594238
+step 201/334, epoch 238/501 --> loss:0.8140997862815857
+step 251/334, epoch 238/501 --> loss:0.8225010085105896
+step 301/334, epoch 238/501 --> loss:0.8142740309238434
+step 51/334, epoch 239/501 --> loss:0.8210376119613647
+step 101/334, epoch 239/501 --> loss:0.8301212286949158
+step 151/334, epoch 239/501 --> loss:0.8101980721950531
+step 201/334, epoch 239/501 --> loss:0.8272831058502197
+step 251/334, epoch 239/501 --> loss:0.8109441220760345
+step 301/334, epoch 239/501 --> loss:0.8186711311340332
+step 51/334, epoch 240/501 --> loss:0.8216639792919159
+step 101/334, epoch 240/501 --> loss:0.8204945087432861
+step 151/334, epoch 240/501 --> loss:0.8230008351802826
+step 201/334, epoch 240/501 --> loss:0.8163488519191742
+step 251/334, epoch 240/501 --> loss:0.8276237583160401
+step 301/334, epoch 240/501 --> loss:0.8202997934818268
+step 51/334, epoch 241/501 --> loss:0.8319107186794281
+step 101/334, epoch 241/501 --> loss:0.8196689200401306
+step 151/334, epoch 241/501 --> loss:0.8223016476631164
+step 201/334, epoch 241/501 --> loss:0.8204121732711792
+step 251/334, epoch 241/501 --> loss:0.7989260745048523
+step 301/334, epoch 241/501 --> loss:0.8257588505744934
+
+##########train dataset##########
+acc--> [99.34656252608642]
+F1--> {'F1': [0.927643556085227], 'precision': [0.8701229449209236], 'recall': [0.9933188544534877]}
+##########eval dataset##########
+acc--> [98.76913836621202]
+F1--> {'F1': [0.8651159266040988], 'precision': [0.8217707203855167], 'recall': [0.9132994441254129]}
+step 51/334, epoch 242/501 --> loss:0.8224156033992768
+step 101/334, epoch 242/501 --> loss:0.8261148047447204
+step 151/334, epoch 242/501 --> loss:0.8212740409374237
+step 201/334, epoch 242/501 --> loss:0.8245815742015838
+step 251/334, epoch 242/501 --> loss:0.8157777881622315
+step 301/334, epoch 242/501 --> loss:0.8091984403133392
+step 51/334, epoch 243/501 --> loss:0.8207364463806153
+step 101/334, epoch 243/501 --> loss:0.8252444124221802
+step 151/334, epoch 243/501 --> loss:0.81843878865242
+step 201/334, epoch 243/501 --> loss:0.818960827589035
+step 251/334, epoch 243/501 --> loss:0.8278276312351227
+step 301/334, epoch 243/501 --> loss:0.8220938682556153
+step 51/334, epoch 244/501 --> loss:0.818386595249176
+step 101/334, epoch 244/501 --> loss:0.8203167402744294
+step 151/334, epoch 244/501 --> loss:0.8203994309902192
+step 201/334, epoch 244/501 --> loss:0.8233017551898957
+step 251/334, epoch 244/501 --> loss:0.8257871496677399
+step 301/334, epoch 244/501 --> loss:0.8156544876098633
+step 51/334, epoch 245/501 --> loss:0.8188300490379333
+step 101/334, epoch 245/501 --> loss:0.8183300709724426
+step 151/334, epoch 245/501 --> loss:0.8375954377651215
+step 201/334, epoch 245/501 --> loss:0.819200508594513
+step 251/334, epoch 245/501 --> loss:0.8303432154655457
+step 301/334, epoch 245/501 --> loss:0.8220125985145569
+step 51/334, epoch 246/501 --> loss:0.8353948831558228
+step 101/334, epoch 246/501 --> loss:0.8230770754814148
+step 151/334, epoch 246/501 --> loss:0.8205601418018341
+step 201/334, epoch 246/501 --> loss:0.8041839623451232
+step 251/334, epoch 246/501 --> loss:0.8125936448574066
+step 301/334, epoch 246/501 --> loss:0.823235536813736
+step 51/334, epoch 247/501 --> loss:0.813552794456482
+step 101/334, epoch 247/501 --> loss:0.8198732900619506
+step 151/334, epoch 247/501 --> loss:0.8334303104877472
+step 201/334, epoch 247/501 --> loss:0.8144864797592163
+step 251/334, epoch 247/501 --> loss:0.8257240402698517
+step 301/334, epoch 247/501 --> loss:0.8179124319553375
+step 51/334, epoch 248/501 --> loss:0.821963084936142
+step 101/334, epoch 248/501 --> loss:0.8148900544643403
+step 151/334, epoch 248/501 --> loss:0.8208262467384339
+step 201/334, epoch 248/501 --> loss:0.8033378398418427
+step 251/334, epoch 248/501 --> loss:0.8268603098392486
+step 301/334, epoch 248/501 --> loss:0.8290955591201782
+step 51/334, epoch 249/501 --> loss:0.8230416011810303
+step 101/334, epoch 249/501 --> loss:0.8118409180641174
+step 151/334, epoch 249/501 --> loss:0.8325001311302185
+step 201/334, epoch 249/501 --> loss:0.8102383148670197
+step 251/334, epoch 249/501 --> loss:0.8326273381710052
+step 301/334, epoch 249/501 --> loss:0.8146769344806671
+step 51/334, epoch 250/501 --> loss:0.8308450329303741
+step 101/334, epoch 250/501 --> loss:0.8232696211338043
+step 151/334, epoch 250/501 --> loss:0.8200904047489166
+step 201/334, epoch 250/501 --> loss:0.8133899295330047
+step 251/334, epoch 250/501 --> loss:0.8315928983688354
+step 301/334, epoch 250/501 --> loss:0.8106770241260528
+step 51/334, epoch 251/501 --> loss:0.8257831442356109
+step 101/334, epoch 251/501 --> loss:0.8241669023036957
+step 151/334, epoch 251/501 --> loss:0.812979474067688
+step 201/334, epoch 251/501 --> loss:0.8229194581508636
+step 251/334, epoch 251/501 --> loss:0.8372060918807983
+step 301/334, epoch 251/501 --> loss:0.7978864359855652
+
+##########train dataset##########
+acc--> [99.23586621908183]
+F1--> {'F1': [0.9165057500704783], 'precision': [0.849830521088471], 'recall': [0.9945456949227794]}
+##########eval dataset##########
+acc--> [98.66382802460312]
+F1--> {'F1': [0.855598275338341], 'precision': [0.8027534459685833], 'recall': [0.9159022908558201]}
+step 51/334, epoch 252/501 --> loss:0.8143597114086151
+step 101/334, epoch 252/501 --> loss:0.8154566645622253
+step 151/334, epoch 252/501 --> loss:0.8175936186313629
+step 201/334, epoch 252/501 --> loss:0.8317526948451995
+step 251/334, epoch 252/501 --> loss:0.8091957640647888
+step 301/334, epoch 252/501 --> loss:0.8275232648849488
+step 51/334, epoch 253/501 --> loss:0.8259145522117615
+step 101/334, epoch 253/501 --> loss:0.8184075021743774
+step 151/334, epoch 253/501 --> loss:0.8181397008895874
+step 201/334, epoch 253/501 --> loss:0.8179580473899841
+step 251/334, epoch 253/501 --> loss:0.8210155141353607
+step 301/334, epoch 253/501 --> loss:0.8230057835578919
+step 51/334, epoch 254/501 --> loss:0.8344134867191315
+step 101/334, epoch 254/501 --> loss:0.8207455205917359
+step 151/334, epoch 254/501 --> loss:0.7985254716873169
+step 201/334, epoch 254/501 --> loss:0.8227601361274719
+step 251/334, epoch 254/501 --> loss:0.8260872304439545
+step 301/334, epoch 254/501 --> loss:0.8270515155792236
+step 51/334, epoch 255/501 --> loss:0.8220732116699219
+step 101/334, epoch 255/501 --> loss:0.8237293291091919
+step 151/334, epoch 255/501 --> loss:0.8165261232852936
+step 201/334, epoch 255/501 --> loss:0.8233648371696473
+step 251/334, epoch 255/501 --> loss:0.8119339799880981
+step 301/334, epoch 255/501 --> loss:0.8267229604721069
+step 51/334, epoch 256/501 --> loss:0.8247255980968475
+step 101/334, epoch 256/501 --> loss:0.8119479501247406
+step 151/334, epoch 256/501 --> loss:0.830321888923645
+step 201/334, epoch 256/501 --> loss:0.8148225831985474
+step 251/334, epoch 256/501 --> loss:0.8198765695095063
+step 301/334, epoch 256/501 --> loss:0.8290415072441101
+step 51/334, epoch 257/501 --> loss:0.8266581988334656
+step 101/334, epoch 257/501 --> loss:0.8305429172515869
+step 151/334, epoch 257/501 --> loss:0.8164225840568542
+step 201/334, epoch 257/501 --> loss:0.8211984884738922
+step 251/334, epoch 257/501 --> loss:0.8115988719463348
+step 301/334, epoch 257/501 --> loss:0.8214744555950165
+step 51/334, epoch 258/501 --> loss:0.8229421138763428
+step 101/334, epoch 258/501 --> loss:0.8148180723190308
+step 151/334, epoch 258/501 --> loss:0.8282732534408569
+step 201/334, epoch 258/501 --> loss:0.8235913133621215
+step 251/334, epoch 258/501 --> loss:0.8187468922138215
+step 301/334, epoch 258/501 --> loss:0.8229008066654205
+step 51/334, epoch 259/501 --> loss:0.8172671461105346
+step 101/334, epoch 259/501 --> loss:0.8223630905151367
+step 151/334, epoch 259/501 --> loss:0.8233535516262055
+step 201/334, epoch 259/501 --> loss:0.8175205707550048
+step 251/334, epoch 259/501 --> loss:0.821837911605835
+step 301/334, epoch 259/501 --> loss:0.8207552230358124
+step 51/334, epoch 260/501 --> loss:0.8442026996612548
+step 101/334, epoch 260/501 --> loss:0.8016510260105133
+step 151/334, epoch 260/501 --> loss:0.8250713801383972
+step 201/334, epoch 260/501 --> loss:0.8184069204330444
+step 251/334, epoch 260/501 --> loss:0.8135446274280548
+step 301/334, epoch 260/501 --> loss:0.8297029185295105
+step 51/334, epoch 261/501 --> loss:0.8172019839286804
+step 101/334, epoch 261/501 --> loss:0.8225187194347382
+step 151/334, epoch 261/501 --> loss:0.8217604517936706
+step 201/334, epoch 261/501 --> loss:0.8258879315853119
+step 251/334, epoch 261/501 --> loss:0.81493732213974
+step 301/334, epoch 261/501 --> loss:0.8202574741840363
+
+##########train dataset##########
+acc--> [99.38252738320145]
+F1--> {'F1': [0.9307133915873993], 'precision': [0.8833279292163816], 'recall': [0.983482084743579]}
+##########eval dataset##########
+acc--> [98.83686109059926]
+F1--> {'F1': [0.8688949215463349], 'precision': [0.8471415125272685], 'recall': [0.8918054959680249]}
+step 51/334, epoch 262/501 --> loss:0.8117648863792419
+step 101/334, epoch 262/501 --> loss:0.8282757484912873
+step 151/334, epoch 262/501 --> loss:0.8221378397941589
+step 201/334, epoch 262/501 --> loss:0.8170058488845825
+step 251/334, epoch 262/501 --> loss:0.8154353034496308
+step 301/334, epoch 262/501 --> loss:0.825804398059845
+step 51/334, epoch 263/501 --> loss:0.8129428791999816
+step 101/334, epoch 263/501 --> loss:0.8187620747089386
+step 151/334, epoch 263/501 --> loss:0.8313467514514923
+step 201/334, epoch 263/501 --> loss:0.8302257764339447
+step 251/334, epoch 263/501 --> loss:0.8286278223991395
+step 301/334, epoch 263/501 --> loss:0.8052790594100953
+step 51/334, epoch 264/501 --> loss:0.8334354054927826
+step 101/334, epoch 264/501 --> loss:0.8206888580322266
+step 151/334, epoch 264/501 --> loss:0.8276268875598908
+step 201/334, epoch 264/501 --> loss:0.8142603921890259
+step 251/334, epoch 264/501 --> loss:0.8308912515640259
+step 301/334, epoch 264/501 --> loss:0.8081478333473205
+step 51/334, epoch 265/501 --> loss:0.8276020181179047
+step 101/334, epoch 265/501 --> loss:0.8202421522140503
+step 151/334, epoch 265/501 --> loss:0.8147751069068909
+step 201/334, epoch 265/501 --> loss:0.8197830665111542
+step 251/334, epoch 265/501 --> loss:0.8253615999221802
+step 301/334, epoch 265/501 --> loss:0.8152309858798981
+step 51/334, epoch 266/501 --> loss:0.829327632188797
+step 101/334, epoch 266/501 --> loss:0.8234184098243713
+step 151/334, epoch 266/501 --> loss:0.8158206641674042
+step 201/334, epoch 266/501 --> loss:0.8091233193874359
+step 251/334, epoch 266/501 --> loss:0.835283191204071
+step 301/334, epoch 266/501 --> loss:0.8067645943164825
+step 51/334, epoch 267/501 --> loss:0.8179609286785126
+step 101/334, epoch 267/501 --> loss:0.8283013606071472
+step 151/334, epoch 267/501 --> loss:0.8126436734199524
+step 201/334, epoch 267/501 --> loss:0.8187878513336182
+step 251/334, epoch 267/501 --> loss:0.8251293885707855
+step 301/334, epoch 267/501 --> loss:0.8241011357307434
+step 51/334, epoch 268/501 --> loss:0.8225588595867157
+step 101/334, epoch 268/501 --> loss:0.8159867298603057
+step 151/334, epoch 268/501 --> loss:0.8186351799964905
+step 201/334, epoch 268/501 --> loss:0.8190616154670716
+step 251/334, epoch 268/501 --> loss:0.8203796327114106
+step 301/334, epoch 268/501 --> loss:0.827876763343811
+step 51/334, epoch 269/501 --> loss:0.8203343892097473
+step 101/334, epoch 269/501 --> loss:0.8144199180603028
+step 151/334, epoch 269/501 --> loss:0.800836181640625
+step 201/334, epoch 269/501 --> loss:0.8411369335651397
+step 251/334, epoch 269/501 --> loss:0.8257397615909576
+step 301/334, epoch 269/501 --> loss:0.8197327494621277
+step 51/334, epoch 270/501 --> loss:0.8284951305389404
+step 101/334, epoch 270/501 --> loss:0.8159098112583161
+step 151/334, epoch 270/501 --> loss:0.8166785061359405
+step 201/334, epoch 270/501 --> loss:0.8148167216777802
+step 251/334, epoch 270/501 --> loss:0.8235804986953735
+step 301/334, epoch 270/501 --> loss:0.8246364367008209
+step 51/334, epoch 271/501 --> loss:0.8317087650299072
+step 101/334, epoch 271/501 --> loss:0.8022534370422363
+step 151/334, epoch 271/501 --> loss:0.8197413015365601
+step 201/334, epoch 271/501 --> loss:0.8206840765476227
+step 251/334, epoch 271/501 --> loss:0.8338905656337738
+step 301/334, epoch 271/501 --> loss:0.8182076251506806
+
+##########train dataset##########
+acc--> [99.45991753548222]
+F1--> {'F1': [0.9394938986251805], 'precision': [0.8903788620829899], 'recall': [0.9943550143654876]}
+##########eval dataset##########
+acc--> [98.85004465764972]
+F1--> {'F1': [0.8726918355047352], 'precision': [0.8366729711838737], 'recall': [0.9119623462856201]}
+save model!
+step 51/334, epoch 272/501 --> loss:0.8251676118373871
+step 101/334, epoch 272/501 --> loss:0.8146912634372712
+step 151/334, epoch 272/501 --> loss:0.8247181868553162
+step 201/334, epoch 272/501 --> loss:0.8193439710140228
+step 251/334, epoch 272/501 --> loss:0.8196381533145904
+step 301/334, epoch 272/501 --> loss:0.8339687168598175
+step 51/334, epoch 273/501 --> loss:0.8178236627578735
+step 101/334, epoch 273/501 --> loss:0.8293409967422485
+step 151/334, epoch 273/501 --> loss:0.8074870443344117
+step 201/334, epoch 273/501 --> loss:0.8126645386219025
+step 251/334, epoch 273/501 --> loss:0.8315913093090057
+step 301/334, epoch 273/501 --> loss:0.8263271367549896
+step 51/334, epoch 274/501 --> loss:0.8235697793960571
+step 101/334, epoch 274/501 --> loss:0.8172351753711701
+step 151/334, epoch 274/501 --> loss:0.8183813774585724
+step 201/334, epoch 274/501 --> loss:0.8182532608509063
+step 251/334, epoch 274/501 --> loss:0.8263382720947265
+step 301/334, epoch 274/501 --> loss:0.816276832818985
+step 51/334, epoch 275/501 --> loss:0.8145675337314606
+step 101/334, epoch 275/501 --> loss:0.8083773267269134
+step 151/334, epoch 275/501 --> loss:0.8299182224273681
+step 201/334, epoch 275/501 --> loss:0.8327108097076416
+step 251/334, epoch 275/501 --> loss:0.8173392474651336
+step 301/334, epoch 275/501 --> loss:0.8366587853431702
+step 51/334, epoch 276/501 --> loss:0.815707197189331
+step 101/334, epoch 276/501 --> loss:0.8375331163406372
+step 151/334, epoch 276/501 --> loss:0.8100321483612061
+step 201/334, epoch 276/501 --> loss:0.8092094552516937
+step 251/334, epoch 276/501 --> loss:0.817642115354538
+step 301/334, epoch 276/501 --> loss:0.8216631460189819
+step 51/334, epoch 277/501 --> loss:0.8221986258029937
+step 101/334, epoch 277/501 --> loss:0.8176197910308838
+step 151/334, epoch 277/501 --> loss:0.8157009804248809
+step 201/334, epoch 277/501 --> loss:0.8291139912605285
+step 251/334, epoch 277/501 --> loss:0.829268593788147
+step 301/334, epoch 277/501 --> loss:0.815908100605011
+step 51/334, epoch 278/501 --> loss:0.8040882098674774
+step 101/334, epoch 278/501 --> loss:0.8222652733325958
+step 151/334, epoch 278/501 --> loss:0.8235727834701538
+step 201/334, epoch 278/501 --> loss:0.8354838168621064
+step 251/334, epoch 278/501 --> loss:0.828636783361435
+step 301/334, epoch 278/501 --> loss:0.8187491869926453
+step 51/334, epoch 279/501 --> loss:0.8261713671684265
+step 101/334, epoch 279/501 --> loss:0.8111468124389648
+step 151/334, epoch 279/501 --> loss:0.8094398605823517
+step 201/334, epoch 279/501 --> loss:0.8214566791057587
+step 251/334, epoch 279/501 --> loss:0.8332460832595825
+step 301/334, epoch 279/501 --> loss:0.8267304944992065
+step 51/334, epoch 280/501 --> loss:0.8167725229263305
+step 101/334, epoch 280/501 --> loss:0.8267828142642974
+step 151/334, epoch 280/501 --> loss:0.8218697369098663
+step 201/334, epoch 280/501 --> loss:0.8226289308071136
+step 251/334, epoch 280/501 --> loss:0.815752272605896
+step 301/334, epoch 280/501 --> loss:0.8205691909790039
+step 51/334, epoch 281/501 --> loss:0.8225015246868134
+step 101/334, epoch 281/501 --> loss:0.8319530999660492
+step 151/334, epoch 281/501 --> loss:0.807945328950882
+step 201/334, epoch 281/501 --> loss:0.8196123325824738
+step 251/334, epoch 281/501 --> loss:0.8245926594734192
+step 301/334, epoch 281/501 --> loss:0.817343418598175
+
+##########train dataset##########
+acc--> [99.17572616502487]
+F1--> {'F1': [0.9105050077697016], 'precision': [0.8397237418243846], 'recall': [0.994328966221055]}
+##########eval dataset##########
+acc--> [98.61840742883165]
+F1--> {'F1': [0.8520319074687519], 'precision': [0.7931584011122245], 'recall': [0.9203577393055796]}
+step 51/334, epoch 282/501 --> loss:0.8341666531562805
+step 101/334, epoch 282/501 --> loss:0.8122676026821136
+step 151/334, epoch 282/501 --> loss:0.8209794855117798
+step 201/334, epoch 282/501 --> loss:0.8375143218040466
+step 251/334, epoch 282/501 --> loss:0.8041041266918182
+step 301/334, epoch 282/501 --> loss:0.8167738127708435
+step 51/334, epoch 283/501 --> loss:0.8210931527614593
+step 101/334, epoch 283/501 --> loss:0.8157588016986846
+step 151/334, epoch 283/501 --> loss:0.8172568905353547
+step 201/334, epoch 283/501 --> loss:0.8245425248146057
+step 251/334, epoch 283/501 --> loss:0.8182550144195556
+step 301/334, epoch 283/501 --> loss:0.8235896611213684
+step 51/334, epoch 284/501 --> loss:0.8288791489601135
+step 101/334, epoch 284/501 --> loss:0.8254114937782288
+step 151/334, epoch 284/501 --> loss:0.8144797050952911
+step 201/334, epoch 284/501 --> loss:0.8161907589435577
+step 251/334, epoch 284/501 --> loss:0.8254828584194184
+step 301/334, epoch 284/501 --> loss:0.8212899398803711
+step 51/334, epoch 285/501 --> loss:0.8271646106243133
+step 101/334, epoch 285/501 --> loss:0.823645590543747
+step 151/334, epoch 285/501 --> loss:0.8146276891231536
+step 201/334, epoch 285/501 --> loss:0.8171962654590607
+step 251/334, epoch 285/501 --> loss:0.8025196325778962
+step 301/334, epoch 285/501 --> loss:0.8346404469013214
+step 51/334, epoch 286/501 --> loss:0.8096281361579895
+step 101/334, epoch 286/501 --> loss:0.8234587323665619
+step 151/334, epoch 286/501 --> loss:0.8187125349044799
+step 201/334, epoch 286/501 --> loss:0.8371898412704468
+step 251/334, epoch 286/501 --> loss:0.8181889832019806
+step 301/334, epoch 286/501 --> loss:0.8273185217380523
+step 51/334, epoch 287/501 --> loss:0.8251639306545258
+step 101/334, epoch 287/501 --> loss:0.8209805905818939
+step 151/334, epoch 287/501 --> loss:0.8071473622322083
+step 201/334, epoch 287/501 --> loss:0.8252320051193237
+step 251/334, epoch 287/501 --> loss:0.8267243659496307
+step 301/334, epoch 287/501 --> loss:0.8142060494422912
+step 51/334, epoch 288/501 --> loss:0.827239865064621
+step 101/334, epoch 288/501 --> loss:0.8251130831241608
+step 151/334, epoch 288/501 --> loss:0.8088383388519287
+step 201/334, epoch 288/501 --> loss:0.8215974056720734
+step 251/334, epoch 288/501 --> loss:0.8295438051223755
+step 301/334, epoch 288/501 --> loss:0.8189298856258392
+step 51/334, epoch 289/501 --> loss:0.8190621721744538
+step 101/334, epoch 289/501 --> loss:0.8208483946323395
+step 151/334, epoch 289/501 --> loss:0.8161418783664703
+step 201/334, epoch 289/501 --> loss:0.8299572467803955
+step 251/334, epoch 289/501 --> loss:0.8139942169189454
+step 301/334, epoch 289/501 --> loss:0.8260261368751526
+step 51/334, epoch 290/501 --> loss:0.8255669414997101
+step 101/334, epoch 290/501 --> loss:0.8190854251384735
+step 151/334, epoch 290/501 --> loss:0.8211819219589234
+step 201/334, epoch 290/501 --> loss:0.82501136302948
+step 251/334, epoch 290/501 --> loss:0.8216764676570892
+step 301/334, epoch 290/501 --> loss:0.8089271891117096
+step 51/334, epoch 291/501 --> loss:0.815453109741211
+step 101/334, epoch 291/501 --> loss:0.8339806437492371
+step 151/334, epoch 291/501 --> loss:0.8084663486480713
+step 201/334, epoch 291/501 --> loss:0.8268436694145203
+step 251/334, epoch 291/501 --> loss:0.8232595360279084
+step 301/334, epoch 291/501 --> loss:0.8091352570056916
+
+##########train dataset##########
+acc--> [99.50895162838857]
+F1--> {'F1': [0.9446246726429975], 'precision': [0.9005498119971513], 'recall': [0.9932468150540412]}
+##########eval dataset##########
+acc--> [98.8873939814464]
+F1--> {'F1': [0.8758614850690387], 'precision': [0.8457914299106997], 'recall': [0.9081592310854891]}
+save model!
+step 51/334, epoch 292/501 --> loss:0.8119375371932983
+step 101/334, epoch 292/501 --> loss:0.8218290948867798
+step 151/334, epoch 292/501 --> loss:0.8305541753768921
+step 201/334, epoch 292/501 --> loss:0.8187162148952484
+step 251/334, epoch 292/501 --> loss:0.8286432564258576
+step 301/334, epoch 292/501 --> loss:0.8121215677261353
+step 51/334, epoch 293/501 --> loss:0.8016590464115143
+step 101/334, epoch 293/501 --> loss:0.803350397348404
+step 151/334, epoch 293/501 --> loss:0.8272145652770996
+step 201/334, epoch 293/501 --> loss:0.8270227980613708
+step 251/334, epoch 293/501 --> loss:0.83476717710495
+step 301/334, epoch 293/501 --> loss:0.8181354308128357
+step 51/334, epoch 294/501 --> loss:0.8310225248336792
+step 101/334, epoch 294/501 --> loss:0.8176198697090149
+step 151/334, epoch 294/501 --> loss:0.828472934961319
+step 201/334, epoch 294/501 --> loss:0.8180350410938263
+step 251/334, epoch 294/501 --> loss:0.8201846587657928
+step 301/334, epoch 294/501 --> loss:0.812921382188797
+step 51/334, epoch 295/501 --> loss:0.8067786192893982
+step 101/334, epoch 295/501 --> loss:0.8236222672462463
+step 151/334, epoch 295/501 --> loss:0.8280504071712493
+step 201/334, epoch 295/501 --> loss:0.817804571390152
+step 251/334, epoch 295/501 --> loss:0.8285028493404388
+step 301/334, epoch 295/501 --> loss:0.8073838639259339
+step 51/334, epoch 296/501 --> loss:0.8261350619792939
+step 101/334, epoch 296/501 --> loss:0.8291965854167939
+step 151/334, epoch 296/501 --> loss:0.8154027915000915
+step 201/334, epoch 296/501 --> loss:0.8257956695556641
+step 251/334, epoch 296/501 --> loss:0.8105470228195191
+step 301/334, epoch 296/501 --> loss:0.8081900584697723
+step 51/334, epoch 297/501 --> loss:0.8343106710910797
+step 101/334, epoch 297/501 --> loss:0.8029677474498749
+step 151/334, epoch 297/501 --> loss:0.8234001481533051
+step 201/334, epoch 297/501 --> loss:0.8353303349018097
+step 251/334, epoch 297/501 --> loss:0.8181882083415986
+step 301/334, epoch 297/501 --> loss:0.8110440862178803
+step 51/334, epoch 298/501 --> loss:0.8225449919700623
+step 101/334, epoch 298/501 --> loss:0.8203106033802032
+step 151/334, epoch 298/501 --> loss:0.8309975862503052
+step 201/334, epoch 298/501 --> loss:0.8213028132915496
+step 251/334, epoch 298/501 --> loss:0.8250302970409393
+step 301/334, epoch 298/501 --> loss:0.8170459985733032
+step 51/334, epoch 299/501 --> loss:0.8021528661251068
+step 101/334, epoch 299/501 --> loss:0.8366986501216889
+step 151/334, epoch 299/501 --> loss:0.8120272862911224
+step 201/334, epoch 299/501 --> loss:0.8192262434959412
+step 251/334, epoch 299/501 --> loss:0.8169496285915375
+step 301/334, epoch 299/501 --> loss:0.8242787230014801
+step 51/334, epoch 300/501 --> loss:0.8060436511039734
+step 101/334, epoch 300/501 --> loss:0.824005788564682
+step 151/334, epoch 300/501 --> loss:0.8122262728214263
+step 201/334, epoch 300/501 --> loss:0.8173054528236389
+step 251/334, epoch 300/501 --> loss:0.8276985085010529
+step 301/334, epoch 300/501 --> loss:0.8349943208694458
+step 51/334, epoch 301/501 --> loss:0.8245076429843903
+step 101/334, epoch 301/501 --> loss:0.8090816712379456
+step 151/334, epoch 301/501 --> loss:0.813757232427597
+step 201/334, epoch 301/501 --> loss:0.8246868562698364
+step 251/334, epoch 301/501 --> loss:0.814064120054245
+step 301/334, epoch 301/501 --> loss:0.8210936152935028
+
+##########train dataset##########
+acc--> [99.52281269635321]
+F1--> {'F1': [0.9462657897769355], 'precision': [0.9009279542264728], 'recall': [0.9964196011466091]}
+##########eval dataset##########
+acc--> [98.88991842327641]
+F1--> {'F1': [0.8765998359810964], 'precision': [0.8436072987618466], 'recall': [0.9122888217803443]}
+save model!
+step 51/334, epoch 302/501 --> loss:0.8099961364269257
+step 101/334, epoch 302/501 --> loss:0.837681587934494
+step 151/334, epoch 302/501 --> loss:0.8169022679328919
+step 201/334, epoch 302/501 --> loss:0.8094868981838226
+step 251/334, epoch 302/501 --> loss:0.817027530670166
+step 301/334, epoch 302/501 --> loss:0.8246503973007202
+step 51/334, epoch 303/501 --> loss:0.8310250115394592
+step 101/334, epoch 303/501 --> loss:0.8227403950691223
+step 151/334, epoch 303/501 --> loss:0.8163794898986816
+step 201/334, epoch 303/501 --> loss:0.8183546400070191
+step 251/334, epoch 303/501 --> loss:0.8266752183437347
+step 301/334, epoch 303/501 --> loss:0.8190807890892029
+step 51/334, epoch 304/501 --> loss:0.8324054086208343
+step 101/334, epoch 304/501 --> loss:0.8234106469154358
+step 151/334, epoch 304/501 --> loss:0.8232555544376373
+step 201/334, epoch 304/501 --> loss:0.8139633846282959
+step 251/334, epoch 304/501 --> loss:0.8236729097366333
+step 301/334, epoch 304/501 --> loss:0.8166598534584045
+step 51/334, epoch 305/501 --> loss:0.8295802438259124
+step 101/334, epoch 305/501 --> loss:0.8409809672832489
+step 151/334, epoch 305/501 --> loss:0.805903731584549
+step 201/334, epoch 305/501 --> loss:0.8149382555484772
+step 251/334, epoch 305/501 --> loss:0.8172038388252258
+step 301/334, epoch 305/501 --> loss:0.820631582736969
+step 51/334, epoch 306/501 --> loss:0.8174416184425354
+step 101/334, epoch 306/501 --> loss:0.8173728001117706
+step 151/334, epoch 306/501 --> loss:0.8190548038482666
+step 201/334, epoch 306/501 --> loss:0.8324005961418152
+step 251/334, epoch 306/501 --> loss:0.8097626495361329
+step 301/334, epoch 306/501 --> loss:0.8310477018356324
+step 51/334, epoch 307/501 --> loss:0.8215911555290222
+step 101/334, epoch 307/501 --> loss:0.827070208787918
+step 151/334, epoch 307/501 --> loss:0.8206476247310639
+step 201/334, epoch 307/501 --> loss:0.8299471843242645
+step 251/334, epoch 307/501 --> loss:0.8121263921260834
+step 301/334, epoch 307/501 --> loss:0.8225842499732972
+step 51/334, epoch 308/501 --> loss:0.8150250875949859
+step 101/334, epoch 308/501 --> loss:0.8195020043849945
+step 151/334, epoch 308/501 --> loss:0.8293206560611724
+step 201/334, epoch 308/501 --> loss:0.8278666186332703
+step 251/334, epoch 308/501 --> loss:0.8232856011390686
+step 301/334, epoch 308/501 --> loss:0.8155734121799469
+step 51/334, epoch 309/501 --> loss:0.8205843698978424
+step 101/334, epoch 309/501 --> loss:0.8213255083560944
+step 151/334, epoch 309/501 --> loss:0.8180992019176483
+step 201/334, epoch 309/501 --> loss:0.8121551740169525
+step 251/334, epoch 309/501 --> loss:0.8159145021438599
+step 301/334, epoch 309/501 --> loss:0.8187961947917938
+step 51/334, epoch 310/501 --> loss:0.821782466173172
+step 101/334, epoch 310/501 --> loss:0.832610446214676
+step 151/334, epoch 310/501 --> loss:0.8074594926834107
+step 201/334, epoch 310/501 --> loss:0.8298034226894379
+step 251/334, epoch 310/501 --> loss:0.8153089499473571
+step 301/334, epoch 310/501 --> loss:0.8167382574081421
+step 51/334, epoch 311/501 --> loss:0.8250526583194733
+step 101/334, epoch 311/501 --> loss:0.8171293532848358
+step 151/334, epoch 311/501 --> loss:0.8162917721271515
+step 201/334, epoch 311/501 --> loss:0.8274657726287842
+step 251/334, epoch 311/501 --> loss:0.8216776847839355
+step 301/334, epoch 311/501 --> loss:0.8184609723091125
+
+##########train dataset##########
+acc--> [99.52881036735968]
+F1--> {'F1': [0.9464316394689671], 'precision': [0.9089779511444506], 'recall': [0.9871153260559608]}
+##########eval dataset##########
+acc--> [98.90247655352235]
+F1--> {'F1': [0.8747625880966862], 'precision': [0.8629880467657159], 'recall': [0.8868731523774384]}
+step 51/334, epoch 312/501 --> loss:0.8335971403121948
+step 101/334, epoch 312/501 --> loss:0.825267653465271
+step 151/334, epoch 312/501 --> loss:0.8181029081344604
+step 201/334, epoch 312/501 --> loss:0.8306618762016297
+step 251/334, epoch 312/501 --> loss:0.8163746154308319
+step 301/334, epoch 312/501 --> loss:0.8020508670806885
+step 51/334, epoch 313/501 --> loss:0.8135610663890839
+step 101/334, epoch 313/501 --> loss:0.8165536046028137
+step 151/334, epoch 313/501 --> loss:0.8161719489097595
+step 201/334, epoch 313/501 --> loss:0.82516117811203
+step 251/334, epoch 313/501 --> loss:0.818775269985199
+step 301/334, epoch 313/501 --> loss:0.8290993690490722
+step 51/334, epoch 314/501 --> loss:0.8070452952384949
+step 101/334, epoch 314/501 --> loss:0.8174462103843689
+step 151/334, epoch 314/501 --> loss:0.8258642578125
+step 201/334, epoch 314/501 --> loss:0.8189561176300049
+step 251/334, epoch 314/501 --> loss:0.8195922899246216
+step 301/334, epoch 314/501 --> loss:0.8326779758930206
+step 51/334, epoch 315/501 --> loss:0.815562219619751
+step 101/334, epoch 315/501 --> loss:0.8154602408409118
+step 151/334, epoch 315/501 --> loss:0.8118087899684906
+step 201/334, epoch 315/501 --> loss:0.8348881876468659
+step 251/334, epoch 315/501 --> loss:0.8073104798793793
+step 301/334, epoch 315/501 --> loss:0.8239743971824646
+step 51/334, epoch 316/501 --> loss:0.8158634054660797
+step 101/334, epoch 316/501 --> loss:0.8231985938549041
+step 151/334, epoch 316/501 --> loss:0.8337314176559448
+step 201/334, epoch 316/501 --> loss:0.8178193438053131
+step 251/334, epoch 316/501 --> loss:0.8228909826278686
+step 301/334, epoch 316/501 --> loss:0.8077071642875672
+step 51/334, epoch 317/501 --> loss:0.8328829979896546
+step 101/334, epoch 317/501 --> loss:0.8204987919330597
+step 151/334, epoch 317/501 --> loss:0.8417745947837829
+step 201/334, epoch 317/501 --> loss:0.803917282819748
+step 251/334, epoch 317/501 --> loss:0.8080436539649963
+step 301/334, epoch 317/501 --> loss:0.8284987211227417
+step 51/334, epoch 318/501 --> loss:0.8132375144958496
+step 101/334, epoch 318/501 --> loss:0.8355102300643921
+step 151/334, epoch 318/501 --> loss:0.8163309454917907
+step 201/334, epoch 318/501 --> loss:0.8321518313884735
+step 251/334, epoch 318/501 --> loss:0.8011013245582581
+step 301/334, epoch 318/501 --> loss:0.8174939906597137
+step 51/334, epoch 319/501 --> loss:0.8056398308277131
+step 101/334, epoch 319/501 --> loss:0.825380619764328
+step 151/334, epoch 319/501 --> loss:0.8259288418292999
+step 201/334, epoch 319/501 --> loss:0.8288856887817383
+step 251/334, epoch 319/501 --> loss:0.8164507055282593
+step 301/334, epoch 319/501 --> loss:0.8240945994853973
+step 51/334, epoch 320/501 --> loss:0.8135259354114532
+step 101/334, epoch 320/501 --> loss:0.8300157606601715
+step 151/334, epoch 320/501 --> loss:0.8274144220352173
+step 201/334, epoch 320/501 --> loss:0.8150363421440124
+step 251/334, epoch 320/501 --> loss:0.8121534407138824
+step 301/334, epoch 320/501 --> loss:0.8198630750179291
+step 51/334, epoch 321/501 --> loss:0.8190076684951783
+step 101/334, epoch 321/501 --> loss:0.8184774804115296
+step 151/334, epoch 321/501 --> loss:0.814014801979065
+step 201/334, epoch 321/501 --> loss:0.8203084301948548
+step 251/334, epoch 321/501 --> loss:0.8190692317485809
+step 301/334, epoch 321/501 --> loss:0.8208622443675995
+
+##########train dataset##########
+acc--> [99.49631006206947]
+F1--> {'F1': [0.9434577601586441], 'precision': [0.8957403761427507], 'recall': [0.9965562860711709]}
+##########eval dataset##########
+acc--> [98.8618585381229]
+F1--> {'F1': [0.8741793267588054], 'precision': [0.8370040747591825], 'recall': [0.914821246171303]}
+step 51/334, epoch 322/501 --> loss:0.8218911373615265
+step 101/334, epoch 322/501 --> loss:0.8134680736064911
+step 151/334, epoch 322/501 --> loss:0.7965230751037597
+step 201/334, epoch 322/501 --> loss:0.821995131969452
+step 251/334, epoch 322/501 --> loss:0.8252204978466033
+step 301/334, epoch 322/501 --> loss:0.8378049051761627
+step 51/334, epoch 323/501 --> loss:0.8187041413784027
+step 101/334, epoch 323/501 --> loss:0.8359304702281952
+step 151/334, epoch 323/501 --> loss:0.8119415354728698
+step 201/334, epoch 323/501 --> loss:0.8145680761337281
+step 251/334, epoch 323/501 --> loss:0.8137717711925506
+step 301/334, epoch 323/501 --> loss:0.8383011615276337
+step 51/334, epoch 324/501 --> loss:0.8210868680477142
+step 101/334, epoch 324/501 --> loss:0.8099394023418427
+step 151/334, epoch 324/501 --> loss:0.8242816615104676
+step 201/334, epoch 324/501 --> loss:0.8299915325641632
+step 251/334, epoch 324/501 --> loss:0.8169703114032746
+step 301/334, epoch 324/501 --> loss:0.8262323021888733
+step 51/334, epoch 325/501 --> loss:0.8279658818244934
+step 101/334, epoch 325/501 --> loss:0.8117801582813263
+step 151/334, epoch 325/501 --> loss:0.8359390985965729
+step 201/334, epoch 325/501 --> loss:0.8175695657730102
+step 251/334, epoch 325/501 --> loss:0.7956850945949554
+step 301/334, epoch 325/501 --> loss:0.831009840965271
+step 51/334, epoch 326/501 --> loss:0.8219309425354004
+step 101/334, epoch 326/501 --> loss:0.8149894821643829
+step 151/334, epoch 326/501 --> loss:0.8220398342609405
+step 201/334, epoch 326/501 --> loss:0.825742255449295
+step 251/334, epoch 326/501 --> loss:0.8113467669487
+step 301/334, epoch 326/501 --> loss:0.8152969872951508
+step 51/334, epoch 327/501 --> loss:0.7899403882026672
+step 101/334, epoch 327/501 --> loss:0.8271599543094635
+step 151/334, epoch 327/501 --> loss:0.8184792518615722
+step 201/334, epoch 327/501 --> loss:0.8357248032093048
+step 251/334, epoch 327/501 --> loss:0.8290582120418548
+step 301/334, epoch 327/501 --> loss:0.8216373980045318
+step 51/334, epoch 328/501 --> loss:0.8408604383468627
+step 101/334, epoch 328/501 --> loss:0.8163637435436248
+step 151/334, epoch 328/501 --> loss:0.8130811297893524
+step 201/334, epoch 328/501 --> loss:0.8219817709922791
+step 251/334, epoch 328/501 --> loss:0.8150644981861115
+step 301/334, epoch 328/501 --> loss:0.8216833364963532
+step 51/334, epoch 329/501 --> loss:0.8220296120643615
+step 101/334, epoch 329/501 --> loss:0.8259539771080017
+step 151/334, epoch 329/501 --> loss:0.8221426081657409
+step 201/334, epoch 329/501 --> loss:0.8152411293983459
+step 251/334, epoch 329/501 --> loss:0.816552129983902
+step 301/334, epoch 329/501 --> loss:0.8300864338874817
+step 51/334, epoch 330/501 --> loss:0.8280358016490936
+step 101/334, epoch 330/501 --> loss:0.8178042101860047
+step 151/334, epoch 330/501 --> loss:0.8259532558917999
+step 201/334, epoch 330/501 --> loss:0.8088402509689331
+step 251/334, epoch 330/501 --> loss:0.8091430985927581
+step 301/334, epoch 330/501 --> loss:0.8399063575267792
+step 51/334, epoch 331/501 --> loss:0.8377401435375214
+step 101/334, epoch 331/501 --> loss:0.8026041185855866
+step 151/334, epoch 331/501 --> loss:0.8258093905448913
+step 201/334, epoch 331/501 --> loss:0.8220746886730194
+step 251/334, epoch 331/501 --> loss:0.824904317855835
+step 301/334, epoch 331/501 --> loss:0.8156115221977234
+
+##########train dataset##########
+acc--> [99.56404174987485]
+F1--> {'F1': [0.9507013401597258], 'precision': [0.9086096913692329], 'recall': [0.9968932161060582]}
+##########eval dataset##########
+acc--> [98.90276490859124]
+F1--> {'F1': [0.8772644544585901], 'precision': [0.8491615743259233], 'recall': [0.9073018082157122]}
+save model!
+step 51/334, epoch 332/501 --> loss:0.8237482404708862
+step 101/334, epoch 332/501 --> loss:0.8236375308036804
+step 151/334, epoch 332/501 --> loss:0.8255185282230377
+step 201/334, epoch 332/501 --> loss:0.815196932554245
+step 251/334, epoch 332/501 --> loss:0.8080405521392823
+step 301/334, epoch 332/501 --> loss:0.8311360108852387
+step 51/334, epoch 333/501 --> loss:0.8256222033500671
+step 101/334, epoch 333/501 --> loss:0.8238320529460907
+step 151/334, epoch 333/501 --> loss:0.8180632555484771
+step 201/334, epoch 333/501 --> loss:0.8209134888648987
+step 251/334, epoch 333/501 --> loss:0.8227761662006379
+step 301/334, epoch 333/501 --> loss:0.8146482169628143
+step 51/334, epoch 334/501 --> loss:0.8210961627960205
+step 101/334, epoch 334/501 --> loss:0.8073880612850189
+step 151/334, epoch 334/501 --> loss:0.8137796533107757
+step 201/334, epoch 334/501 --> loss:0.8245114231109619
+step 251/334, epoch 334/501 --> loss:0.8221376121044159
+step 301/334, epoch 334/501 --> loss:0.8211803460121154
+step 51/334, epoch 335/501 --> loss:0.8146737432479858
+step 101/334, epoch 335/501 --> loss:0.8146268618106842
+step 151/334, epoch 335/501 --> loss:0.8192963027954101
+step 201/334, epoch 335/501 --> loss:0.8261270833015442
+step 251/334, epoch 335/501 --> loss:0.8252432703971863
+step 301/334, epoch 335/501 --> loss:0.8183830463886261
+step 51/334, epoch 336/501 --> loss:0.8204915392398834
+step 101/334, epoch 336/501 --> loss:0.81616406083107
+step 151/334, epoch 336/501 --> loss:0.8164242017269134
+step 201/334, epoch 336/501 --> loss:0.8116546654701233
+step 251/334, epoch 336/501 --> loss:0.8174416756629944
+step 301/334, epoch 336/501 --> loss:0.8273008644580842
+step 51/334, epoch 337/501 --> loss:0.8320293128490448
+step 101/334, epoch 337/501 --> loss:0.7984056222438812
+step 151/334, epoch 337/501 --> loss:0.8433764469623566
+step 201/334, epoch 337/501 --> loss:0.8115154337882996
+step 251/334, epoch 337/501 --> loss:0.8251086091995239
+step 301/334, epoch 337/501 --> loss:0.8170581161975861
+step 51/334, epoch 338/501 --> loss:0.8193895447254181
+step 101/334, epoch 338/501 --> loss:0.8261495947837829
+step 151/334, epoch 338/501 --> loss:0.8107014203071594
+step 201/334, epoch 338/501 --> loss:0.8324798524379731
+step 251/334, epoch 338/501 --> loss:0.8184800374507905
+step 301/334, epoch 338/501 --> loss:0.8205740964412689
+step 51/334, epoch 339/501 --> loss:0.8299842250347137
+step 101/334, epoch 339/501 --> loss:0.8255938756465911
+step 151/334, epoch 339/501 --> loss:0.814873239994049
+step 201/334, epoch 339/501 --> loss:0.8167256402969361
+step 251/334, epoch 339/501 --> loss:0.8180926203727722
+step 301/334, epoch 339/501 --> loss:0.8115283012390136
+step 51/334, epoch 340/501 --> loss:0.8268792235851288
+step 101/334, epoch 340/501 --> loss:0.8073931431770325
+step 151/334, epoch 340/501 --> loss:0.8083897078037262
+step 201/334, epoch 340/501 --> loss:0.8294415533542633
+step 251/334, epoch 340/501 --> loss:0.8204132151603699
+step 301/334, epoch 340/501 --> loss:0.8305689632892609
+step 51/334, epoch 341/501 --> loss:0.8237163817882538
+step 101/334, epoch 341/501 --> loss:0.8202145767211914
+step 151/334, epoch 341/501 --> loss:0.8230745136737824
+step 201/334, epoch 341/501 --> loss:0.8121104431152344
+step 251/334, epoch 341/501 --> loss:0.8090252852439881
+step 301/334, epoch 341/501 --> loss:0.8234859693050385
+
+##########train dataset##########
+acc--> [99.5690195936783]
+F1--> {'F1': [0.951202504677976], 'precision': [0.9101386054246958], 'recall': [0.9961578986955129]}
+##########eval dataset##########
+acc--> [98.92606159519926]
+F1--> {'F1': [0.8794660965533291], 'precision': [0.8539820060549322], 'recall': [0.9065285523963726]}
+save model!
+step 51/334, epoch 342/501 --> loss:0.8242650675773621
+step 101/334, epoch 342/501 --> loss:0.8202900159358978
+step 151/334, epoch 342/501 --> loss:0.8324118947982788
+step 201/334, epoch 342/501 --> loss:0.8035437130928039
+step 251/334, epoch 342/501 --> loss:0.8466037464141846
+step 301/334, epoch 342/501 --> loss:0.8066669642925263
+step 51/334, epoch 343/501 --> loss:0.8417934143543243
+step 101/334, epoch 343/501 --> loss:0.8085867571830749
+step 151/334, epoch 343/501 --> loss:0.8211936891078949
+step 201/334, epoch 343/501 --> loss:0.8081447744369507
+step 251/334, epoch 343/501 --> loss:0.8171038293838501
+step 301/334, epoch 343/501 --> loss:0.8309816765785217
+step 51/334, epoch 344/501 --> loss:0.8106122875213623
+step 101/334, epoch 344/501 --> loss:0.8215561485290528
+step 151/334, epoch 344/501 --> loss:0.8367774844169616
+step 201/334, epoch 344/501 --> loss:0.8240025436878204
+step 251/334, epoch 344/501 --> loss:0.8078265976905823
+step 301/334, epoch 344/501 --> loss:0.8206008350849152
+step 51/334, epoch 345/501 --> loss:0.8140377449989319
+step 101/334, epoch 345/501 --> loss:0.807291465997696
+step 151/334, epoch 345/501 --> loss:0.8239515841007232
+step 201/334, epoch 345/501 --> loss:0.8290143120288849
+step 251/334, epoch 345/501 --> loss:0.8310040771961212
+step 301/334, epoch 345/501 --> loss:0.8209853458404541
+step 51/334, epoch 346/501 --> loss:0.8180737221240997
+step 101/334, epoch 346/501 --> loss:0.825013040304184
+step 151/334, epoch 346/501 --> loss:0.8156553387641907
+step 201/334, epoch 346/501 --> loss:0.8224848198890686
+step 251/334, epoch 346/501 --> loss:0.817633490562439
+step 301/334, epoch 346/501 --> loss:0.8158674037456513
+step 51/334, epoch 347/501 --> loss:0.81834303855896
+step 101/334, epoch 347/501 --> loss:0.8179630947113037
+step 151/334, epoch 347/501 --> loss:0.8183111321926116
+step 201/334, epoch 347/501 --> loss:0.8207153105735778
+step 251/334, epoch 347/501 --> loss:0.8243489134311676
+step 301/334, epoch 347/501 --> loss:0.8270098328590393
+step 51/334, epoch 348/501 --> loss:0.8235237801074982
+step 101/334, epoch 348/501 --> loss:0.8208696818351746
+step 151/334, epoch 348/501 --> loss:0.8146053624153137
+step 201/334, epoch 348/501 --> loss:0.8230683422088623
+step 251/334, epoch 348/501 --> loss:0.8029674935340881
+step 301/334, epoch 348/501 --> loss:0.828099912405014
+step 51/334, epoch 349/501 --> loss:0.8134067618846893
+step 101/334, epoch 349/501 --> loss:0.8206758534908295
+step 151/334, epoch 349/501 --> loss:0.8196981239318848
+step 201/334, epoch 349/501 --> loss:0.8225470268726349
+step 251/334, epoch 349/501 --> loss:0.8104571974277497
+step 301/334, epoch 349/501 --> loss:0.8319697165489197
+step 51/334, epoch 350/501 --> loss:0.8338759028911591
+step 101/334, epoch 350/501 --> loss:0.824646508693695
+step 151/334, epoch 350/501 --> loss:0.8245103144645691
+step 201/334, epoch 350/501 --> loss:0.8282723832130432
+step 251/334, epoch 350/501 --> loss:0.804206600189209
+step 301/334, epoch 350/501 --> loss:0.8097021555900574
+step 51/334, epoch 351/501 --> loss:0.8289218211174011
+step 101/334, epoch 351/501 --> loss:0.8183785784244537
+step 151/334, epoch 351/501 --> loss:0.8096149110794068
+step 201/334, epoch 351/501 --> loss:0.8255421566963196
+step 251/334, epoch 351/501 --> loss:0.813141963481903
+step 301/334, epoch 351/501 --> loss:0.8292682719230652
+
+##########train dataset##########
+acc--> [99.6333682586218]
+F1--> {'F1': [0.958170524844945], 'precision': [0.9232493779688591], 'recall': [0.9958480343107]}
+##########eval dataset##########
+acc--> [98.98486800706257]
+F1--> {'F1': [0.8847249089878657], 'precision': [0.8687214987373096], 'recall': [0.9013393834757358]}
+save model!
+step 51/334, epoch 352/501 --> loss:0.8175318169593812
+step 101/334, epoch 352/501 --> loss:0.8148210787773132
+step 151/334, epoch 352/501 --> loss:0.8096950662136078
+step 201/334, epoch 352/501 --> loss:0.8160723221302032
+step 251/334, epoch 352/501 --> loss:0.8315666401386261
+step 301/334, epoch 352/501 --> loss:0.8261503398418426
+step 51/334, epoch 353/501 --> loss:0.8219458293914795
+step 101/334, epoch 353/501 --> loss:0.8301697170734406
+step 151/334, epoch 353/501 --> loss:0.8037472367286682
+step 201/334, epoch 353/501 --> loss:0.8159686362743378
+step 251/334, epoch 353/501 --> loss:0.8177574932575226
+step 301/334, epoch 353/501 --> loss:0.8216421067714691
+step 51/334, epoch 354/501 --> loss:0.8315659987926484
+step 101/334, epoch 354/501 --> loss:0.8222654736042023
+step 151/334, epoch 354/501 --> loss:0.8136594784259796
+step 201/334, epoch 354/501 --> loss:0.8077197456359864
+step 251/334, epoch 354/501 --> loss:0.812250770330429
+step 301/334, epoch 354/501 --> loss:0.8355934369564056
+step 51/334, epoch 355/501 --> loss:0.8225277745723725
+step 101/334, epoch 355/501 --> loss:0.8173350965976716
+step 151/334, epoch 355/501 --> loss:0.8200935363769531
+step 201/334, epoch 355/501 --> loss:0.8183234083652496
+step 251/334, epoch 355/501 --> loss:0.8136945915222168
+step 301/334, epoch 355/501 --> loss:0.8236898398399353
+step 51/334, epoch 356/501 --> loss:0.8084429132938385
+step 101/334, epoch 356/501 --> loss:0.8255087792873382
+step 151/334, epoch 356/501 --> loss:0.8140508377552033
+step 201/334, epoch 356/501 --> loss:0.8160334837436676
+step 251/334, epoch 356/501 --> loss:0.8200645458698272
+step 301/334, epoch 356/501 --> loss:0.817563704252243
+step 51/334, epoch 357/501 --> loss:0.8329207885265351
+step 101/334, epoch 357/501 --> loss:0.8142191994190217
+step 151/334, epoch 357/501 --> loss:0.8048194789886475
+step 201/334, epoch 357/501 --> loss:0.8175344693660737
+step 251/334, epoch 357/501 --> loss:0.8280981266498566
+step 301/334, epoch 357/501 --> loss:0.8184128654003143
+step 51/334, epoch 358/501 --> loss:0.8314945793151856
+step 101/334, epoch 358/501 --> loss:0.8201878094673156
+step 151/334, epoch 358/501 --> loss:0.8107272398471832
+step 201/334, epoch 358/501 --> loss:0.8303355777263641
+step 251/334, epoch 358/501 --> loss:0.8151690638065339
+step 301/334, epoch 358/501 --> loss:0.8210221517086029
+step 51/334, epoch 359/501 --> loss:0.8258315253257752
+step 101/334, epoch 359/501 --> loss:0.8328612613677978
+step 151/334, epoch 359/501 --> loss:0.8296942937374115
+step 201/334, epoch 359/501 --> loss:0.8053486096858978
+step 251/334, epoch 359/501 --> loss:0.8099292612075806
+step 301/334, epoch 359/501 --> loss:0.8192755436897278
+step 51/334, epoch 360/501 --> loss:0.8236865162849426
+step 101/334, epoch 360/501 --> loss:0.818718626499176
+step 151/334, epoch 360/501 --> loss:0.8110213315486908
+step 201/334, epoch 360/501 --> loss:0.8139977216720581
+step 251/334, epoch 360/501 --> loss:0.817268830537796
+step 301/334, epoch 360/501 --> loss:0.8387279546260834
+step 51/334, epoch 361/501 --> loss:0.8187650227546692
+step 101/334, epoch 361/501 --> loss:0.8130443048477173
+step 151/334, epoch 361/501 --> loss:0.819744621515274
+step 201/334, epoch 361/501 --> loss:0.8167943501472473
+step 251/334, epoch 361/501 --> loss:0.8239090013504028
+step 301/334, epoch 361/501 --> loss:0.8159723973274231
+
+##########train dataset##########
+acc--> [99.61374552454339]
+F1--> {'F1': [0.9560609423457186], 'precision': [0.9187244134613096], 'recall': [0.9965715486557993]}
+##########eval dataset##########
+acc--> [98.95260494628673]
+F1--> {'F1': [0.8818038135072891], 'precision': [0.8606749965434721], 'recall': [0.9040066295823492]}
+step 51/334, epoch 362/501 --> loss:0.8175465607643128
+step 101/334, epoch 362/501 --> loss:0.8289793062210083
+step 151/334, epoch 362/501 --> loss:0.8239879417419433
+step 201/334, epoch 362/501 --> loss:0.8080276191234589
+step 251/334, epoch 362/501 --> loss:0.8239714348316193
+step 301/334, epoch 362/501 --> loss:0.8223477196693421
+step 51/334, epoch 363/501 --> loss:0.8454826641082763
+step 101/334, epoch 363/501 --> loss:0.8180803453922272
+step 151/334, epoch 363/501 --> loss:0.8088935923576355
+step 201/334, epoch 363/501 --> loss:0.8143538248538971
+step 251/334, epoch 363/501 --> loss:0.815692527294159
+step 301/334, epoch 363/501 --> loss:0.81264923453331
+step 51/334, epoch 364/501 --> loss:0.8227552008628846
+step 101/334, epoch 364/501 --> loss:0.8165955078601838
+step 151/334, epoch 364/501 --> loss:0.8413807904720306
+step 201/334, epoch 364/501 --> loss:0.8174784100055694
+step 251/334, epoch 364/501 --> loss:0.8124135041236877
+step 301/334, epoch 364/501 --> loss:0.8147754299640656
+step 51/334, epoch 365/501 --> loss:0.8238129389286041
+step 101/334, epoch 365/501 --> loss:0.8224873661994934
+step 151/334, epoch 365/501 --> loss:0.8137117767333985
+step 201/334, epoch 365/501 --> loss:0.8288553392887116
+step 251/334, epoch 365/501 --> loss:0.8083549463748931
+step 301/334, epoch 365/501 --> loss:0.8160139071941376
+step 51/334, epoch 366/501 --> loss:0.8278130877017975
+step 101/334, epoch 366/501 --> loss:0.8194397366046906
+step 151/334, epoch 366/501 --> loss:0.8117987954616547
+step 201/334, epoch 366/501 --> loss:0.8101046717166901
+step 251/334, epoch 366/501 --> loss:0.8364104020595551
+step 301/334, epoch 366/501 --> loss:0.8141806507110596
+step 51/334, epoch 367/501 --> loss:0.821098825931549
+step 101/334, epoch 367/501 --> loss:0.8227142250537872
+step 151/334, epoch 367/501 --> loss:0.8178924405574799
+step 201/334, epoch 367/501 --> loss:0.8211237549781799
+step 251/334, epoch 367/501 --> loss:0.8209055209159851
+step 301/334, epoch 367/501 --> loss:0.8092305326461792
+step 51/334, epoch 368/501 --> loss:0.8203941941261291
+step 101/334, epoch 368/501 --> loss:0.8197283875942231
+step 151/334, epoch 368/501 --> loss:0.8132940196990966
+step 201/334, epoch 368/501 --> loss:0.8087798094749451
+step 251/334, epoch 368/501 --> loss:0.8216151833534241
+step 301/334, epoch 368/501 --> loss:0.8330827558040619
+step 51/334, epoch 369/501 --> loss:0.8216998779773712
+step 101/334, epoch 369/501 --> loss:0.8154524564743042
+step 151/334, epoch 369/501 --> loss:0.8108001899719238
+step 201/334, epoch 369/501 --> loss:0.8404386401176452
+step 251/334, epoch 369/501 --> loss:0.8092223525047302
+step 301/334, epoch 369/501 --> loss:0.8222764658927918
+step 51/334, epoch 370/501 --> loss:0.8167438232898712
+step 101/334, epoch 370/501 --> loss:0.8153248000144958
+step 151/334, epoch 370/501 --> loss:0.8196490383148194
+step 201/334, epoch 370/501 --> loss:0.8098790216445922
+step 251/334, epoch 370/501 --> loss:0.8349864196777343
+step 301/334, epoch 370/501 --> loss:0.8301915991306305
+step 51/334, epoch 371/501 --> loss:0.8127798795700073
+step 101/334, epoch 371/501 --> loss:0.8219832575321198
+step 151/334, epoch 371/501 --> loss:0.8284392142295838
+step 201/334, epoch 371/501 --> loss:0.8301660430431366
+step 251/334, epoch 371/501 --> loss:0.8200283181667328
+step 301/334, epoch 371/501 --> loss:0.8144818270206451
+
+##########train dataset##########
+acc--> [99.61935157046123]
+F1--> {'F1': [0.9566900015120249], 'precision': [0.9194971578306282], 'recall': [0.9970293583609442]}
+##########eval dataset##########
+acc--> [98.9418950919338]
+F1--> {'F1': [0.8818314485070375], 'precision': [0.8523009214105477], 'recall': [0.9134924878190765]}
+step 51/334, epoch 372/501 --> loss:0.821934974193573
+step 101/334, epoch 372/501 --> loss:0.8143102252483367
+step 151/334, epoch 372/501 --> loss:0.8193115174770356
+step 201/334, epoch 372/501 --> loss:0.8262423002719879
+step 251/334, epoch 372/501 --> loss:0.8122766602039337
+step 301/334, epoch 372/501 --> loss:0.8231892931461334
+step 51/334, epoch 373/501 --> loss:0.8031075751781463
+step 101/334, epoch 373/501 --> loss:0.8185816073417663
+step 151/334, epoch 373/501 --> loss:0.8238857817649842
+step 201/334, epoch 373/501 --> loss:0.8276274466514587
+step 251/334, epoch 373/501 --> loss:0.825569828748703
+step 301/334, epoch 373/501 --> loss:0.823192024230957
+step 51/334, epoch 374/501 --> loss:0.8170891213417053
+step 101/334, epoch 374/501 --> loss:0.8165626049041748
+step 151/334, epoch 374/501 --> loss:0.8232076072692871
+step 201/334, epoch 374/501 --> loss:0.8009484767913818
+step 251/334, epoch 374/501 --> loss:0.8414152932167053
+step 301/334, epoch 374/501 --> loss:0.8257167518138886
+step 51/334, epoch 375/501 --> loss:0.8199542152881623
+step 101/334, epoch 375/501 --> loss:0.8184980463981628
+step 151/334, epoch 375/501 --> loss:0.8049408793449402
+step 201/334, epoch 375/501 --> loss:0.8244140303134918
+step 251/334, epoch 375/501 --> loss:0.8242901635169982
+step 301/334, epoch 375/501 --> loss:0.824112012386322
+step 51/334, epoch 376/501 --> loss:0.8341054117679596
+step 101/334, epoch 376/501 --> loss:0.8132616758346558
+step 151/334, epoch 376/501 --> loss:0.8122627365589142
+step 201/334, epoch 376/501 --> loss:0.8157079923152923
+step 251/334, epoch 376/501 --> loss:0.8298035037517547
+step 301/334, epoch 376/501 --> loss:0.8174020540714264
+step 51/334, epoch 377/501 --> loss:0.8263072037696838
+step 101/334, epoch 377/501 --> loss:0.8157876706123353
+step 151/334, epoch 377/501 --> loss:0.8259710121154785
+step 201/334, epoch 377/501 --> loss:0.824975254535675
+step 251/334, epoch 377/501 --> loss:0.8019620525836945
+step 301/334, epoch 377/501 --> loss:0.8227092385292053
+step 51/334, epoch 378/501 --> loss:0.8305096352100372
+step 101/334, epoch 378/501 --> loss:0.8250514149665833
+step 151/334, epoch 378/501 --> loss:0.8095201313495636
+step 201/334, epoch 378/501 --> loss:0.8305350923538208
+step 251/334, epoch 378/501 --> loss:0.8120408284664155
+step 301/334, epoch 378/501 --> loss:0.8176614725589753
+step 51/334, epoch 379/501 --> loss:0.819902378320694
+step 101/334, epoch 379/501 --> loss:0.8226523530483246
+step 151/334, epoch 379/501 --> loss:0.8188148534297943
+step 201/334, epoch 379/501 --> loss:0.8331268620491028
+step 251/334, epoch 379/501 --> loss:0.8182134747505188
+step 301/334, epoch 379/501 --> loss:0.813912341594696
+step 51/334, epoch 380/501 --> loss:0.8153570258617401
+step 101/334, epoch 380/501 --> loss:0.82612438082695
+step 151/334, epoch 380/501 --> loss:0.8256076371669769
+step 201/334, epoch 380/501 --> loss:0.8285400927066803
+step 251/334, epoch 380/501 --> loss:0.8069401681423187
+step 301/334, epoch 380/501 --> loss:0.8148906290531158
+step 51/334, epoch 381/501 --> loss:0.818462860584259
+step 101/334, epoch 381/501 --> loss:0.8156814420223236
+step 151/334, epoch 381/501 --> loss:0.8355787098407745
+step 201/334, epoch 381/501 --> loss:0.8213703441619873
+step 251/334, epoch 381/501 --> loss:0.8216822671890259
+step 301/334, epoch 381/501 --> loss:0.8115437662601471
+
+##########train dataset##########
+acc--> [99.5859547326453]
+F1--> {'F1': [0.9530618884077555], 'precision': [0.9129478334066199], 'recall': [0.996874019166281]}
+##########eval dataset##########
+acc--> [98.90993907590725]
+F1--> {'F1': [0.878177313045694], 'precision': [0.849325464959024], 'recall': [0.9090690074049878]}
+step 51/334, epoch 382/501 --> loss:0.8280851459503173
+step 101/334, epoch 382/501 --> loss:0.8261872982978821
+step 151/334, epoch 382/501 --> loss:0.7973963379859924
+step 201/334, epoch 382/501 --> loss:0.830547034740448
+step 251/334, epoch 382/501 --> loss:0.811787085533142
+step 301/334, epoch 382/501 --> loss:0.8207508480548859
+step 51/334, epoch 383/501 --> loss:0.8168587231636047
+step 101/334, epoch 383/501 --> loss:0.8261514317989349
+step 151/334, epoch 383/501 --> loss:0.8146683704853058
+step 201/334, epoch 383/501 --> loss:0.8274558329582214
+step 251/334, epoch 383/501 --> loss:0.8139886724948883
+step 301/334, epoch 383/501 --> loss:0.8242673826217651
+step 51/334, epoch 384/501 --> loss:0.8190070521831513
+step 101/334, epoch 384/501 --> loss:0.811850323677063
+step 151/334, epoch 384/501 --> loss:0.8250056278705596
+step 201/334, epoch 384/501 --> loss:0.8197868728637695
+step 251/334, epoch 384/501 --> loss:0.825504287481308
+step 301/334, epoch 384/501 --> loss:0.8284838652610779
+step 51/334, epoch 385/501 --> loss:0.8308977282047272
+step 101/334, epoch 385/501 --> loss:0.8162457239627838
+step 151/334, epoch 385/501 --> loss:0.8236281800270081
+step 201/334, epoch 385/501 --> loss:0.7986596608161927
+step 251/334, epoch 385/501 --> loss:0.8215980279445648
+step 301/334, epoch 385/501 --> loss:0.8289586782455445
+step 51/334, epoch 386/501 --> loss:0.8246755397319794
+step 101/334, epoch 386/501 --> loss:0.8161771249771118
+step 151/334, epoch 386/501 --> loss:0.8126680648326874
+step 201/334, epoch 386/501 --> loss:0.8196799206733704
+step 251/334, epoch 386/501 --> loss:0.8182316386699676
+step 301/334, epoch 386/501 --> loss:0.8211353194713592
+step 51/334, epoch 387/501 --> loss:0.8132411694526672
+step 101/334, epoch 387/501 --> loss:0.8313048958778382
+step 151/334, epoch 387/501 --> loss:0.8165776419639588
+step 201/334, epoch 387/501 --> loss:0.8195895326137542
+step 251/334, epoch 387/501 --> loss:0.8256740236282348
+step 301/334, epoch 387/501 --> loss:0.82236896276474
+step 51/334, epoch 388/501 --> loss:0.8217207837104797
+step 101/334, epoch 388/501 --> loss:0.8155261754989624
+step 151/334, epoch 388/501 --> loss:0.8224049544334412
+step 201/334, epoch 388/501 --> loss:0.820603551864624
+step 251/334, epoch 388/501 --> loss:0.8261456429958344
+step 301/334, epoch 388/501 --> loss:0.8140921974182129
+step 51/334, epoch 389/501 --> loss:0.8355114161968231
+step 101/334, epoch 389/501 --> loss:0.8218341827392578
+step 151/334, epoch 389/501 --> loss:0.8073307752609253
+step 201/334, epoch 389/501 --> loss:0.822030599117279
+step 251/334, epoch 389/501 --> loss:0.8169629228115082
+step 301/334, epoch 389/501 --> loss:0.8057129311561585
+step 51/334, epoch 390/501 --> loss:0.8096779000759124
+step 101/334, epoch 390/501 --> loss:0.8239073777198791
+step 151/334, epoch 390/501 --> loss:0.8116293215751648
+step 201/334, epoch 390/501 --> loss:0.8131042289733886
+step 251/334, epoch 390/501 --> loss:0.8338767123222351
+step 301/334, epoch 390/501 --> loss:0.8285298848152161
+step 51/334, epoch 391/501 --> loss:0.8160702085494995
+step 101/334, epoch 391/501 --> loss:0.8267519676685333
+step 151/334, epoch 391/501 --> loss:0.817912551164627
+step 201/334, epoch 391/501 --> loss:0.8315890347957611
+step 251/334, epoch 391/501 --> loss:0.8153634989261627
+step 301/334, epoch 391/501 --> loss:0.8162141346931457
+
+##########train dataset##########
+acc--> [98.7694095572925]
+F1--> {'F1': [0.8718011840164883], 'precision': [0.7774462709060453], 'recall': [0.9922352109448657]}
+##########eval dataset##########
+acc--> [98.15418179996132]
+F1--> {'F1': [0.8099684613206358], 'precision': [0.7296568672959439], 'recall': [0.910158546012026]}
+step 51/334, epoch 392/501 --> loss:0.8202594864368439
+step 101/334, epoch 392/501 --> loss:0.8274243450164795
+step 151/334, epoch 392/501 --> loss:0.8123803091049194
+step 201/334, epoch 392/501 --> loss:0.8271772992610932
+step 251/334, epoch 392/501 --> loss:0.8219225132465362
+step 301/334, epoch 392/501 --> loss:0.8236465191841126
+step 51/334, epoch 393/501 --> loss:0.8090633630752564
+step 101/334, epoch 393/501 --> loss:0.8057389545440674
+step 151/334, epoch 393/501 --> loss:0.8165728867053985
+step 201/334, epoch 393/501 --> loss:0.8275722587108612
+step 251/334, epoch 393/501 --> loss:0.8256799006462097
+step 301/334, epoch 393/501 --> loss:0.8226103079319
+step 51/334, epoch 394/501 --> loss:0.8129540157318115
+step 101/334, epoch 394/501 --> loss:0.8291492080688476
+step 151/334, epoch 394/501 --> loss:0.8166971385478974
+step 201/334, epoch 394/501 --> loss:0.8182640838623046
+step 251/334, epoch 394/501 --> loss:0.8316791939735413
+step 301/334, epoch 394/501 --> loss:0.8158219051361084
+step 51/334, epoch 395/501 --> loss:0.8209054398536683
+step 101/334, epoch 395/501 --> loss:0.8090905857086181
+step 151/334, epoch 395/501 --> loss:0.8165616202354431
+step 201/334, epoch 395/501 --> loss:0.8279025030136108
+step 251/334, epoch 395/501 --> loss:0.8321469914913178
+step 301/334, epoch 395/501 --> loss:0.8200903964042664
+step 51/334, epoch 396/501 --> loss:0.8266151237487793
+step 101/334, epoch 396/501 --> loss:0.8151129400730133
+step 151/334, epoch 396/501 --> loss:0.8185646629333496
+step 201/334, epoch 396/501 --> loss:0.8071363365650177
+step 251/334, epoch 396/501 --> loss:0.816834397315979
+step 301/334, epoch 396/501 --> loss:0.8304009199142456
+step 51/334, epoch 397/501 --> loss:0.8076762902736664
+step 101/334, epoch 397/501 --> loss:0.8253053891658783
+step 151/334, epoch 397/501 --> loss:0.8238611996173859
+step 201/334, epoch 397/501 --> loss:0.825822741985321
+step 251/334, epoch 397/501 --> loss:0.8271083533763885
+step 301/334, epoch 397/501 --> loss:0.8145496678352356
+step 51/334, epoch 398/501 --> loss:0.8172268843650818
+step 101/334, epoch 398/501 --> loss:0.8171056067943573
+step 151/334, epoch 398/501 --> loss:0.8200404644012451
+step 201/334, epoch 398/501 --> loss:0.8179826080799103
+step 251/334, epoch 398/501 --> loss:0.8301122641563415
+step 301/334, epoch 398/501 --> loss:0.8269007682800293
+step 51/334, epoch 399/501 --> loss:0.8241085815429687
+step 101/334, epoch 399/501 --> loss:0.8254958724975586
+step 151/334, epoch 399/501 --> loss:0.828322719335556
+step 201/334, epoch 399/501 --> loss:0.8104670524597168
+step 251/334, epoch 399/501 --> loss:0.8120108377933503
+step 301/334, epoch 399/501 --> loss:0.8197585308551788
+step 51/334, epoch 400/501 --> loss:0.8213581717014313
+step 101/334, epoch 400/501 --> loss:0.8117839646339416
+step 151/334, epoch 400/501 --> loss:0.8327842402458191
+step 201/334, epoch 400/501 --> loss:0.8146937847137451
+step 251/334, epoch 400/501 --> loss:0.8158158814907074
+step 301/334, epoch 400/501 --> loss:0.825803884267807
+step 51/334, epoch 401/501 --> loss:0.8199796462059021
+step 101/334, epoch 401/501 --> loss:0.8218754684925079
+step 151/334, epoch 401/501 --> loss:0.8237382853031159
+step 201/334, epoch 401/501 --> loss:0.8170877993106842
+step 251/334, epoch 401/501 --> loss:0.8192272448539734
+step 301/334, epoch 401/501 --> loss:0.8206246328353882
+
+##########train dataset##########
+acc--> [99.65285110616381]
+F1--> {'F1': [0.9602939187399578], 'precision': [0.9274483857732181], 'recall': [0.9955620473916171]}
+##########eval dataset##########
+acc--> [98.98777825729496]
+F1--> {'F1': [0.8843423412344272], 'precision': [0.8735689507943821], 'recall': [0.8953950276254863]}
+step 51/334, epoch 402/501 --> loss:0.8225598156452179
+step 101/334, epoch 402/501 --> loss:0.8297091364860535
+step 151/334, epoch 402/501 --> loss:0.8120643031597138
+step 201/334, epoch 402/501 --> loss:0.8085080516338349
+step 251/334, epoch 402/501 --> loss:0.8296221172809601
+step 301/334, epoch 402/501 --> loss:0.8157697451114655
+step 51/334, epoch 403/501 --> loss:0.8164387905597686
+step 101/334, epoch 403/501 --> loss:0.8238282346725464
+step 151/334, epoch 403/501 --> loss:0.8312518620491027
+step 201/334, epoch 403/501 --> loss:0.8317082023620606
+step 251/334, epoch 403/501 --> loss:0.8051417660713196
+step 301/334, epoch 403/501 --> loss:0.8145205569267273
+step 51/334, epoch 404/501 --> loss:0.8137458133697509
+step 101/334, epoch 404/501 --> loss:0.8409537303447724
+step 151/334, epoch 404/501 --> loss:0.8056823897361756
+step 201/334, epoch 404/501 --> loss:0.8315962862968445
+step 251/334, epoch 404/501 --> loss:0.8096405351161957
+step 301/334, epoch 404/501 --> loss:0.8158099174499511
+step 51/334, epoch 405/501 --> loss:0.8155907821655274
+step 101/334, epoch 405/501 --> loss:0.8171792554855347
+step 151/334, epoch 405/501 --> loss:0.8013535416126252
+step 201/334, epoch 405/501 --> loss:0.8513607501983642
+step 251/334, epoch 405/501 --> loss:0.8152976882457733
+step 301/334, epoch 405/501 --> loss:0.8265077936649322
+step 51/334, epoch 406/501 --> loss:0.8184292829036712
+step 101/334, epoch 406/501 --> loss:0.815441951751709
+step 151/334, epoch 406/501 --> loss:0.8261306595802307
+step 201/334, epoch 406/501 --> loss:0.8327541339397431
+step 251/334, epoch 406/501 --> loss:0.8175709974765778
+step 301/334, epoch 406/501 --> loss:0.8241398322582245
+step 51/334, epoch 407/501 --> loss:0.8153679955005646
+step 101/334, epoch 407/501 --> loss:0.813901652097702
+step 151/334, epoch 407/501 --> loss:0.8252981734275818
+step 201/334, epoch 407/501 --> loss:0.8241944408416748
+step 251/334, epoch 407/501 --> loss:0.821304053068161
+step 301/334, epoch 407/501 --> loss:0.8138004076480866
+step 51/334, epoch 408/501 --> loss:0.8270196855068207
+step 101/334, epoch 408/501 --> loss:0.8164829790592194
+step 151/334, epoch 408/501 --> loss:0.8184480059146881
+step 201/334, epoch 408/501 --> loss:0.8201210260391235
+step 251/334, epoch 408/501 --> loss:0.8173481464385987
+step 301/334, epoch 408/501 --> loss:0.8194248414039612
+step 51/334, epoch 409/501 --> loss:0.820980830192566
+step 101/334, epoch 409/501 --> loss:0.8073178505897523
+step 151/334, epoch 409/501 --> loss:0.8302248203754425
+step 201/334, epoch 409/501 --> loss:0.8217311108112335
+step 251/334, epoch 409/501 --> loss:0.8132966160774231
+step 301/334, epoch 409/501 --> loss:0.8242576229572296
+step 51/334, epoch 410/501 --> loss:0.8136060988903046
+step 101/334, epoch 410/501 --> loss:0.82984748005867
+step 151/334, epoch 410/501 --> loss:0.8242809784412384
+step 201/334, epoch 410/501 --> loss:0.8133033037185669
+step 251/334, epoch 410/501 --> loss:0.8096268987655639
+step 301/334, epoch 410/501 --> loss:0.8312915134429931
+step 51/334, epoch 411/501 --> loss:0.8298645889759064
+step 101/334, epoch 411/501 --> loss:0.8249017322063446
+step 151/334, epoch 411/501 --> loss:0.8169886136054992
+step 201/334, epoch 411/501 --> loss:0.8283198499679565
+step 251/334, epoch 411/501 --> loss:0.8167734098434448
+step 301/334, epoch 411/501 --> loss:0.8133686101436615
+
+##########train dataset##########
+acc--> [99.71449615626985]
+F1--> {'F1': [0.9671501340860892], 'precision': [0.9392612686478444], 'recall': [0.996756463347787]}
+##########eval dataset##########
+acc--> [99.05061229528265]
+F1--> {'F1': [0.890958327950147], 'precision': [0.8845851154923899], 'recall': [0.8974341867703953]}
+save model!
+step 51/334, epoch 412/501 --> loss:0.8248805975914002
+step 101/334, epoch 412/501 --> loss:0.8070118463039399
+step 151/334, epoch 412/501 --> loss:0.8219491922855378
+step 201/334, epoch 412/501 --> loss:0.8160322082042694
+step 251/334, epoch 412/501 --> loss:0.8208501052856445
+step 301/334, epoch 412/501 --> loss:0.827144296169281
+step 51/334, epoch 413/501 --> loss:0.8149892222881318
+step 101/334, epoch 413/501 --> loss:0.8246668362617493
+step 151/334, epoch 413/501 --> loss:0.8174368190765381
+step 201/334, epoch 413/501 --> loss:0.8212783873081207
+step 251/334, epoch 413/501 --> loss:0.8134153378009796
+step 301/334, epoch 413/501 --> loss:0.8291379284858703
+step 51/334, epoch 414/501 --> loss:0.8159644019603729
+step 101/334, epoch 414/501 --> loss:0.8136144065856934
+step 151/334, epoch 414/501 --> loss:0.799521256685257
+step 201/334, epoch 414/501 --> loss:0.8295181262493133
+step 251/334, epoch 414/501 --> loss:0.8325970661640167
+step 301/334, epoch 414/501 --> loss:0.8240467703342438
+step 51/334, epoch 415/501 --> loss:0.8235266697406769
+step 101/334, epoch 415/501 --> loss:0.8182305407524109
+step 151/334, epoch 415/501 --> loss:0.8035845983028412
+step 201/334, epoch 415/501 --> loss:0.8399643802642822
+step 251/334, epoch 415/501 --> loss:0.8017950224876403
+step 301/334, epoch 415/501 --> loss:0.8130293869972229
+step 51/334, epoch 416/501 --> loss:0.8230130624771118
+step 101/334, epoch 416/501 --> loss:0.8135220241546631
+step 151/334, epoch 416/501 --> loss:0.8117858147621155
+step 201/334, epoch 416/501 --> loss:0.815110319852829
+step 251/334, epoch 416/501 --> loss:0.8266668391227722
+step 301/334, epoch 416/501 --> loss:0.8153950655460358
+step 51/334, epoch 417/501 --> loss:0.8201763713359833
+step 101/334, epoch 417/501 --> loss:0.8330340504646301
+step 151/334, epoch 417/501 --> loss:0.8069922375679016
+step 201/334, epoch 417/501 --> loss:0.8198372197151184
+step 251/334, epoch 417/501 --> loss:0.8091773819923401
+step 301/334, epoch 417/501 --> loss:0.8282596862316132
+step 51/334, epoch 418/501 --> loss:0.8082261753082275
+step 101/334, epoch 418/501 --> loss:0.818099365234375
+step 151/334, epoch 418/501 --> loss:0.812973998785019
+step 201/334, epoch 418/501 --> loss:0.8260638117790222
+step 251/334, epoch 418/501 --> loss:0.822861168384552
+step 301/334, epoch 418/501 --> loss:0.8267959105968475
+step 51/334, epoch 419/501 --> loss:0.8310397911071777
+step 101/334, epoch 419/501 --> loss:0.8202559936046601
+step 151/334, epoch 419/501 --> loss:0.8217848777770996
+step 201/334, epoch 419/501 --> loss:0.8162389349937439
+step 251/334, epoch 419/501 --> loss:0.8094468915462494
+step 301/334, epoch 419/501 --> loss:0.813490788936615
+step 51/334, epoch 420/501 --> loss:0.8214245295524597
+step 101/334, epoch 420/501 --> loss:0.8197947931289673
+step 151/334, epoch 420/501 --> loss:0.8253722774982453
+step 201/334, epoch 420/501 --> loss:0.8189669740200043
+step 251/334, epoch 420/501 --> loss:0.8144628274440765
+step 301/334, epoch 420/501 --> loss:0.8156219971179962
+step 51/334, epoch 421/501 --> loss:0.8221850204467773
+step 101/334, epoch 421/501 --> loss:0.8287748384475708
+step 151/334, epoch 421/501 --> loss:0.8267176520824432
+step 201/334, epoch 421/501 --> loss:0.8238826119899749
+step 251/334, epoch 421/501 --> loss:0.8166914570331574
+step 301/334, epoch 421/501 --> loss:0.8051589870452881
+
+##########train dataset##########
+acc--> [99.71905291013142]
+F1--> {'F1': [0.9676511944571471], 'precision': [0.9403827626661767], 'recall': [0.9965588637521303]}
+##########eval dataset##########
+acc--> [99.02574968045325]
+F1--> {'F1': [0.8877408369977255], 'precision': [0.8842106053359383], 'recall': [0.8913094508927865]}
+step 51/334, epoch 422/501 --> loss:0.8104488158226013
+step 101/334, epoch 422/501 --> loss:0.8300914311408997
+step 151/334, epoch 422/501 --> loss:0.8247804582118988
+step 201/334, epoch 422/501 --> loss:0.8363031280040741
+step 251/334, epoch 422/501 --> loss:0.8117931056022644
+step 301/334, epoch 422/501 --> loss:0.8048047208786011
+step 51/334, epoch 423/501 --> loss:0.8243738782405853
+step 101/334, epoch 423/501 --> loss:0.820638302564621
+step 151/334, epoch 423/501 --> loss:0.8310527670383453
+step 201/334, epoch 423/501 --> loss:0.8082592225074768
+step 251/334, epoch 423/501 --> loss:0.8246346294879914
+step 301/334, epoch 423/501 --> loss:0.8128795027732849
+step 51/334, epoch 424/501 --> loss:0.8236858451366424
+step 101/334, epoch 424/501 --> loss:0.820721242427826
+step 151/334, epoch 424/501 --> loss:0.816328889131546
+step 201/334, epoch 424/501 --> loss:0.8151112842559814
+step 251/334, epoch 424/501 --> loss:0.8220904302597046
+step 301/334, epoch 424/501 --> loss:0.8173188281059265
+step 51/334, epoch 425/501 --> loss:0.8244369578361511
+step 101/334, epoch 425/501 --> loss:0.822507667541504
+step 151/334, epoch 425/501 --> loss:0.8187673199176788
+step 201/334, epoch 425/501 --> loss:0.8327242434024811
+step 251/334, epoch 425/501 --> loss:0.8191264414787293
+step 301/334, epoch 425/501 --> loss:0.8079043221473694
+step 51/334, epoch 426/501 --> loss:0.8291502809524536
+step 101/334, epoch 426/501 --> loss:0.814256238937378
+step 151/334, epoch 426/501 --> loss:0.8235642302036286
+step 201/334, epoch 426/501 --> loss:0.8313594543933869
+step 251/334, epoch 426/501 --> loss:0.811728835105896
+step 301/334, epoch 426/501 --> loss:0.8099574387073517
+step 51/334, epoch 427/501 --> loss:0.8156013059616088
+step 101/334, epoch 427/501 --> loss:0.8119581353664398
+step 151/334, epoch 427/501 --> loss:0.8251649582386017
+step 201/334, epoch 427/501 --> loss:0.8243951714038849
+step 251/334, epoch 427/501 --> loss:0.8169778597354889
+step 301/334, epoch 427/501 --> loss:0.826451632976532
+step 51/334, epoch 428/501 --> loss:0.8077429437637329
+step 101/334, epoch 428/501 --> loss:0.8014553725719452
+step 151/334, epoch 428/501 --> loss:0.8226246845722198
+step 201/334, epoch 428/501 --> loss:0.8305677151679993
+step 251/334, epoch 428/501 --> loss:0.8247942066192627
+step 301/334, epoch 428/501 --> loss:0.8261897718906402
+step 51/334, epoch 429/501 --> loss:0.8244864344596863
+step 101/334, epoch 429/501 --> loss:0.8237468338012696
+step 151/334, epoch 429/501 --> loss:0.8125397884845733
+step 201/334, epoch 429/501 --> loss:0.8215260028839111
+step 251/334, epoch 429/501 --> loss:0.8166616654396057
+step 301/334, epoch 429/501 --> loss:0.8207425260543824
+step 51/334, epoch 430/501 --> loss:0.8133768284320831
+step 101/334, epoch 430/501 --> loss:0.8419559860229492
+step 151/334, epoch 430/501 --> loss:0.8035413563251496
+step 201/334, epoch 430/501 --> loss:0.81420680642128
+step 251/334, epoch 430/501 --> loss:0.8167403697967529
+step 301/334, epoch 430/501 --> loss:0.8321761000156402
+step 51/334, epoch 431/501 --> loss:0.804620337486267
+step 101/334, epoch 431/501 --> loss:0.8339902937412262
+step 151/334, epoch 431/501 --> loss:0.8353189420700073
+step 201/334, epoch 431/501 --> loss:0.8226468300819397
+step 251/334, epoch 431/501 --> loss:0.808076125383377
+step 301/334, epoch 431/501 --> loss:0.815089602470398
+
+##########train dataset##########
+acc--> [99.59281203359427]
+F1--> {'F1': [0.9529393490417256], 'precision': [0.9294244857519611], 'recall': [0.9776854907691022]}
+##########eval dataset##########
+acc--> [98.93612265064716]
+F1--> {'F1': [0.8757927956293627], 'precision': [0.8839065965139342], 'recall': [0.8678364187879577]}
+step 51/334, epoch 432/501 --> loss:0.8180098235607147
+step 101/334, epoch 432/501 --> loss:0.8168574166297913
+step 151/334, epoch 432/501 --> loss:0.8274987530708313
+step 201/334, epoch 432/501 --> loss:0.8265464758872986
+step 251/334, epoch 432/501 --> loss:0.8153049147129059
+step 301/334, epoch 432/501 --> loss:0.8076727211475372
+step 51/334, epoch 433/501 --> loss:0.820800986289978
+step 101/334, epoch 433/501 --> loss:0.8357145631313324
+step 151/334, epoch 433/501 --> loss:0.8055941200256348
+step 201/334, epoch 433/501 --> loss:0.8105328667163849
+step 251/334, epoch 433/501 --> loss:0.8175479125976562
+step 301/334, epoch 433/501 --> loss:0.8314472901821136
+step 51/334, epoch 434/501 --> loss:0.8195440113544464
+step 101/334, epoch 434/501 --> loss:0.8222063195705414
+step 151/334, epoch 434/501 --> loss:0.8266060125827789
+step 201/334, epoch 434/501 --> loss:0.8179777002334595
+step 251/334, epoch 434/501 --> loss:0.8063228392601013
+step 301/334, epoch 434/501 --> loss:0.8241327333450318
+step 51/334, epoch 435/501 --> loss:0.8063196277618409
+step 101/334, epoch 435/501 --> loss:0.8222197604179382
+step 151/334, epoch 435/501 --> loss:0.8230304133892059
+step 201/334, epoch 435/501 --> loss:0.8261644208431244
+step 251/334, epoch 435/501 --> loss:0.8063384377956391
+step 301/334, epoch 435/501 --> loss:0.832246925830841
+step 51/334, epoch 436/501 --> loss:0.8175931286811828
+step 101/334, epoch 436/501 --> loss:0.815503876209259
+step 151/334, epoch 436/501 --> loss:0.8199188387393952
+step 201/334, epoch 436/501 --> loss:0.816226567029953
+step 251/334, epoch 436/501 --> loss:0.8257083415985107
+step 301/334, epoch 436/501 --> loss:0.8258805274963379
+step 51/334, epoch 437/501 --> loss:0.8125661742687226
+step 101/334, epoch 437/501 --> loss:0.8289661967754364
+step 151/334, epoch 437/501 --> loss:0.825207359790802
+step 201/334, epoch 437/501 --> loss:0.8250453734397888
+step 251/334, epoch 437/501 --> loss:0.822739166021347
+step 301/334, epoch 437/501 --> loss:0.8031266272068024
+step 51/334, epoch 438/501 --> loss:0.8132682585716248
+step 101/334, epoch 438/501 --> loss:0.8281136441230774
+step 151/334, epoch 438/501 --> loss:0.8244411027431489
+step 201/334, epoch 438/501 --> loss:0.8081590616703034
+step 251/334, epoch 438/501 --> loss:0.8184075939655304
+step 301/334, epoch 438/501 --> loss:0.8220502686500549
+step 51/334, epoch 439/501 --> loss:0.8310092198848724
+step 101/334, epoch 439/501 --> loss:0.8133981311321259
+step 151/334, epoch 439/501 --> loss:0.822640653848648
+step 201/334, epoch 439/501 --> loss:0.8267053556442261
+step 251/334, epoch 439/501 --> loss:0.803844153881073
+step 301/334, epoch 439/501 --> loss:0.821410870552063
+step 51/334, epoch 440/501 --> loss:0.8180319845676423
+step 101/334, epoch 440/501 --> loss:0.8062984275817872
+step 151/334, epoch 440/501 --> loss:0.8278172218799591
+step 201/334, epoch 440/501 --> loss:0.830620893239975
+step 251/334, epoch 440/501 --> loss:0.808742755651474
+step 301/334, epoch 440/501 --> loss:0.8265818595886231
+step 51/334, epoch 441/501 --> loss:0.8142237210273743
+step 101/334, epoch 441/501 --> loss:0.8232631182670593
+step 151/334, epoch 441/501 --> loss:0.8158003580570221
+step 201/334, epoch 441/501 --> loss:0.8372813320159912
+step 251/334, epoch 441/501 --> loss:0.8132123637199402
+step 301/334, epoch 441/501 --> loss:0.8059975636005402
+
+##########train dataset##########
+acc--> [99.67621444627486]
+F1--> {'F1': [0.9629350903472641], 'precision': [0.9307189027023794], 'recall': [0.9974722446500078]}
+##########eval dataset##########
+acc--> [98.98499749984813]
+F1--> {'F1': [0.885147677499237], 'precision': [0.8661808682955573], 'recall': [0.904974164574992]}
+step 51/334, epoch 442/501 --> loss:0.8304681050777435
+step 101/334, epoch 442/501 --> loss:0.8269554734230041
+step 151/334, epoch 442/501 --> loss:0.8229196071624756
+step 201/334, epoch 442/501 --> loss:0.819531102180481
+step 251/334, epoch 442/501 --> loss:0.8166980159282684
+step 301/334, epoch 442/501 --> loss:0.8149226987361908
+step 51/334, epoch 443/501 --> loss:0.8239378929138184
+step 101/334, epoch 443/501 --> loss:0.8172957158088684
+step 151/334, epoch 443/501 --> loss:0.8218349123001099
+step 201/334, epoch 443/501 --> loss:0.833852504491806
+step 251/334, epoch 443/501 --> loss:0.8224946999549866
+step 301/334, epoch 443/501 --> loss:0.804399597644806
+step 51/334, epoch 444/501 --> loss:0.8097547125816346
+step 101/334, epoch 444/501 --> loss:0.8116431355476379
+step 151/334, epoch 444/501 --> loss:0.8173381865024567
+step 201/334, epoch 444/501 --> loss:0.8201517128944397
+step 251/334, epoch 444/501 --> loss:0.8207791745662689
+step 301/334, epoch 444/501 --> loss:0.8350893533229828
+step 51/334, epoch 445/501 --> loss:0.8162590789794922
+step 101/334, epoch 445/501 --> loss:0.8179909753799438
+step 151/334, epoch 445/501 --> loss:0.8197723591327667
+step 201/334, epoch 445/501 --> loss:0.8241303634643554
+step 251/334, epoch 445/501 --> loss:0.8247190153598786
+step 301/334, epoch 445/501 --> loss:0.8153969359397888
+step 51/334, epoch 446/501 --> loss:0.814810152053833
+step 101/334, epoch 446/501 --> loss:0.8121375024318696
+step 151/334, epoch 446/501 --> loss:0.8212248754501342
+step 201/334, epoch 446/501 --> loss:0.8291562533378601
+step 251/334, epoch 446/501 --> loss:0.8203913938999176
+step 301/334, epoch 446/501 --> loss:0.8149760866165161
+step 51/334, epoch 447/501 --> loss:0.809885972738266
+step 101/334, epoch 447/501 --> loss:0.8186136424541474
+step 151/334, epoch 447/501 --> loss:0.8365409398078918
+step 201/334, epoch 447/501 --> loss:0.8190536367893219
+step 251/334, epoch 447/501 --> loss:0.8114765083789826
+step 301/334, epoch 447/501 --> loss:0.8204110777378082
+step 51/334, epoch 448/501 --> loss:0.827043719291687
+step 101/334, epoch 448/501 --> loss:0.8237409520149231
+step 151/334, epoch 448/501 --> loss:0.8144891691207886
+step 201/334, epoch 448/501 --> loss:0.8167475700378418
+step 251/334, epoch 448/501 --> loss:0.81226318359375
+step 301/334, epoch 448/501 --> loss:0.8164543306827545
+step 51/334, epoch 449/501 --> loss:0.810138133764267
+step 101/334, epoch 449/501 --> loss:0.8133133268356323
+step 151/334, epoch 449/501 --> loss:0.8230279529094696
+step 201/334, epoch 449/501 --> loss:0.8267864739894867
+step 251/334, epoch 449/501 --> loss:0.8165161681175231
+step 301/334, epoch 449/501 --> loss:0.8258708798885346
+step 51/334, epoch 450/501 --> loss:0.821738178730011
+step 101/334, epoch 450/501 --> loss:0.8207693350315094
+step 151/334, epoch 450/501 --> loss:0.8253156685829163
+step 201/334, epoch 450/501 --> loss:0.8135858654975892
+step 251/334, epoch 450/501 --> loss:0.812991429567337
+step 301/334, epoch 450/501 --> loss:0.8168860340118408
+step 51/334, epoch 451/501 --> loss:0.8178574669361115
+step 101/334, epoch 451/501 --> loss:0.8166037595272064
+step 151/334, epoch 451/501 --> loss:0.8255840921401978
+step 201/334, epoch 451/501 --> loss:0.8340664219856262
+step 251/334, epoch 451/501 --> loss:0.815595098733902
+step 301/334, epoch 451/501 --> loss:0.8139047861099243
+
+##########train dataset##########
+acc--> [99.72251889228893]
+F1--> {'F1': [0.9680560044434808], 'precision': [0.9406152449254399], 'recall': [0.9971565465661815]}
+##########eval dataset##########
+acc--> [99.05161219318359]
+F1--> {'F1': [0.8908069690729975], 'precision': [0.8865705275664867], 'recall': [0.8950941883332807]}
+step 51/334, epoch 452/501 --> loss:0.824139860868454
+step 101/334, epoch 452/501 --> loss:0.8188480198383331
+step 151/334, epoch 452/501 --> loss:0.8318483316898346
+step 201/334, epoch 452/501 --> loss:0.8037753820419311
+step 251/334, epoch 452/501 --> loss:0.8148184275627136
+step 301/334, epoch 452/501 --> loss:0.8219335818290711
+step 51/334, epoch 453/501 --> loss:0.80617769241333
+step 101/334, epoch 453/501 --> loss:0.8130633628368378
+step 151/334, epoch 453/501 --> loss:0.8297892129421234
+step 201/334, epoch 453/501 --> loss:0.8069971644878388
+step 251/334, epoch 453/501 --> loss:0.8198708295822144
+step 301/334, epoch 453/501 --> loss:0.8320849764347077
+step 51/334, epoch 454/501 --> loss:0.8035475981235504
+step 101/334, epoch 454/501 --> loss:0.8131007635593415
+step 151/334, epoch 454/501 --> loss:0.819818764925003
+step 201/334, epoch 454/501 --> loss:0.8314249753952027
+step 251/334, epoch 454/501 --> loss:0.814263470172882
+step 301/334, epoch 454/501 --> loss:0.8257091569900513
+step 51/334, epoch 455/501 --> loss:0.8265034401416779
+step 101/334, epoch 455/501 --> loss:0.8181447541713714
+step 151/334, epoch 455/501 --> loss:0.8197316396236419
+step 201/334, epoch 455/501 --> loss:0.8274285221099853
+step 251/334, epoch 455/501 --> loss:0.8132295298576355
+step 301/334, epoch 455/501 --> loss:0.8188195896148681
+step 51/334, epoch 456/501 --> loss:0.8171242964267731
+step 101/334, epoch 456/501 --> loss:0.8201159620285035
+step 151/334, epoch 456/501 --> loss:0.8132155442237854
+step 201/334, epoch 456/501 --> loss:0.8172614181041717
+step 251/334, epoch 456/501 --> loss:0.8168145489692687
+step 301/334, epoch 456/501 --> loss:0.8151347732543945
+step 51/334, epoch 457/501 --> loss:0.808828284740448
+step 101/334, epoch 457/501 --> loss:0.8214283394813537
+step 151/334, epoch 457/501 --> loss:0.8189996361732483
+step 201/334, epoch 457/501 --> loss:0.8262976324558258
+step 251/334, epoch 457/501 --> loss:0.8125221073627472
+step 301/334, epoch 457/501 --> loss:0.8226879703998565
+step 51/334, epoch 458/501 --> loss:0.8210755562782288
+step 101/334, epoch 458/501 --> loss:0.8200304532051086
+step 151/334, epoch 458/501 --> loss:0.8228310775756836
+step 201/334, epoch 458/501 --> loss:0.8011517035961151
+step 251/334, epoch 458/501 --> loss:0.8130247282981873
+step 301/334, epoch 458/501 --> loss:0.8244931888580322
+step 51/334, epoch 459/501 --> loss:0.819364984035492
+step 101/334, epoch 459/501 --> loss:0.8297978889942169
+step 151/334, epoch 459/501 --> loss:0.8161893510818481
+step 201/334, epoch 459/501 --> loss:0.8266939091682434
+step 251/334, epoch 459/501 --> loss:0.8116048955917359
+step 301/334, epoch 459/501 --> loss:0.8157531487941742
+step 51/334, epoch 460/501 --> loss:0.8177711713314056
+step 101/334, epoch 460/501 --> loss:0.8254835760593414
+step 151/334, epoch 460/501 --> loss:0.8167818927764893
+step 201/334, epoch 460/501 --> loss:0.8141272842884064
+step 251/334, epoch 460/501 --> loss:0.8166946125030518
+step 301/334, epoch 460/501 --> loss:0.8170036017894745
+step 51/334, epoch 461/501 --> loss:0.8080326068401337
+step 101/334, epoch 461/501 --> loss:0.8059654748439788
+step 151/334, epoch 461/501 --> loss:0.8375721132755279
+step 201/334, epoch 461/501 --> loss:0.818536524772644
+step 251/334, epoch 461/501 --> loss:0.8296771383285523
+step 301/334, epoch 461/501 --> loss:0.8106813442707062
+
+##########train dataset##########
+acc--> [99.72445699307443]
+F1--> {'F1': [0.9682748384572084], 'precision': [0.9409467526209064], 'recall': [0.9972483934087902]}
+##########eval dataset##########
+acc--> [99.03869228412437]
+F1--> {'F1': [0.8895945006083344], 'precision': [0.8831902106050499], 'recall': [0.8961024941540253]}
+step 51/334, epoch 462/501 --> loss:0.8238279116153717
+step 101/334, epoch 462/501 --> loss:0.8209541273117066
+step 151/334, epoch 462/501 --> loss:0.8267764341831207
+step 201/334, epoch 462/501 --> loss:0.8101293694972992
+step 251/334, epoch 462/501 --> loss:0.8051168310642243
+step 301/334, epoch 462/501 --> loss:0.8257147789001464
+step 51/334, epoch 463/501 --> loss:0.8276672685146331
+step 101/334, epoch 463/501 --> loss:0.8317949140071869
+step 151/334, epoch 463/501 --> loss:0.8012850284576416
+step 201/334, epoch 463/501 --> loss:0.8214071202278137
+step 251/334, epoch 463/501 --> loss:0.8228083908557892
+step 301/334, epoch 463/501 --> loss:0.8105222940444946
+step 51/334, epoch 464/501 --> loss:0.8284563910961151
+step 101/334, epoch 464/501 --> loss:0.8135382056236267
+step 151/334, epoch 464/501 --> loss:0.8199398791790009
+step 201/334, epoch 464/501 --> loss:0.8204011201858521
+step 251/334, epoch 464/501 --> loss:0.8323626232147217
+step 301/334, epoch 464/501 --> loss:0.8067807352542877
+step 51/334, epoch 465/501 --> loss:0.8092253482341767
+step 101/334, epoch 465/501 --> loss:0.8236846375465393
+step 151/334, epoch 465/501 --> loss:0.8216937720775604
+step 201/334, epoch 465/501 --> loss:0.8204448425769806
+step 251/334, epoch 465/501 --> loss:0.8189055621623993
+step 301/334, epoch 465/501 --> loss:0.814453786611557
+step 51/334, epoch 466/501 --> loss:0.8185279500484467
+step 101/334, epoch 466/501 --> loss:0.8281885015964509
+step 151/334, epoch 466/501 --> loss:0.8217286574840545
+step 201/334, epoch 466/501 --> loss:0.8030387389659882
+step 251/334, epoch 466/501 --> loss:0.8099427711963654
+step 301/334, epoch 466/501 --> loss:0.8244709885120391
+step 51/334, epoch 467/501 --> loss:0.8075731778144837
+step 101/334, epoch 467/501 --> loss:0.8170571219921112
+step 151/334, epoch 467/501 --> loss:0.8091092181205749
+step 201/334, epoch 467/501 --> loss:0.8338597822189331
+step 251/334, epoch 467/501 --> loss:0.8266467308998108
+step 301/334, epoch 467/501 --> loss:0.8157262289524079
+step 51/334, epoch 468/501 --> loss:0.8062221956253052
+step 101/334, epoch 468/501 --> loss:0.8173485970497132
+step 151/334, epoch 468/501 --> loss:0.8256453120708466
+step 201/334, epoch 468/501 --> loss:0.8209198307991028
+step 251/334, epoch 468/501 --> loss:0.8251348447799682
+step 301/334, epoch 468/501 --> loss:0.823043270111084
+step 51/334, epoch 469/501 --> loss:0.8163778340816498
+step 101/334, epoch 469/501 --> loss:0.7943284487724305
+step 151/334, epoch 469/501 --> loss:0.8227258944511413
+step 201/334, epoch 469/501 --> loss:0.8294323050975799
+step 251/334, epoch 469/501 --> loss:0.8200436615943909
+step 301/334, epoch 469/501 --> loss:0.8279038321971893
+step 51/334, epoch 470/501 --> loss:0.8121951961517334
+step 101/334, epoch 470/501 --> loss:0.8147819590568542
+step 151/334, epoch 470/501 --> loss:0.8325954401493072
+step 201/334, epoch 470/501 --> loss:0.8197168970108032
+step 251/334, epoch 470/501 --> loss:0.8213034629821777
+step 301/334, epoch 470/501 --> loss:0.8058829736709595
+step 51/334, epoch 471/501 --> loss:0.8113530147075653
+step 101/334, epoch 471/501 --> loss:0.814047908782959
+step 151/334, epoch 471/501 --> loss:0.8261838686466217
+step 201/334, epoch 471/501 --> loss:0.8265895116329193
+step 251/334, epoch 471/501 --> loss:0.8156669533252716
+step 301/334, epoch 471/501 --> loss:0.822308418750763
+
+##########train dataset##########
+acc--> [98.95361552400881]
+F1--> {'F1': [0.8884172249312834], 'precision': [0.807193758577636], 'recall': [0.987827919173837]}
+##########eval dataset##########
+acc--> [98.30378201167801]
+F1--> {'F1': [0.8183893819561069], 'precision': [0.7616505620188371], 'recall': [0.8842737032160396]}
+step 51/334, epoch 472/501 --> loss:0.8249546003341675
+step 101/334, epoch 472/501 --> loss:0.7976024317741394
+step 151/334, epoch 472/501 --> loss:0.8296883010864258
+step 201/334, epoch 472/501 --> loss:0.818544784784317
+step 251/334, epoch 472/501 --> loss:0.8225216722488403
+step 301/334, epoch 472/501 --> loss:0.8231935620307922
+step 51/334, epoch 473/501 --> loss:0.8429158103466033
+step 101/334, epoch 473/501 --> loss:0.8284158635139466
+step 151/334, epoch 473/501 --> loss:0.8085901355743408
+step 201/334, epoch 473/501 --> loss:0.8071961975097657
+step 251/334, epoch 473/501 --> loss:0.8263218712806701
+step 301/334, epoch 473/501 --> loss:0.8183651876449585
+step 51/334, epoch 474/501 --> loss:0.8180765187740326
+step 101/334, epoch 474/501 --> loss:0.8273848211765289
+step 151/334, epoch 474/501 --> loss:0.8200564169883728
+step 201/334, epoch 474/501 --> loss:0.8154377031326294
+step 251/334, epoch 474/501 --> loss:0.8275428116321564
+step 301/334, epoch 474/501 --> loss:0.8061863815784455
+step 51/334, epoch 475/501 --> loss:0.815177150964737
+step 101/334, epoch 475/501 --> loss:0.7987860524654389
+step 151/334, epoch 475/501 --> loss:0.8179084348678589
+step 201/334, epoch 475/501 --> loss:0.8307650029659271
+step 251/334, epoch 475/501 --> loss:0.8285950803756714
+step 301/334, epoch 475/501 --> loss:0.831562088727951
+step 51/334, epoch 476/501 --> loss:0.8205791115760803
+step 101/334, epoch 476/501 --> loss:0.8137090909481048
+step 151/334, epoch 476/501 --> loss:0.8222638583183288
+step 201/334, epoch 476/501 --> loss:0.8069977712631226
+step 251/334, epoch 476/501 --> loss:0.8170209288597107
+step 301/334, epoch 476/501 --> loss:0.8158467698097229
+step 51/334, epoch 477/501 --> loss:0.8235846102237702
+step 101/334, epoch 477/501 --> loss:0.8207018458843232
+step 151/334, epoch 477/501 --> loss:0.8194844281673431
+step 201/334, epoch 477/501 --> loss:0.8217451524734497
+step 251/334, epoch 477/501 --> loss:0.8222208070755005
+step 301/334, epoch 477/501 --> loss:0.8136228930950165
+step 51/334, epoch 478/501 --> loss:0.8071574068069458
+step 101/334, epoch 478/501 --> loss:0.8171424734592437
+step 151/334, epoch 478/501 --> loss:0.8311319661140442
+step 201/334, epoch 478/501 --> loss:0.8360956561565399
+step 251/334, epoch 478/501 --> loss:0.8148741972446442
+step 301/334, epoch 478/501 --> loss:0.8128171038627624
+step 51/334, epoch 479/501 --> loss:0.8080250072479248
+step 101/334, epoch 479/501 --> loss:0.8262264537811279
+step 151/334, epoch 479/501 --> loss:0.8276922345161438
+step 201/334, epoch 479/501 --> loss:0.8152618861198425
+step 251/334, epoch 479/501 --> loss:0.8248602974414826
+step 301/334, epoch 479/501 --> loss:0.8246168351173401
+step 51/334, epoch 480/501 --> loss:0.8235531115531921
+step 101/334, epoch 480/501 --> loss:0.8195676195621491
+step 151/334, epoch 480/501 --> loss:0.8223682630062104
+step 201/334, epoch 480/501 --> loss:0.8159653329849244
+step 251/334, epoch 480/501 --> loss:0.8171436667442322
+step 301/334, epoch 480/501 --> loss:0.8227680599689484
+step 51/334, epoch 481/501 --> loss:0.8154548919200897
+step 101/334, epoch 481/501 --> loss:0.8305086410045623
+step 151/334, epoch 481/501 --> loss:0.8169167470932007
+step 201/334, epoch 481/501 --> loss:0.8169396471977234
+step 251/334, epoch 481/501 --> loss:0.8193001854419708
+step 301/334, epoch 481/501 --> loss:0.8127645194530487
+
+##########train dataset##########
+acc--> [99.68100291403108]
+F1--> {'F1': [0.9634775990956759], 'precision': [0.931375849973452], 'recall': [0.9978819602551456]}
+##########eval dataset##########
+acc--> [98.98510229555605]
+F1--> {'F1': [0.8854799165402804], 'precision': [0.8641983022110519], 'recall': [0.9078466547367088]}
+step 51/334, epoch 482/501 --> loss:0.8277462327480316
+step 101/334, epoch 482/501 --> loss:0.7971116209030151
+step 151/334, epoch 482/501 --> loss:0.8339678084850312
+step 201/334, epoch 482/501 --> loss:0.8139355087280273
+step 251/334, epoch 482/501 --> loss:0.8162545704841614
+step 301/334, epoch 482/501 --> loss:0.823022335767746
+step 51/334, epoch 483/501 --> loss:0.8280816161632538
+step 101/334, epoch 483/501 --> loss:0.8110349524021149
+step 151/334, epoch 483/501 --> loss:0.823763165473938
+step 201/334, epoch 483/501 --> loss:0.8397124361991882
+step 251/334, epoch 483/501 --> loss:0.7986979115009308
+step 301/334, epoch 483/501 --> loss:0.8262569117546081
+step 51/334, epoch 484/501 --> loss:0.8292239081859588
+step 101/334, epoch 484/501 --> loss:0.8244635319709778
+step 151/334, epoch 484/501 --> loss:0.826393620967865
+step 201/334, epoch 484/501 --> loss:0.7977128756046296
+step 251/334, epoch 484/501 --> loss:0.821510214805603
+step 301/334, epoch 484/501 --> loss:0.8263209974765777
+step 51/334, epoch 485/501 --> loss:0.8224137938022613
+step 101/334, epoch 485/501 --> loss:0.8112370836734771
+step 151/334, epoch 485/501 --> loss:0.8119093191623687
+step 201/334, epoch 485/501 --> loss:0.8230378687381744
+step 251/334, epoch 485/501 --> loss:0.8255314469337464
+step 301/334, epoch 485/501 --> loss:0.822901383638382
+step 51/334, epoch 486/501 --> loss:0.8137113177776336
+step 101/334, epoch 486/501 --> loss:0.8173148739337921
+step 151/334, epoch 486/501 --> loss:0.8383276617527008
+step 201/334, epoch 486/501 --> loss:0.8228995656967163
+step 251/334, epoch 486/501 --> loss:0.8215039110183716
+step 301/334, epoch 486/501 --> loss:0.817008672952652
+step 51/334, epoch 487/501 --> loss:0.8130774521827697
+step 101/334, epoch 487/501 --> loss:0.8226908338069916
+step 151/334, epoch 487/501 --> loss:0.836745765209198
+step 201/334, epoch 487/501 --> loss:0.8220049715042115
+step 251/334, epoch 487/501 --> loss:0.8206419682502747
+step 301/334, epoch 487/501 --> loss:0.8096421921253204
+step 51/334, epoch 488/501 --> loss:0.8150848746299744
+step 101/334, epoch 488/501 --> loss:0.8066330087184906
+step 151/334, epoch 488/501 --> loss:0.8179202938079834
+step 201/334, epoch 488/501 --> loss:0.8178883635997772
+step 251/334, epoch 488/501 --> loss:0.8291736507415771
+step 301/334, epoch 488/501 --> loss:0.8286701679229737
+step 51/334, epoch 489/501 --> loss:0.8215845000743865
+step 101/334, epoch 489/501 --> loss:0.8149484598636627
+step 151/334, epoch 489/501 --> loss:0.822409496307373
+step 201/334, epoch 489/501 --> loss:0.8252937018871307
+step 251/334, epoch 489/501 --> loss:0.8147219848632813
+step 301/334, epoch 489/501 --> loss:0.8218866646289825
+step 51/334, epoch 490/501 --> loss:0.8207247948646545
+step 101/334, epoch 490/501 --> loss:0.8166019415855408
+step 151/334, epoch 490/501 --> loss:0.810721242427826
+step 201/334, epoch 490/501 --> loss:0.8132280826568603
+step 251/334, epoch 490/501 --> loss:0.8309707105159759
+step 301/334, epoch 490/501 --> loss:0.8246621334552765
+step 51/334, epoch 491/501 --> loss:0.8117020571231842
+step 101/334, epoch 491/501 --> loss:0.8429317998886109
+step 151/334, epoch 491/501 --> loss:0.8084323883056641
+step 201/334, epoch 491/501 --> loss:0.8241006529331207
+step 251/334, epoch 491/501 --> loss:0.8210321474075317
+step 301/334, epoch 491/501 --> loss:0.8031120359897613
+
+##########train dataset##########
+acc--> [99.70868385637911]
+F1--> {'F1': [0.9665283296664553], 'precision': [0.9374224590565734], 'recall': [0.997510163693596]}
+##########eval dataset##########
+acc--> [99.01139533842398]
+F1--> {'F1': [0.8865058819982732], 'precision': [0.8797704406161029], 'recall': [0.8933554051757125]}
+step 51/334, epoch 492/501 --> loss:0.8172120833396912
+step 101/334, epoch 492/501 --> loss:0.8207767355442047
+step 151/334, epoch 492/501 --> loss:0.8235795891284943
+step 201/334, epoch 492/501 --> loss:0.8056039905548096
+step 251/334, epoch 492/501 --> loss:0.8293042540550232
+step 301/334, epoch 492/501 --> loss:0.8211122155189514
+step 51/334, epoch 493/501 --> loss:0.8093373847007751
+step 101/334, epoch 493/501 --> loss:0.8306656050682067
+step 151/334, epoch 493/501 --> loss:0.8217039239406586
+step 201/334, epoch 493/501 --> loss:0.8298123514652253
+step 251/334, epoch 493/501 --> loss:0.8232460045814514
+step 301/334, epoch 493/501 --> loss:0.81110799908638
+step 51/334, epoch 494/501 --> loss:0.8235265648365021
+step 101/334, epoch 494/501 --> loss:0.8268008935451507
+step 151/334, epoch 494/501 --> loss:0.8075778961181641
+step 201/334, epoch 494/501 --> loss:0.8264875221252441
+step 251/334, epoch 494/501 --> loss:0.8165814542770385
+step 301/334, epoch 494/501 --> loss:0.8147359347343445
+step 51/334, epoch 495/501 --> loss:0.8192656576633454
+step 101/334, epoch 495/501 --> loss:0.8151698231697082
+step 151/334, epoch 495/501 --> loss:0.8185287773609161
+step 201/334, epoch 495/501 --> loss:0.8207924783229827
+step 251/334, epoch 495/501 --> loss:0.8201541149616242
+step 301/334, epoch 495/501 --> loss:0.8293347907066345
+step 51/334, epoch 496/501 --> loss:0.8018811631202698
+step 101/334, epoch 496/501 --> loss:0.8092078578472137
+step 151/334, epoch 496/501 --> loss:0.8288103973865509
+step 201/334, epoch 496/501 --> loss:0.8028371453285217
+step 251/334, epoch 496/501 --> loss:0.8280919945240021
+step 301/334, epoch 496/501 --> loss:0.8431819355487824
+step 51/334, epoch 497/501 --> loss:0.8191014707088471
+step 101/334, epoch 497/501 --> loss:0.823388751745224
+step 151/334, epoch 497/501 --> loss:0.819463437795639
+step 201/334, epoch 497/501 --> loss:0.8198009157180786
+step 251/334, epoch 497/501 --> loss:0.8204757761955261
+step 301/334, epoch 497/501 --> loss:0.8255733442306519
+step 51/334, epoch 498/501 --> loss:0.8128284978866577
+step 101/334, epoch 498/501 --> loss:0.8194142985343933
+step 151/334, epoch 498/501 --> loss:0.8206681537628174
+step 201/334, epoch 498/501 --> loss:0.8102213215827941
+step 251/334, epoch 498/501 --> loss:0.827694878578186
+step 301/334, epoch 498/501 --> loss:0.8265667140483857
+step 51/334, epoch 499/501 --> loss:0.8142942821979523
+step 101/334, epoch 499/501 --> loss:0.8095817244052887
+step 151/334, epoch 499/501 --> loss:0.816102523803711
+step 201/334, epoch 499/501 --> loss:0.8345287573337555
+step 251/334, epoch 499/501 --> loss:0.8195510578155517
+step 301/334, epoch 499/501 --> loss:0.81830047249794
+step 51/334, epoch 500/501 --> loss:0.8198323512077331
+step 101/334, epoch 500/501 --> loss:0.8127891862392426
+step 151/334, epoch 500/501 --> loss:0.8252341890335083
+step 201/334, epoch 500/501 --> loss:0.8250670611858368
+step 251/334, epoch 500/501 --> loss:0.8080964314937592
+step 301/334, epoch 500/501 --> loss:0.8239072501659394
+step 51/334, epoch 501/501 --> loss:0.8200955128669739
+step 101/334, epoch 501/501 --> loss:0.8173751437664032
+step 151/334, epoch 501/501 --> loss:0.8188766312599182
+step 201/334, epoch 501/501 --> loss:0.8200496590137482
+step 251/334, epoch 501/501 --> loss:0.8334545731544495
+step 301/334, epoch 501/501 --> loss:0.8137574756145477
+
+##########train dataset##########
+acc--> [99.72682304939869]
+F1--> {'F1': [0.9685421083471956], 'precision': [0.941350733240079], 'recall': [0.9973616757035882]}
+##########eval dataset##########
+acc--> [99.02381529853272]
+F1--> {'F1': [0.8882228318190938], 'precision': [0.8792246023031537], 'recall': [0.8974173533603079]}
