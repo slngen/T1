@@ -7,13 +7,13 @@ LastEditTime: 2023-11-26 09:56
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda:0",  # CPU or cuda
+    "device":"cuda:1",  # CPU or cuda
     "class_nums":2,
     # Dataset
-    "data_path":"Dataset\WHU-BCD",
-    "image_size":64,
+    "data_path":"Datasets/WHU-BCD",
+    "image_size":256,
     "num_parallel_workers":4,
-    "batch_size": 64,
+    "batch_size": 16,
     "input_dim": 6,
     "seed": 33,
     # Model
