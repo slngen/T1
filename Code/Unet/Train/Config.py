@@ -11,7 +11,7 @@ config = ed({
     "class_nums":2,
     # Dataset
     "data_path":"/Code/T1/Datasets/WHU-BCD",
-    "image_size":128,
+    "image_size":64,
     "num_parallel_workers":4,
     "batch_size": 64,
     "input_dim": 6,
@@ -19,6 +19,7 @@ config = ed({
     # Model
     "pretrained":False,
     "resume":r"", 
+    "pos_mode": "add", # add or multi
     # Train & Eval
     "eval_epochs":10,
     "start_eval_epochs":0,
@@ -36,5 +37,5 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "features":[32, 64, 128]
+    "features":[64, 128, 256]
 })

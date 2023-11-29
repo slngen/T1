@@ -136,7 +136,10 @@ class PositionalEmbedding(nn.Module):
                     self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
                 batch_embeddings.append(self.embeddings[key])
             positional_encoding = torch.cat(batch_embeddings)
-            feature_out = torch.einsum('bchw,bcwj->bchj', feature_maps[feature_index], positional_encoding)
+            if config.pos_mode == "add":
+                feature_out = feature_maps[feature_index] + positional_encoding
+            else:
+                feature_out = torch.einsum('bchw,bcwj->bchj', feature_maps[feature_index], positional_encoding)
             feature_outs.append(feature_out)
         return feature_outs
     
@@ -151,22 +154,22 @@ class Backbone(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
     def forward(self, x, direction = torch.randint(-1,1,(config.batch_size,2))):
-        # center_patch = x[:,0,:,:,:]
-        # guide_patch = x[:,1,:,:,:]
-        # center_features = self.encoder(center_patch)
-        # guide_features = self.encoder(guide_patch)
-        # positional_guide_features = self.embedding(guide_features, direction)
-        # features = [torch.cat((center_features[i], positional_guide_features[i]), dim=1) for i in range(len(config.features))]
-        # att_features = self.attention(features)
-        # output = self.decoder(att_features)
-        # output = self.softmax(output)
-        # return output
-
         center_patch = x[:,0,:,:,:]
+        guide_patch = x[:,1,:,:,:]
         center_features = self.encoder(center_patch)
-        output = self.decoder(center_features)
+        guide_features = self.encoder(guide_patch)
+        positional_guide_features = self.embedding(guide_features, direction)
+        features = [torch.cat((center_features[i], positional_guide_features[i]), dim=1) for i in range(len(config.features))]
+        att_features = self.attention(features)
+        output = self.decoder(att_features)
         output = self.softmax(output)
         return output
+
+        # center_patch = x[:,0,:,:,:]
+        # center_features = self.encoder(center_patch)
+        # output = self.decoder(center_features)
+        # output = self.softmax(output)
+        # return output
 
 if __name__ == "__main__":
     from torchinfo import summary
