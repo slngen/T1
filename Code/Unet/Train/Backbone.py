@@ -126,6 +126,8 @@ class PositionalEmbedding(nn.Module):
         self.device = config.device
 
     def forward(self, feature_maps, pos):
+        if config.pos_mode == "none":
+            return feature_maps
         feature_outs = []
         for feature_index in range(len(feature_maps)):
             batch_size, channel, size, _ = feature_maps[feature_index].shape
