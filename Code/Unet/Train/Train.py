@@ -25,7 +25,7 @@ if __name__=='__main__':
     Log
     '''
     # get time stamp with format "2021-01-01_00-00"
-    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice--unet--x"+str(config.features[0])+"--r"+str(config.seed)+"--s"+str(config.image_size)
+    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice--unet--x"+str(config.features[0])+"--r"+str(config.seed)+"--s"+str(config.image_size)+"--pos"+str(config.pos_mode)
     # create log path
     log_path = os.path.join(config.log_path, time_stamp)
     os.makedirs(log_path, exist_ok=True)

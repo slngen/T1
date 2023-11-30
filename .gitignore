@@ -169,6 +169,7 @@ embedding/*
 Models/DeepLabv3/*
 Models/SegNet/*
 Models/RefineNet/*
+Models/PSPNet/*
 Dataset/*
 Datasets/*
 nohup*
