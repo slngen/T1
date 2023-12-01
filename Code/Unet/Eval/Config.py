@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-11-16 15:41
+LastEditTime: 2023-12-01 23:16
 '''
 from easydict import EasyDict as ed
 
@@ -10,7 +10,7 @@ config = ed({
     "device":"cuda",  # CPU or cuda
     "class_nums":2,
     # Dataset
-    "data_path":"/Code/T1/Datasets/WHU-BCD",
+    "data_path":"Datasets\WHU-BCD",
     "image_size":64,
     "num_parallel_workers":4,
     "batch_size": 64,
@@ -19,6 +19,7 @@ config = ed({
     # Model
     "pretrained":False,
     "resume":r"", 
+    "pos_mode": "add", # add ,none or multi
     # Train & Eval
     "eval_epochs":10,
     "start_eval_epochs":0,
@@ -28,8 +29,8 @@ config = ed({
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
-    "save_model_path":"W:\T1\Models",
-    "log_path":"W:\T1\Logs",
+    "save_model_path":"Models",
+    "log_path":"Logs",
     # LR
     "lr_init":5e-4,
     "lr_max":5e-4,

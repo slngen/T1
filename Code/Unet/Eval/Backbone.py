@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-10-29 16:06
 LastEditors: CT
-LastEditTime: 2023-11-17 19:02
+LastEditTime: 2023-12-01 23:10
 '''
 import torch
 import torch.nn as nn
@@ -126,40 +126,61 @@ class PositionalEmbedding(nn.Module):
         self.embeddings = nn.ParameterDict()
         self.device = config.device
         # for eval
-        eval_keys = [
-            "pos0_1_ch32_s64", 
-            "pos-1_0_ch32_s64", 
-            "pos1_0_ch32_s64", 
-            "pos0_-1_ch32_s64", 
-            "pos0_1_ch64_s32", 
-            "pos-1_0_ch64_s32", 
-            "pos1_0_ch64_s32", 
-            "pos0_-1_ch64_s32", 
-            "pos0_1_ch128_s16", 
-            "pos-1_0_ch128_s16", 
-            "pos1_0_ch128_s16", 
-            "pos0_-1_ch128_s16"
-        ] if config.features[0]==32 else [
-            "pos0_1_ch64_s64", 
-            "pos-1_0_ch64_s64", 
-            "pos1_0_ch64_s64", 
-            "pos0_-1_ch64_s64", 
-            "pos0_1_ch128_s32", 
-            "pos-1_0_ch128_s32", 
-            "pos1_0_ch128_s32", 
-            "pos0_-1_ch128_s32", 
-            "pos0_1_ch256_s16", 
-            "pos-1_0_ch256_s16", 
-            "pos1_0_ch256_s16", 
-            "pos0_-1_ch256_s16"
-        ]
+        if config.pos_mode != "none":
+            if config.features[0]==16:
+                eval_keys = [
+                    "pos0_1_ch16_s64", 
+                    "pos-1_0_ch16_s64", 
+                    "pos1_0_ch16_s64", 
+                    "pos0_-1_ch16_s64", 
+                    "pos0_1_ch32_s32", 
+                    "pos-1_0_ch32_s32", 
+                    "pos1_0_ch32_s32", 
+                    "pos0_-1_ch32_s32", 
+                    "pos0_1_ch64_s16", 
+                    "pos-1_0_ch64_s16", 
+                    "pos1_0_ch64_s16", 
+                    "pos0_-1_ch64_s16"
+                ]  
+            elif config.features[0]==32:
+                eval_keys = [
+                    "pos0_1_ch32_s64", 
+                    "pos-1_0_ch32_s64", 
+                    "pos1_0_ch32_s64", 
+                    "pos0_-1_ch32_s64", 
+                    "pos0_1_ch64_s32", 
+                    "pos-1_0_ch64_s32", 
+                    "pos1_0_ch64_s32", 
+                    "pos0_-1_ch64_s32", 
+                    "pos0_1_ch128_s16", 
+                    "pos-1_0_ch128_s16", 
+                    "pos1_0_ch128_s16", 
+                    "pos0_-1_ch128_s16"
+                ]  
+            elif config.features[0]==64:
+                eval_keys = [
+                    "pos0_1_ch64_s64", 
+                    "pos-1_0_ch64_s64", 
+                    "pos1_0_ch64_s64", 
+                    "pos0_-1_ch64_s64", 
+                    "pos0_1_ch128_s32", 
+                    "pos-1_0_ch128_s32", 
+                    "pos1_0_ch128_s32", 
+                    "pos0_-1_ch128_s32", 
+                    "pos0_1_ch256_s16", 
+                    "pos-1_0_ch256_s16", 
+                    "pos1_0_ch256_s16", 
+                    "pos0_-1_ch256_s16"
+                ]
 
-        for key in eval_keys:
-            channel = int(key.split("ch")[1].split("_")[0])
-            size = int(key.split("s")[-1])
-            self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
+            for key in eval_keys:
+                channel = int(key.split("ch")[1].split("_")[0])
+                size = int(key.split("s")[-1])
+                self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
 
     def forward(self, feature_maps, pos):
+        if config.pos_mode == "none":
+            return feature_maps
         feature_outs = []
         for feature_index in range(len(feature_maps)):
             batch_size, channel, size, _ = feature_maps[feature_index].shape
@@ -170,7 +191,10 @@ class PositionalEmbedding(nn.Module):
                     self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
                 batch_embeddings.append(self.embeddings[key])
             positional_encoding = torch.cat(batch_embeddings)
-            feature_out = torch.einsum('bchw,bcwj->bchj', feature_maps[feature_index], positional_encoding)
+            if config.pos_mode == "add":
+                feature_out = feature_maps[feature_index] + positional_encoding
+            else:
+                feature_out = torch.einsum('bchw,bcwj->bchj', feature_maps[feature_index], positional_encoding)
             feature_outs.append(feature_out)
         return feature_outs
     
