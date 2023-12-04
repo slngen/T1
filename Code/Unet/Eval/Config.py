@@ -7,10 +7,10 @@ LastEditTime: 2023-12-01 23:16
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda",  # CPU or cuda
+    "device":"cuda:0",  # CPU or cuda
     "class_nums":2,
     # Dataset
-    "data_path":"Datasets\WHU-BCD",
+    "data_path":"Datasets/WHU-BCD",
     "image_size":64,
     "num_parallel_workers":4,
     "batch_size": 64,
@@ -19,7 +19,7 @@ config = ed({
     # Model
     "pretrained":False,
     "resume":r"", 
-    "pos_mode": "add", # add ,none or multi
+    "pos_mode": "none", # add ,none or multi
     # Train & Eval
     "eval_epochs":10,
     "start_eval_epochs":0,
