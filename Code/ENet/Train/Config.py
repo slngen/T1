@@ -11,7 +11,7 @@ config = ed({
     "class_nums":2,
     # Dataset
     "data_path":"Datasets/WHU-BCD",
-    "image_size":64,
+    "image_size":256,
     "num_parallel_workers":4,
     "batch_size": 64,
     "input_dim": 6,
