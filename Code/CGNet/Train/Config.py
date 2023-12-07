@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-12-07 13:19
+LastEditTime: 2023-12-07 19:48
 '''
 from easydict import EasyDict as ed
 
@@ -28,8 +28,8 @@ config = ed({
     "metrics_List":["acc", "F1"],  # "acc", "F1", "kappa"
     "save_metrics_List":["F1"],
     # Log
-    "save_model_path":"Models/ICNet",
-    "log_path":"Logs/ICNet",
+    "save_model_path":"Models/CGNet",
+    "log_path":"Logs/CGNet",
     # LR
     "lr_init":5e-4,
     "lr_max":5e-4,
