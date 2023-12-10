@@ -2,12 +2,12 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-12-01 23:16
+LastEditTime: 2023-12-10 15:03
 '''
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda:0",  # CPU or cuda
+    "device":"cuda",  # CPU or cuda
     "class_nums":2,
     # Dataset
     "data_path":"Datasets/WHU-BCD",
@@ -37,5 +37,5 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "features":[64, 128, 256]
+    "features":[16, 32, 64]
 })

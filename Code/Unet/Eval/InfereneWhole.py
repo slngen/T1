@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-12-10 12:26
 LastEditors: CT
-LastEditTime: 2023-12-10 13:53
+LastEditTime: 2023-12-10 15:02
 '''
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -20,7 +20,7 @@ random.seed(config.seed)
 torch.manual_seed(config.seed)
 
 # Path
-ckpt_path = r"Models\Unet\2023-11-30_09-47--Dice--unet--x32--r33--s64--posnone\unet-E420-0.9047.ckpt"
+ckpt_path = r"Models\Unet\2023-11-30_22-36--Dice--unet--x16--r33--s64--posnone\unet-E470-0.8926.ckpt"
 inference_path = os.path.dirname(ckpt_path).replace("Models", "Inferences")
 os.makedirs(inference_path, exist_ok=True)
 
