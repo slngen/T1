@@ -172,4 +172,7 @@ Models/RefineNet/*
 Models/PSPNet/*
 Dataset/*
 Datasets/*
+Inferences/*/*/split/*
+!Inferences/*/*/whole.png
+
 nohup*
