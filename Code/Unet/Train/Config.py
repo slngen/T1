@@ -7,7 +7,7 @@ LastEditTime: 2023-11-16 15:40
 from easydict import EasyDict as ed
 
 config = ed({
-    "device":"cuda:1",  # CPU or cuda
+    "device":"cuda:0",  # CPU or cuda
     "class_nums":2,
     # Dataset
     "data_path":"/Code/T1/Datasets/WHU-BCD",
@@ -37,5 +37,5 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "features":[64, 128, 256]
+    "features":[16, 32, 64]
 })
