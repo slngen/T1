@@ -1,0 +1,1063 @@
+##########Config##########
+{'device': 'cuda:0', 'class_nums': 2, 'data_path': 'Datasets/WHU-BCD', 'image_size': 256, 'num_parallel_workers': 4, 'batch_size': 64, 'input_dim': 6, 'seed': 33, 'pretrained': False, 'resume': '', 'eval_epochs': 10, 'start_eval_epochs': 0, 'eval_traindata': True, 'epoch_size': 501, 'loss_monitor_step': 50, 'metrics_List': ['acc', 'F1'], 'save_metrics_List': ['F1'], 'save_model_path': 'Models/ICNet', 'log_path': 'Logs/ICNet', 'lr_init': 0.0005, 'lr_max': 0.0005, 'lr_end': 5e-05, 'warmup_epochs': 0}
+
+##########Network##########
+Backbone(
+  (icnet): ICNet(
+    (initial_conv): Conv2d(6, 64, kernel_size=(7, 7), stride=(2, 2), padding=(3, 3), bias=False)
+    (conv_sub1): Sequential(
+      (0): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (1): ReLU(inplace=True)
+      (2): MaxPool2d(kernel_size=3, stride=2, padding=1, dilation=1, ceil_mode=False)
+      (3): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(64, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+            (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(256, 64, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(64, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+      (4): Sequential(
+        (0): Bottleneck(
+          (conv1): Conv2d(256, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+          (downsample): Sequential(
+            (0): Conv2d(256, 512, kernel_size=(1, 1), stride=(2, 2), bias=False)
+            (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          )
+        )
+        (1): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (2): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+        (3): Bottleneck(
+          (conv1): Conv2d(512, 128, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv2): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (bn2): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (conv3): Conv2d(128, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+          (bn3): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (relu): ReLU(inplace=True)
+        )
+      )
+    )
+    (conv_sub2): Sequential(
+      (0): Bottleneck(
+        (conv1): Conv2d(512, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (downsample): Sequential(
+          (0): Conv2d(512, 1024, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (2): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (3): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (4): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (5): Bottleneck(
+        (conv1): Conv2d(1024, 256, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(256, 1024, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+    )
+    (conv_sub4): Sequential(
+      (0): Bottleneck(
+        (conv1): Conv2d(1024, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+        (downsample): Sequential(
+          (0): Conv2d(1024, 2048, kernel_size=(1, 1), stride=(2, 2), bias=False)
+          (1): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        )
+      )
+      (1): Bottleneck(
+        (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+      (2): Bottleneck(
+        (conv1): Conv2d(2048, 512, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv2): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (bn2): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (conv3): Conv2d(512, 2048, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (bn3): BatchNorm2d(2048, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (relu): ReLU(inplace=True)
+      )
+    )
+    (fusion_layer): Conv2d(2048, 2, kernel_size=(1, 1), stride=(1, 1))
+  )
+  (softmax): Softmax(dim=1)
+)
+
+##########Training##########
+step 51/84, epoch 1/501 --> loss:0.8749782335758209
+
+##########train dataset##########
+acc--> [90.6396906609182]
+F1--> {'F1': [0.45142578501105995], 'precision': [0.30069287716549503], 'recall': [0.9052084565976034]}
+##########eval dataset##########
+acc--> [90.99078908470794]
+F1--> {'F1': [0.4563775826054602], 'precision': [0.3047235152234881], 'recall': [0.9085650139703428]}
+save model!
+step 51/84, epoch 2/501 --> loss:0.8410602223873138
+step 51/84, epoch 3/501 --> loss:0.8516098976135253
+step 51/84, epoch 4/501 --> loss:0.8408244264125824
+step 51/84, epoch 5/501 --> loss:0.8398532617092133
+step 51/84, epoch 6/501 --> loss:0.8373726165294647
+step 51/84, epoch 7/501 --> loss:0.8416516041755676
+step 51/84, epoch 8/501 --> loss:0.843923213481903
+step 51/84, epoch 9/501 --> loss:0.8328851997852326
+step 51/84, epoch 10/501 --> loss:0.841996465921402
+step 51/84, epoch 11/501 --> loss:0.8425768089294433
+
+##########train dataset##########
+acc--> [95.83233381685169]
+F1--> {'F1': [0.11058649628219457], 'precision': [0.6009307188947551], 'recall': [0.06089751175270495]}
+##########eval dataset##########
+acc--> [96.07687655604298]
+F1--> {'F1': [0.17482228478975334], 'precision': [0.7020210220492332], 'recall': [0.09984436577634723]}
+step 51/84, epoch 12/501 --> loss:0.8427839863300324
+step 51/84, epoch 13/501 --> loss:0.8347471487522126
+step 51/84, epoch 14/501 --> loss:0.8290501499176025
+step 51/84, epoch 15/501 --> loss:0.8354410028457642
+step 51/84, epoch 16/501 --> loss:0.8306885719299316
+step 51/84, epoch 17/501 --> loss:0.8324015510082244
+step 51/84, epoch 18/501 --> loss:0.8355279159545899
+step 51/84, epoch 19/501 --> loss:0.8347955989837647
+step 51/84, epoch 20/501 --> loss:0.8308496570587158
+step 51/84, epoch 21/501 --> loss:0.8286774599552155
+
+##########train dataset##########
+acc--> [95.4343314469392]
+F1--> {'F1': [0.6308962646855297], 'precision': [0.4808401462688636], 'recall': [0.9171136923517613]}
+##########eval dataset##########
+acc--> [95.51997948192849]
+F1--> {'F1': [0.6272529183006486], 'precision': [0.47978100080694036], 'recall': [0.9056337023049972]}
+save model!
+step 51/84, epoch 22/501 --> loss:0.8309628450870514
+step 51/84, epoch 23/501 --> loss:0.833853256702423
+step 51/84, epoch 24/501 --> loss:0.8347981953620911
+step 51/84, epoch 25/501 --> loss:0.8271007585525513
+step 51/84, epoch 26/501 --> loss:0.8282270586490631
+step 51/84, epoch 27/501 --> loss:0.8429363822937012
+step 51/84, epoch 28/501 --> loss:0.8341902410984039
+step 51/84, epoch 29/501 --> loss:0.8317349588871003
+step 51/84, epoch 30/501 --> loss:0.8295472633838653
+step 51/84, epoch 31/501 --> loss:0.8214353549480439
+
+##########train dataset##########
+acc--> [95.65125684591276]
+F1--> {'F1': [0.6502212898886651], 'precision': [0.49425056335853534], 'recall': [0.9500381224645871]}
+##########eval dataset##########
+acc--> [95.7875309340846]
+F1--> {'F1': [0.6474673682558969], 'precision': [0.49677922216809867], 'recall': [0.9293935396948585]}
+save model!
+step 51/84, epoch 32/501 --> loss:0.836877372264862
+step 51/84, epoch 33/501 --> loss:0.8237470984458923
+step 51/84, epoch 34/501 --> loss:0.8316222286224365
+step 51/84, epoch 35/501 --> loss:0.8210842144489289
+step 51/84, epoch 36/501 --> loss:0.8294707489013672
+step 51/84, epoch 37/501 --> loss:0.833683032989502
+step 51/84, epoch 38/501 --> loss:0.8250849521160126
+step 51/84, epoch 39/501 --> loss:0.8332620298862458
+step 51/84, epoch 40/501 --> loss:0.8279453408718109
+step 51/84, epoch 41/501 --> loss:0.8220919919013977
+
+##########train dataset##########
+acc--> [95.46585769567227]
+F1--> {'F1': [0.6378853645411816], 'precision': [0.4830985204393114], 'recall': [0.9386442118392518]}
+##########eval dataset##########
+acc--> [95.46268493171114]
+F1--> {'F1': [0.6279615688905246], 'precision': [0.47666030639755236], 'recall': [0.920000962188469]}
+step 51/84, epoch 42/501 --> loss:0.8374669563770294
+step 51/84, epoch 43/501 --> loss:0.8385421061515808
+step 51/84, epoch 44/501 --> loss:0.8314125418663025
+step 51/84, epoch 45/501 --> loss:0.8223382103443145
+step 51/84, epoch 46/501 --> loss:0.8294705605506897
+step 51/84, epoch 47/501 --> loss:0.8332344472408295
+step 51/84, epoch 48/501 --> loss:0.8250760340690613
+step 51/84, epoch 49/501 --> loss:0.8329975497722626
+step 51/84, epoch 50/501 --> loss:0.8379541039466858
+step 51/84, epoch 51/501 --> loss:0.8229082179069519
+
+##########train dataset##########
+acc--> [95.9432592631521]
+F1--> {'F1': [0.6658036835229174], 'precision': [0.5125542040002818], 'recall': [0.9497986300110872]}
+##########eval dataset##########
+acc--> [95.8665015086246]
+F1--> {'F1': [0.6519432645165371], 'precision': [0.501867446515451], 'recall': [0.9300835902499207]}
+save model!
+step 51/84, epoch 52/501 --> loss:0.8305258417129516
+step 51/84, epoch 53/501 --> loss:0.8320076858997345
+step 51/84, epoch 54/501 --> loss:0.8274951303005218
+step 51/84, epoch 55/501 --> loss:0.8344536066055298
+step 51/84, epoch 56/501 --> loss:0.825341693162918
+step 51/84, epoch 57/501 --> loss:0.8278552556037903
+step 51/84, epoch 58/501 --> loss:0.8240265500545502
+step 51/84, epoch 59/501 --> loss:0.8317539846897125
+step 51/84, epoch 60/501 --> loss:0.8292371153831481
+step 51/84, epoch 61/501 --> loss:0.8292604160308837
+
+##########train dataset##########
+acc--> [90.88597850134195]
+F1--> {'F1': [0.4594303859537764], 'precision': [0.30725320905068526], 'recall': [0.9103022096231925]}
+##########eval dataset##########
+acc--> [91.14413123743444]
+F1--> {'F1': [0.45427319495285096], 'precision': [0.3054960826039111], 'recall': [0.8855547225471003]}
+step 51/84, epoch 62/501 --> loss:0.8271023213863373
+step 51/84, epoch 63/501 --> loss:0.8233033049106598
+step 51/84, epoch 64/501 --> loss:0.8200865602493286
+step 51/84, epoch 65/501 --> loss:0.8351819384098053
+step 51/84, epoch 66/501 --> loss:0.8301936948299408
+step 51/84, epoch 67/501 --> loss:0.8300840723514556
+step 51/84, epoch 68/501 --> loss:0.8228573346138001
+step 51/84, epoch 69/501 --> loss:0.8281321251392364
+step 51/84, epoch 70/501 --> loss:0.8314698016643525
+step 51/84, epoch 71/501 --> loss:0.831575254201889
+
+##########train dataset##########
+acc--> [96.38577701895873]
+F1--> {'F1': [0.6945760904430293], 'precision': [0.5422538549830498], 'recall': [0.9659219450922429]}
+##########eval dataset##########
+acc--> [96.14194000590592]
+F1--> {'F1': [0.6673531747939132], 'precision': [0.5204580407984705], 'recall': [0.9297925277917665]}
+save model!
+step 51/84, epoch 72/501 --> loss:0.8265090811252594
+step 51/84, epoch 73/501 --> loss:0.826509666442871
+step 51/84, epoch 74/501 --> loss:0.8189653420448303
+step 51/84, epoch 75/501 --> loss:0.8266461527347565
+step 51/84, epoch 76/501 --> loss:0.8245506525039673
+step 51/84, epoch 77/501 --> loss:0.8243069970607757
+step 51/84, epoch 78/501 --> loss:0.8268154215812683
+step 51/84, epoch 79/501 --> loss:0.8267857611179352
+step 51/84, epoch 80/501 --> loss:0.8244862043857575
+step 51/84, epoch 81/501 --> loss:0.8195338869094848
+
+##########train dataset##########
+acc--> [97.1424190033469]
+F1--> {'F1': [0.7346862945994755], 'precision': [0.6072058529772579], 'recall': [0.9299344051544465]}
+##########eval dataset##########
+acc--> [96.95077664165233]
+F1--> {'F1': [0.709073693165021], 'precision': [0.5880751919976481], 'recall': [0.8927778824590484]}
+save model!
+step 51/84, epoch 82/501 --> loss:0.8318272173404694
+step 51/84, epoch 83/501 --> loss:0.8227763545513153
+step 51/84, epoch 84/501 --> loss:0.8319514667987824
+step 51/84, epoch 85/501 --> loss:0.8259714877605439
+step 51/84, epoch 86/501 --> loss:0.8209911179542542
+step 51/84, epoch 87/501 --> loss:0.8200763547420502
+step 51/84, epoch 88/501 --> loss:0.8260635983943939
+step 51/84, epoch 89/501 --> loss:0.8276763033866882
+step 51/84, epoch 90/501 --> loss:0.8207831478118897
+step 51/84, epoch 91/501 --> loss:0.8216191422939301
+
+##########train dataset##########
+acc--> [95.16012236827667]
+F1--> {'F1': [0.6294564026895709], 'precision': [0.4667778579315694], 'recall': [0.966206081843644]}
+##########eval dataset##########
+acc--> [95.01048077226406]
+F1--> {'F1': [0.6081936008537587], 'precision': [0.45175201862472514], 'recall': [0.930406565341228]}
+step 51/84, epoch 92/501 --> loss:0.8285774993896484
+step 51/84, epoch 93/501 --> loss:0.8209050095081329
+step 51/84, epoch 94/501 --> loss:0.8235682487487793
+step 51/84, epoch 95/501 --> loss:0.8222699522972107
+step 51/84, epoch 96/501 --> loss:0.8254057025909424
+step 51/84, epoch 97/501 --> loss:0.8345548403263092
+step 51/84, epoch 98/501 --> loss:0.8242234373092652
+step 51/84, epoch 99/501 --> loss:0.8264506304264069
+step 51/84, epoch 100/501 --> loss:0.8254524624347687
+step 51/84, epoch 101/501 --> loss:0.8252726554870605
+
+##########train dataset##########
+acc--> [98.22023732857696]
+F1--> {'F1': [0.8221067209139765], 'precision': [0.7152032000711231], 'recall': [0.966598534805766]}
+##########eval dataset##########
+acc--> [97.82087804972211]
+F1--> {'F1': [0.7737521536842253], 'precision': [0.6812960491213239], 'recall': [0.8952552008356697]}
+save model!
+step 51/84, epoch 102/501 --> loss:0.8250063526630401
+step 51/84, epoch 103/501 --> loss:0.8217440044879913
+step 51/84, epoch 104/501 --> loss:0.8192188692092895
+step 51/84, epoch 105/501 --> loss:0.8241705799102783
+step 51/84, epoch 106/501 --> loss:0.8216495835781097
+step 51/84, epoch 107/501 --> loss:0.816779477596283
+step 51/84, epoch 108/501 --> loss:0.818068778514862
+step 51/84, epoch 109/501 --> loss:0.8222276568412781
+step 51/84, epoch 110/501 --> loss:0.8244770038127899
+step 51/84, epoch 111/501 --> loss:0.8186277580261231
+
+##########train dataset##########
+acc--> [97.9702146034513]
+F1--> {'F1': [0.8044536461917358], 'precision': [0.6816072275088317], 'recall': [0.9813312875839223]}
+##########eval dataset##########
+acc--> [97.57472961905721]
+F1--> {'F1': [0.7579806196399894], 'precision': [0.6482400816354393], 'recall': [0.912463166164731]}
+step 51/84, epoch 112/501 --> loss:0.8238770568370819
+step 51/84, epoch 113/501 --> loss:0.8207492303848266
+step 51/84, epoch 114/501 --> loss:0.8183556950092316
+step 51/84, epoch 115/501 --> loss:0.8193069636821747
+step 51/84, epoch 116/501 --> loss:0.8176609528064728
+step 51/84, epoch 117/501 --> loss:0.8266447508335113
+step 51/84, epoch 118/501 --> loss:0.8290990209579467
+step 51/84, epoch 119/501 --> loss:0.8181601369380951
+step 51/84, epoch 120/501 --> loss:0.8171314418315887
+step 51/84, epoch 121/501 --> loss:0.8179465949535369
+
+##########train dataset##########
+acc--> [98.40745586199026]
+F1--> {'F1': [0.8377840264230435], 'precision': [0.7392724400337914], 'recall': [0.9665993416304268]}
+##########eval dataset##########
+acc--> [97.87104982924454]
+F1--> {'F1': [0.7759977036598428], 'precision': [0.6903164983997773], 'recall': [0.8859750391877739]}
+save model!
+step 51/84, epoch 122/501 --> loss:0.8177462840080261
+step 51/84, epoch 123/501 --> loss:0.8323683643341064
+step 51/84, epoch 124/501 --> loss:0.8224853801727295
+step 51/84, epoch 125/501 --> loss:0.8212370538711548
+step 51/84, epoch 126/501 --> loss:0.828215297460556
+step 51/84, epoch 127/501 --> loss:0.8188138937950135
+step 51/84, epoch 128/501 --> loss:0.8220414638519287
+step 51/84, epoch 129/501 --> loss:0.8240042018890381
+step 51/84, epoch 130/501 --> loss:0.818765071630478
+step 51/84, epoch 131/501 --> loss:0.8247536146640777
+
+##########train dataset##########
+acc--> [97.73366532613319]
+F1--> {'F1': [0.7858868706700947], 'precision': [0.6570518506933489], 'recall': [0.9775839232111503]}
+##########eval dataset##########
+acc--> [97.19587444528379]
+F1--> {'F1': [0.730220467075034], 'precision': [0.6089682333113668], 'recall': [0.9117772850994275]}
+step 51/84, epoch 132/501 --> loss:0.818890323638916
+step 51/84, epoch 133/501 --> loss:0.8240556693077088
+step 51/84, epoch 134/501 --> loss:0.8169927144050598
+step 51/84, epoch 135/501 --> loss:0.8256487810611725
+step 51/84, epoch 136/501 --> loss:0.8149832892417908
+step 51/84, epoch 137/501 --> loss:0.8190246665477753
+step 51/84, epoch 138/501 --> loss:0.8161906838417053
+step 51/84, epoch 139/501 --> loss:0.8144099318981171
+step 51/84, epoch 140/501 --> loss:0.820978901386261
+step 51/84, epoch 141/501 --> loss:0.8219309532642365
+
+##########train dataset##########
+acc--> [98.61955474635822]
+F1--> {'F1': [0.85871319681182], 'precision': [0.7605307597611815], 'recall': [0.9860165183895605]}
+##########eval dataset##########
+acc--> [98.04515955432893]
+F1--> {'F1': [0.7938745409845523], 'precision': [0.7074041420801926], 'recall': [0.9044412282340135]}
+save model!
+step 51/84, epoch 142/501 --> loss:0.818670723438263
+step 51/84, epoch 143/501 --> loss:0.830759094953537
+step 51/84, epoch 144/501 --> loss:0.8176310884952546
+step 51/84, epoch 145/501 --> loss:0.8198265171051026
+step 51/84, epoch 146/501 --> loss:0.8280385756492614
+step 51/84, epoch 147/501 --> loss:0.8149219632148743
+step 51/84, epoch 148/501 --> loss:0.8299976575374604
+step 51/84, epoch 149/501 --> loss:0.8174734091758729
+step 51/84, epoch 150/501 --> loss:0.8182093703746796
+step 51/84, epoch 151/501 --> loss:0.8120760893821717
+
+##########train dataset##########
+acc--> [98.82822083228693]
+F1--> {'F1': [0.8750781256178238], 'precision': [0.8007279904980946], 'recall': [0.9646608781473123]}
+##########eval dataset##########
+acc--> [98.33567595126613]
+F1--> {'F1': [0.8074120190019274], 'precision': [0.7788050629414333], 'recall': [0.8382114492571683]}
+save model!
+step 51/84, epoch 152/501 --> loss:0.8266820502281189
+step 51/84, epoch 153/501 --> loss:0.8164077830314637
+step 51/84, epoch 154/501 --> loss:0.8232108628749848
+step 51/84, epoch 155/501 --> loss:0.8168338334560394
+step 51/84, epoch 156/501 --> loss:0.8252170705795288
+step 51/84, epoch 157/501 --> loss:0.8159190452098847
+step 51/84, epoch 158/501 --> loss:0.8168761062622071
+step 51/84, epoch 159/501 --> loss:0.8338464784622193
+step 51/84, epoch 160/501 --> loss:0.8252172040939331
+step 51/84, epoch 161/501 --> loss:0.8270342481136322
+
+##########train dataset##########
+acc--> [98.64874383148724]
+F1--> {'F1': [0.8618743313625032], 'precision': [0.7625913515878625], 'recall': [0.9908913529905017]}
+##########eval dataset##########
+acc--> [98.15485729840975]
+F1--> {'F1': [0.803087395675385], 'precision': [0.7224497825455013], 'recall': [0.9040002245095373]}
+step 51/84, epoch 162/501 --> loss:0.8207257735729218
+step 51/84, epoch 163/501 --> loss:0.8244172525405884
+step 51/84, epoch 164/501 --> loss:0.8184780752658845
+step 51/84, epoch 165/501 --> loss:0.8248936212062836
+step 51/84, epoch 166/501 --> loss:0.8209974384307861
+step 51/84, epoch 167/501 --> loss:0.8164721858501435
+step 51/84, epoch 168/501 --> loss:0.8288227546215058
+step 51/84, epoch 169/501 --> loss:0.8203516209125519
+step 51/84, epoch 170/501 --> loss:0.8239923989772797
+step 51/84, epoch 171/501 --> loss:0.8235442459583282
+
+##########train dataset##########
+acc--> [98.79467953087001]
+F1--> {'F1': [0.8739794150781967], 'precision': [0.787127844256517], 'recall': [0.9823869504172746]}
+##########eval dataset##########
+acc--> [98.20298122295213]
+F1--> {'F1': [0.8067125228373965], 'precision': [0.7303079485202199], 'recall': [0.9009842401290923]}
+step 51/84, epoch 172/501 --> loss:0.8232646179199219
+step 51/84, epoch 173/501 --> loss:0.8198995208740234
+step 51/84, epoch 174/501 --> loss:0.8210442650318146
+step 51/84, epoch 175/501 --> loss:0.8228551256656647
+step 51/84, epoch 176/501 --> loss:0.8129805564880371
+step 51/84, epoch 177/501 --> loss:0.8238262808322907
+step 51/84, epoch 178/501 --> loss:0.8335069072246551
+step 51/84, epoch 179/501 --> loss:0.8205849850177764
+step 51/84, epoch 180/501 --> loss:0.8226641404628754
+step 51/84, epoch 181/501 --> loss:0.8161760234832763
+
+##########train dataset##########
+acc--> [98.81655704138994]
+F1--> {'F1': [0.87564046327651], 'precision': [0.7918349801520608], 'recall': [0.9792974843200489]}
+##########eval dataset##########
+acc--> [98.26590470441026]
+F1--> {'F1': [0.8086973779524791], 'precision': [0.7476455923269849], 'recall': [0.8806183674027999]}
+save model!
+step 51/84, epoch 182/501 --> loss:0.8262190341949462
+step 51/84, epoch 183/501 --> loss:0.825822435617447
+step 51/84, epoch 184/501 --> loss:0.8221685230731964
+step 51/84, epoch 185/501 --> loss:0.8256897675991058
+step 51/84, epoch 186/501 --> loss:0.8130345988273621
+step 51/84, epoch 187/501 --> loss:0.8170921337604523
+step 51/84, epoch 188/501 --> loss:0.8210057997703553
+step 51/84, epoch 189/501 --> loss:0.8125713956356049
+step 51/84, epoch 190/501 --> loss:0.8212208688259125
+step 51/84, epoch 191/501 --> loss:0.8203003573417663
+
+##########train dataset##########
+acc--> [98.86545124775989]
+F1--> {'F1': [0.8812744333342809], 'precision': [0.7942565433165493], 'recall': [0.9897179609920516]}
+##########eval dataset##########
+acc--> [98.34694249109927]
+F1--> {'F1': [0.8199802632844331], 'precision': [0.7498960329238601], 'recall': [0.904527023504048]}
+save model!
+step 51/84, epoch 192/501 --> loss:0.8167349874973298
+step 51/84, epoch 193/501 --> loss:0.8245590603351594
+step 51/84, epoch 194/501 --> loss:0.8158356261253357
+step 51/84, epoch 195/501 --> loss:0.8162146317958832
+step 51/84, epoch 196/501 --> loss:0.8209994471073151
+step 51/84, epoch 197/501 --> loss:0.8209529531002044
+step 51/84, epoch 198/501 --> loss:0.8240035402774811
+step 51/84, epoch 199/501 --> loss:0.8192961466312408
+step 51/84, epoch 200/501 --> loss:0.8152276194095611
+step 51/84, epoch 201/501 --> loss:0.8201298189163208
+
+##########train dataset##########
+acc--> [98.95371965222813]
+F1--> {'F1': [0.8896762457891454], 'precision': [0.8067647133794384], 'recall': [0.9915937610931723]}
+##########eval dataset##########
+acc--> [98.40482042634028]
+F1--> {'F1': [0.8227953597329395], 'precision': [0.7652074877975931], 'recall': [0.8897681523132414]}
+save model!
+step 51/84, epoch 202/501 --> loss:0.8241180801391601
+step 51/84, epoch 203/501 --> loss:0.8122178876399994
+step 51/84, epoch 204/501 --> loss:0.8135163486003876
+step 51/84, epoch 205/501 --> loss:0.8184615492820739
+step 51/84, epoch 206/501 --> loss:0.8203127980232239
+step 51/84, epoch 207/501 --> loss:0.8182491850852966
+step 51/84, epoch 208/501 --> loss:0.8213993620872497
+step 51/84, epoch 209/501 --> loss:0.8179316747188569
+step 51/84, epoch 210/501 --> loss:0.8173391187191009
+step 51/84, epoch 211/501 --> loss:0.8217618417739868
+
+##########train dataset##########
+acc--> [99.03627673829305]
+F1--> {'F1': [0.8974257817382207], 'precision': [0.8200639246352005], 'recall': [0.9909161628488232]}
+##########eval dataset##########
+acc--> [98.47241232296477]
+F1--> {'F1': [0.8282797497529241], 'precision': [0.7782915899873809], 'recall': [0.8851413016010278]}
+save model!
+step 51/84, epoch 212/501 --> loss:0.8185981690883637
+step 51/84, epoch 213/501 --> loss:0.822762919664383
+step 51/84, epoch 214/501 --> loss:0.8160861039161682
+step 51/84, epoch 215/501 --> loss:0.8212250733375549
+step 51/84, epoch 216/501 --> loss:0.8152993881702423
+step 51/84, epoch 217/501 --> loss:0.8230919575691223
+step 51/84, epoch 218/501 --> loss:0.8184848403930665
+step 51/84, epoch 219/501 --> loss:0.8182993042469024
+step 51/84, epoch 220/501 --> loss:0.8154899096488952
+step 51/84, epoch 221/501 --> loss:0.8168599951267242
+
+##########train dataset##########
+acc--> [98.82845483471388]
+F1--> {'F1': [0.8685770027939366], 'precision': [0.8308147006773713], 'recall': [0.9099464671831398]}
+##########eval dataset##########
+acc--> [98.2827214118311]
+F1--> {'F1': [0.7900784901799206], 'precision': [0.8042246949416975], 'recall': [0.7764309969478109]}
+step 51/84, epoch 222/501 --> loss:0.8251418399810792
+step 51/84, epoch 223/501 --> loss:0.8190672397613525
+step 51/84, epoch 224/501 --> loss:0.8177711999416352
+step 51/84, epoch 225/501 --> loss:0.8240023064613342
+step 51/84, epoch 226/501 --> loss:0.8225313878059387
+step 51/84, epoch 227/501 --> loss:0.8171316993236541
+step 51/84, epoch 228/501 --> loss:0.816664137840271
+step 51/84, epoch 229/501 --> loss:0.8047485280036927
+step 51/84, epoch 230/501 --> loss:0.8140899205207824
+step 51/84, epoch 231/501 --> loss:0.8191393160820007
+
+##########train dataset##########
+acc--> [99.17377662157791]
+F1--> {'F1': [0.9106336908953329], 'precision': [0.8434544987583416], 'recall': [0.9894520450309084]}
+##########eval dataset##########
+acc--> [98.54239382872503]
+F1--> {'F1': [0.8328783943499263], 'precision': [0.7965824702641587], 'recall': [0.872650793203936]}
+save model!
+step 51/84, epoch 232/501 --> loss:0.8176748669147491
+step 51/84, epoch 233/501 --> loss:0.8145090878009796
+step 51/84, epoch 234/501 --> loss:0.8079572784900665
+step 51/84, epoch 235/501 --> loss:0.8195756554603577
+step 51/84, epoch 236/501 --> loss:0.8147832858562469
+step 51/84, epoch 237/501 --> loss:0.8102421641349793
+step 51/84, epoch 238/501 --> loss:0.8266747272014618
+step 51/84, epoch 239/501 --> loss:0.8213088834285736
+step 51/84, epoch 240/501 --> loss:0.819764894247055
+step 51/84, epoch 241/501 --> loss:0.8200682783126831
+
+##########train dataset##########
+acc--> [99.13538019890174]
+F1--> {'F1': [0.9070325706064528], 'precision': [0.8359151782406773], 'recall': [0.9913880208046519]}
+##########eval dataset##########
+acc--> [98.48900475422091]
+F1--> {'F1': [0.8284665743519493], 'precision': [0.7852900215676079], 'recall': [0.8766783599458341]}
+step 51/84, epoch 242/501 --> loss:0.8219514584541321
+step 51/84, epoch 243/501 --> loss:0.825478196144104
+step 51/84, epoch 244/501 --> loss:0.8198360574245452
+step 51/84, epoch 245/501 --> loss:0.8221191120147705
+step 51/84, epoch 246/501 --> loss:0.8160206925868988
+step 51/84, epoch 247/501 --> loss:0.823976982831955
+step 51/84, epoch 248/501 --> loss:0.8188385772705078
+step 51/84, epoch 249/501 --> loss:0.8208801102638245
+step 51/84, epoch 250/501 --> loss:0.8171732902526856
+step 51/84, epoch 251/501 --> loss:0.8151711308956147
+
+##########train dataset##########
+acc--> [86.83224060493166]
+F1--> {'F1': [0.30749465876732207], 'precision': [0.19806842326285698], 'recall': [0.687122674999807]}
+##########eval dataset##########
+acc--> [87.3368824769343]
+F1--> {'F1': [0.3032172835414418], 'precision': [0.19664842739901472], 'recall': [0.6619728902972575]}
+step 51/84, epoch 252/501 --> loss:0.842409907579422
+step 51/84, epoch 253/501 --> loss:0.8261553800106048
+step 51/84, epoch 254/501 --> loss:0.8105798733234405
+step 51/84, epoch 255/501 --> loss:0.8216382741928101
+step 51/84, epoch 256/501 --> loss:0.8160140705108643
+step 51/84, epoch 257/501 --> loss:0.8231100606918335
+step 51/84, epoch 258/501 --> loss:0.8108009397983551
+step 51/84, epoch 259/501 --> loss:0.8300339663028717
+step 51/84, epoch 260/501 --> loss:0.8195003712177277
+step 51/84, epoch 261/501 --> loss:0.8185525393486023
+
+##########train dataset##########
+acc--> [93.8350450067311]
+F1--> {'F1': [0.5765086422485259], 'precision': [0.40729529792244124], 'recall': [0.9862781312858456]}
+##########eval dataset##########
+acc--> [93.17270514219767]
+F1--> {'F1': [0.5337082389623352], 'precision': [0.3728476366046744], 'recall': [0.9387234144898771]}
+step 51/84, epoch 262/501 --> loss:0.8175921487808228
+step 51/84, epoch 263/501 --> loss:0.8224785530567169
+step 51/84, epoch 264/501 --> loss:0.815905567407608
+step 51/84, epoch 265/501 --> loss:0.81682501912117
+step 51/84, epoch 266/501 --> loss:0.8143783402442932
+step 51/84, epoch 267/501 --> loss:0.8094205021858215
+step 51/84, epoch 268/501 --> loss:0.8071832418441772
+step 51/84, epoch 269/501 --> loss:0.8191923391819
+step 51/84, epoch 270/501 --> loss:0.8227714633941651
+step 51/84, epoch 271/501 --> loss:0.8228915548324585
+
+##########train dataset##########
+acc--> [99.1474416222846]
+F1--> {'F1': [0.9082330864009318], 'precision': [0.8377637122887904], 'recall': [0.9916583070660415]}
+##########eval dataset##########
+acc--> [98.52038539508685]
+F1--> {'F1': [0.8321637250479421], 'precision': [0.7882277649110203], 'recall': [0.8812979942334653]}
+step 51/84, epoch 272/501 --> loss:0.8162663793563842
+step 51/84, epoch 273/501 --> loss:0.8172349333763123
+step 51/84, epoch 274/501 --> loss:0.8117479920387268
+step 51/84, epoch 275/501 --> loss:0.8250769984722137
+step 51/84, epoch 276/501 --> loss:0.8174141073226928
+step 51/84, epoch 277/501 --> loss:0.8190662610530853
+step 51/84, epoch 278/501 --> loss:0.8241230940818787
+step 51/84, epoch 279/501 --> loss:0.8097724187374115
+step 51/84, epoch 280/501 --> loss:0.8230764782428741
+step 51/84, epoch 281/501 --> loss:0.8126669669151306
+
+##########train dataset##########
+acc--> [99.16987753468399]
+F1--> {'F1': [0.9104834244904078], 'precision': [0.84114749967622], 'recall': [0.9922887733031184]}
+##########eval dataset##########
+acc--> [98.54220492945535]
+F1--> {'F1': [0.8338998943407055], 'precision': [0.7930413143201838], 'recall': [0.8792084384044018]}
+save model!
+step 51/84, epoch 282/501 --> loss:0.8216125357151032
+step 51/84, epoch 283/501 --> loss:0.8108339142799378
+step 51/84, epoch 284/501 --> loss:0.8110238361358643
+step 51/84, epoch 285/501 --> loss:0.8118495726585389
+step 51/84, epoch 286/501 --> loss:0.820751564502716
+step 51/84, epoch 287/501 --> loss:0.8208840882778168
+step 51/84, epoch 288/501 --> loss:0.8142599153518677
+step 51/84, epoch 289/501 --> loss:0.8207468652725219
+step 51/84, epoch 290/501 --> loss:0.8174992084503174
+step 51/84, epoch 291/501 --> loss:0.8229386484622956
+
+##########train dataset##########
+acc--> [99.22335795976879]
+F1--> {'F1': [0.9157125701759362], 'precision': [0.8506072680218331], 'recall': [0.9916218654855258]}
+##########eval dataset##########
+acc--> [98.5735028017367]
+F1--> {'F1': [0.8356026005348821], 'precision': [0.8029636248259195], 'recall': [0.8710182775984204]}
+save model!
+step 51/84, epoch 292/501 --> loss:0.8131986916065216
+step 51/84, epoch 293/501 --> loss:0.8111947989463806
+step 51/84, epoch 294/501 --> loss:0.807363451719284
+step 51/84, epoch 295/501 --> loss:0.8232499372959137
+step 51/84, epoch 296/501 --> loss:0.828633165359497
+step 51/84, epoch 297/501 --> loss:0.8222295045852661
+step 51/84, epoch 298/501 --> loss:0.8222140789031982
+step 51/84, epoch 299/501 --> loss:0.8149582982063294
+step 51/84, epoch 300/501 --> loss:0.8193946158885956
+step 51/84, epoch 301/501 --> loss:0.8195878887176513
+
+##########train dataset##########
+acc--> [99.17621762733475]
+F1--> {'F1': [0.9110875102603087], 'precision': [0.8423451381486328], 'recall': [0.9920585593332185]}
+##########eval dataset##########
+acc--> [98.53496735072375]
+F1--> {'F1': [0.83391451532472], 'precision': [0.7894749133268593], 'recall': [0.88366674551137]}
+step 51/84, epoch 302/501 --> loss:0.8195559298992157
+step 51/84, epoch 303/501 --> loss:0.8129209280014038
+step 51/84, epoch 304/501 --> loss:0.8202679800987244
+step 51/84, epoch 305/501 --> loss:0.815534805059433
+step 51/84, epoch 306/501 --> loss:0.8276670575141907
+step 51/84, epoch 307/501 --> loss:0.821052234172821
+step 51/84, epoch 308/501 --> loss:0.8252757310867309
+step 51/84, epoch 309/501 --> loss:0.8140552926063538
+step 51/84, epoch 310/501 --> loss:0.8198896038532257
+step 51/84, epoch 311/501 --> loss:0.8288561630249024
+
+##########train dataset##########
+acc--> [99.20450417254078]
+F1--> {'F1': [0.9138470855412232], 'precision': [0.847354193003604], 'recall': [0.9916758555024153]}
+##########eval dataset##########
+acc--> [98.53615614789436]
+F1--> {'F1': [0.8325391942899902], 'precision': [0.7946331706007159], 'recall': [0.8742538016511593]}
+step 51/84, epoch 312/501 --> loss:0.8212539446353913
+step 51/84, epoch 313/501 --> loss:0.8215978443622589
+step 51/84, epoch 314/501 --> loss:0.8167498850822449
+step 51/84, epoch 315/501 --> loss:0.8228493428230286
+step 51/84, epoch 316/501 --> loss:0.8194883501529694
+step 51/84, epoch 317/501 --> loss:0.8230204904079437
+step 51/84, epoch 318/501 --> loss:0.8386315059661865
+step 51/84, epoch 319/501 --> loss:0.8249452447891236
+step 51/84, epoch 320/501 --> loss:0.8256263971328736
+step 51/84, epoch 321/501 --> loss:0.8147505378723144
+
+##########train dataset##########
+acc--> [98.99318138668662]
+F1--> {'F1': [0.8928459137621693], 'precision': [0.8158361701367888], 'recall': [0.9859215820211321]}
+##########eval dataset##########
+acc--> [98.32295428631677]
+F1--> {'F1': [0.813611169572197], 'precision': [0.7569811303033566], 'recall': [0.8794109793876793]}
+step 51/84, epoch 322/501 --> loss:0.8226435482501984
+step 51/84, epoch 323/501 --> loss:0.8176451671123505
+step 51/84, epoch 324/501 --> loss:0.8162603664398194
+step 51/84, epoch 325/501 --> loss:0.8190107226371766
+step 51/84, epoch 326/501 --> loss:0.825468977689743
+step 51/84, epoch 327/501 --> loss:0.8122239899635315
+step 51/84, epoch 328/501 --> loss:0.8229438173770904
+step 51/84, epoch 329/501 --> loss:0.8224928820133209
+step 51/84, epoch 330/501 --> loss:0.814612318277359
+step 51/84, epoch 331/501 --> loss:0.817339870929718
+
+##########train dataset##########
+acc--> [99.21283614648593]
+F1--> {'F1': [0.9147050989325559], 'precision': [0.8485265088208152], 'recall': [0.9920914374381488]}
+##########eval dataset##########
+acc--> [98.56234639752013]
+F1--> {'F1': [0.8339091870678212], 'precision': [0.8031584716811419], 'recall': [0.8671191632140879]}
+step 51/84, epoch 332/501 --> loss:0.8271286869049073
+step 51/84, epoch 333/501 --> loss:0.8164085125923157
+step 51/84, epoch 334/501 --> loss:0.8180154347419739
+step 51/84, epoch 335/501 --> loss:0.8151760649681091
+step 51/84, epoch 336/501 --> loss:0.8180016207695008
+step 51/84, epoch 337/501 --> loss:0.8211090195178986
+step 51/84, epoch 338/501 --> loss:0.8176062345504761
+step 51/84, epoch 339/501 --> loss:0.8185396361351013
+step 51/84, epoch 340/501 --> loss:0.820909777879715
+step 51/84, epoch 341/501 --> loss:0.8168989980220794
+
+##########train dataset##########
+acc--> [99.31000865797253]
+F1--> {'F1': [0.9243141315598838], 'precision': [0.8665578113654991], 'recall': [0.9903306098512011]}
+##########eval dataset##########
+acc--> [98.62117817394969]
+F1--> {'F1': [0.8409000552817628], 'precision': [0.8089775550738012], 'recall': [0.8754562183515675]}
+save model!
+step 51/84, epoch 342/501 --> loss:0.8136053085327148
+step 51/84, epoch 343/501 --> loss:0.8259043395519257
+step 51/84, epoch 344/501 --> loss:0.8177678143978119
+step 51/84, epoch 345/501 --> loss:0.8090555799007416
+step 51/84, epoch 346/501 --> loss:0.8187173414230347
+step 51/84, epoch 347/501 --> loss:0.8154590916633606
+step 51/84, epoch 348/501 --> loss:0.8277978491783142
+step 51/84, epoch 349/501 --> loss:0.8176005232334137
+step 51/84, epoch 350/501 --> loss:0.8224158489704132
+step 51/84, epoch 351/501 --> loss:0.8231287872791291
+
+##########train dataset##########
+acc--> [99.33053993937119]
+F1--> {'F1': [0.9262366483342649], 'precision': [0.8717825176559632], 'recall': [0.9879580747005416]}
+##########eval dataset##########
+acc--> [98.61266435704277]
+F1--> {'F1': [0.8394687127474485], 'precision': [0.8096991131549649], 'recall': [0.8715216633042862]}
+step 51/84, epoch 352/501 --> loss:0.8194762969017029
+step 51/84, epoch 353/501 --> loss:0.812968966960907
+step 51/84, epoch 354/501 --> loss:0.8200686538219452
+step 51/84, epoch 355/501 --> loss:0.8182814335823059
+step 51/84, epoch 356/501 --> loss:0.8233243238925934
+step 51/84, epoch 357/501 --> loss:0.8215644240379334
+step 51/84, epoch 358/501 --> loss:0.8187397933006286
+step 51/84, epoch 359/501 --> loss:0.8233844339847565
+step 51/84, epoch 360/501 --> loss:0.8228078246116638
+step 51/84, epoch 361/501 --> loss:0.8187208783626556
+
+##########train dataset##########
+acc--> [99.22509781644442]
+F1--> {'F1': [0.9159373834937699], 'precision': [0.850503768945232], 'recall': [0.9922901180108865]}
+##########eval dataset##########
+acc--> [98.59555929455303]
+F1--> {'F1': [0.8388544932195064], 'precision': [0.802841516787925], 'recall': [0.8782610020392362]}
+step 51/84, epoch 362/501 --> loss:0.8253577280044556
+step 51/84, epoch 363/501 --> loss:0.813845499753952
+step 51/84, epoch 364/501 --> loss:0.8242011368274689
+step 51/84, epoch 365/501 --> loss:0.8138797378540039
+step 51/84, epoch 366/501 --> loss:0.8170951521396637
+step 51/84, epoch 367/501 --> loss:0.8209249782562256
+step 51/84, epoch 368/501 --> loss:0.8148646306991577
+step 51/84, epoch 369/501 --> loss:0.8196724569797516
+step 51/84, epoch 370/501 --> loss:0.8174393486976623
+step 51/84, epoch 371/501 --> loss:0.8151758694648743
+
+##########train dataset##########
+acc--> [99.02296434594562]
+F1--> {'F1': [0.8961243970900156], 'precision': [0.818122991758455], 'recall': [0.9905790446113588]}
+##########eval dataset##########
+acc--> [98.37304930465187]
+F1--> {'F1': [0.8213494176483452], 'precision': [0.7563644403950097], 'recall': [0.8985625684042504]}
+step 51/84, epoch 372/501 --> loss:0.8099077880382538
+step 51/84, epoch 373/501 --> loss:0.8209986484050751
+step 51/84, epoch 374/501 --> loss:0.8236051547527313
+step 51/84, epoch 375/501 --> loss:0.818335109949112
+step 51/84, epoch 376/501 --> loss:0.8195571517944336
+step 51/84, epoch 377/501 --> loss:0.8298190402984619
+step 51/84, epoch 378/501 --> loss:0.8259266722202301
+step 51/84, epoch 379/501 --> loss:0.8122870826721191
+step 51/84, epoch 380/501 --> loss:0.8206226170063019
+step 51/84, epoch 381/501 --> loss:0.820549076795578
+
+##########train dataset##########
+acc--> [99.29114686088148]
+F1--> {'F1': [0.9224693944570046], 'precision': [0.8626527119128663], 'recall': [0.9912110572623691]}
+##########eval dataset##########
+acc--> [98.60329481976936]
+F1--> {'F1': [0.8392922377581019], 'precision': [0.8053267631731644], 'recall': [0.8762598073200585]}
+step 51/84, epoch 382/501 --> loss:0.8137206912040711
+step 51/84, epoch 383/501 --> loss:0.8143081021308899
+step 51/84, epoch 384/501 --> loss:0.8126923036575318
+step 51/84, epoch 385/501 --> loss:0.8189181756973266
+step 51/84, epoch 386/501 --> loss:0.8202937519550324
+step 51/84, epoch 387/501 --> loss:0.823125742673874
+step 51/84, epoch 388/501 --> loss:0.8215889132022858
+step 51/84, epoch 389/501 --> loss:0.8226770949363709
+step 51/84, epoch 390/501 --> loss:0.8139377355575561
+step 51/84, epoch 391/501 --> loss:0.8243659114837647
+
+##########train dataset##########
+acc--> [99.32195565474075]
+F1--> {'F1': [0.9255798355553672], 'precision': [0.8682009069310166], 'recall': [0.9910911765648424]}
+##########eval dataset##########
+acc--> [98.62626043203902]
+F1--> {'F1': [0.8407796120355764], 'precision': [0.8122086287793536], 'recall': [0.8714446881087412]}
+step 51/84, epoch 392/501 --> loss:0.8120276439189911
+step 51/84, epoch 393/501 --> loss:0.8214839732646942
+step 51/84, epoch 394/501 --> loss:0.8209666264057159
+step 51/84, epoch 395/501 --> loss:0.8169283902645111
+step 51/84, epoch 396/501 --> loss:0.8161354494094849
+step 51/84, epoch 397/501 --> loss:0.8161354207992554
+step 51/84, epoch 398/501 --> loss:0.8136400508880616
+step 51/84, epoch 399/501 --> loss:0.8229037010669709
+step 51/84, epoch 400/501 --> loss:0.8287690103054046
+step 51/84, epoch 401/501 --> loss:0.8157820737361908
+
+##########train dataset##########
+acc--> [99.29157710495254]
+F1--> {'F1': [0.922583735694583], 'precision': [0.8621080485664658], 'recall': [0.9921955850547886]}
+##########eval dataset##########
+acc--> [98.61500657448897]
+F1--> {'F1': [0.840083210871561], 'precision': [0.8086814804735333], 'recall': [0.8740329790589397]}
+step 51/84, epoch 402/501 --> loss:0.8181447124481201
+step 51/84, epoch 403/501 --> loss:0.8134197080135346
+step 51/84, epoch 404/501 --> loss:0.8141972625255585
+step 51/84, epoch 405/501 --> loss:0.8217175579071045
+step 51/84, epoch 406/501 --> loss:0.8245390331745148
+step 51/84, epoch 407/501 --> loss:0.8229065990447998
+step 51/84, epoch 408/501 --> loss:0.8143889594078064
+step 51/84, epoch 409/501 --> loss:0.8132207584381104
+step 51/84, epoch 410/501 --> loss:0.8215423345565795
+step 51/84, epoch 411/501 --> loss:0.8154894280433654
+
+##########train dataset##########
+acc--> [99.18014846761425]
+F1--> {'F1': [0.9112758416134418], 'precision': [0.8444308539273104], 'recall': [0.9896251761560522]}
+##########eval dataset##########
+acc--> [98.53659135045204]
+F1--> {'F1': [0.8327711127602523], 'precision': [0.7940692823731103], 'recall': [0.8754498037519387]}
+step 51/84, epoch 412/501 --> loss:0.8180107319355011
+step 51/84, epoch 413/501 --> loss:0.817520524263382
+step 51/84, epoch 414/501 --> loss:0.8099008417129516
+step 51/84, epoch 415/501 --> loss:0.8172359919548035
+step 51/84, epoch 416/501 --> loss:0.8211312401294708
+step 51/84, epoch 417/501 --> loss:0.821798312664032
+step 51/84, epoch 418/501 --> loss:0.8232472610473632
+step 51/84, epoch 419/501 --> loss:0.8164311158657074
+step 51/84, epoch 420/501 --> loss:0.8172207963466644
+step 51/84, epoch 421/501 --> loss:0.8227312707901001
+
+##########train dataset##########
+acc--> [99.2725190662174]
+F1--> {'F1': [0.9206986929647285], 'precision': [0.8584935195909846], 'recall': [0.9926342287287451]}
+##########eval dataset##########
+acc--> [98.62572310372775]
+F1--> {'F1': [0.8388651861002057], 'precision': [0.8192381570209817], 'recall': [0.859466225127014]}
+step 51/84, epoch 422/501 --> loss:0.8175607740879058
+step 51/84, epoch 423/501 --> loss:0.8224167799949647
+step 51/84, epoch 424/501 --> loss:0.8182677614688874
+step 51/84, epoch 425/501 --> loss:0.8226353430747986
+step 51/84, epoch 426/501 --> loss:0.8166899633407593
+step 51/84, epoch 427/501 --> loss:0.8160009479522705
+step 51/84, epoch 428/501 --> loss:0.8205956757068634
+step 51/84, epoch 429/501 --> loss:0.8148987889289856
+step 51/84, epoch 430/501 --> loss:0.825541844367981
+step 51/84, epoch 431/501 --> loss:0.8104051423072814
+
+##########train dataset##########
+acc--> [99.2378189092607]
+F1--> {'F1': [0.9172631493327515], 'precision': [0.8522132789055559], 'recall': [0.9930758979951798]}
+##########eval dataset##########
+acc--> [98.55378518892365]
+F1--> {'F1': [0.8350950088965733], 'precision': [0.7947185780456855], 'recall': [0.8798048358048843]}
+step 51/84, epoch 432/501 --> loss:0.8231685543060303
+step 51/84, epoch 433/501 --> loss:0.820379055738449
+step 51/84, epoch 434/501 --> loss:0.8098569142818451
+step 51/84, epoch 435/501 --> loss:0.8204138767719269
+step 51/84, epoch 436/501 --> loss:0.8142702639102936
+step 51/84, epoch 437/501 --> loss:0.811227617263794
+step 51/84, epoch 438/501 --> loss:0.819340398311615
+step 51/84, epoch 439/501 --> loss:0.8246424543857575
+step 51/84, epoch 440/501 --> loss:0.8128905367851257
+step 51/84, epoch 441/501 --> loss:0.8157601225376129
+
+##########train dataset##########
+acc--> [99.28240867245435]
+F1--> {'F1': [0.9216772865335546], 'precision': [0.8603514368742169], 'recall': [0.9924282867340595]}
+##########eval dataset##########
+acc--> [98.62448691486757]
+F1--> {'F1': [0.8401030198611344], 'precision': [0.813796113990517], 'recall': [0.8681782136127937]}
+step 51/84, epoch 442/501 --> loss:0.8141658079624176
+step 51/84, epoch 443/501 --> loss:0.8134723961353302
+step 51/84, epoch 444/501 --> loss:0.8113088858127594
+step 51/84, epoch 445/501 --> loss:0.8172308599948883
+step 51/84, epoch 446/501 --> loss:0.8176902937889099
+step 51/84, epoch 447/501 --> loss:0.8249023580551147
+step 51/84, epoch 448/501 --> loss:0.8212108516693115
+step 51/84, epoch 449/501 --> loss:0.8219363987445831
+step 51/84, epoch 450/501 --> loss:0.8270752298831939
+step 51/84, epoch 451/501 --> loss:0.8173273277282714
+
+##########train dataset##########
+acc--> [99.30230116727678]
+F1--> {'F1': [0.9236428098398389], 'precision': [0.8642084176784297], 'recall': [0.9918674091239821]}
+##########eval dataset##########
+acc--> [98.65309147070678]
+F1--> {'F1': [0.842383919928869], 'precision': [0.821138706581564], 'recall': [0.864768212450153]}
+save model!
+step 51/84, epoch 452/501 --> loss:0.8238728296756744
+step 51/84, epoch 453/501 --> loss:0.8247352242469788
+step 51/84, epoch 454/501 --> loss:0.8300810217857361
+step 51/84, epoch 455/501 --> loss:0.8221025347709656
+step 51/84, epoch 456/501 --> loss:0.8197867476940155
+step 51/84, epoch 457/501 --> loss:0.8203029131889343
+step 51/84, epoch 458/501 --> loss:0.8150262904167175
+step 51/84, epoch 459/501 --> loss:0.8180635368824005
+step 51/84, epoch 460/501 --> loss:0.8230281460285187
+step 51/84, epoch 461/501 --> loss:0.8214061486721039
+
+##########train dataset##########
+acc--> [99.2691703713399]
+F1--> {'F1': [0.9203583890625613], 'precision': [0.8579460678065015], 'recall': [0.9925751960577252]}
+##########eval dataset##########
+acc--> [98.55149236563277]
+F1--> {'F1': [0.8335424470034823], 'precision': [0.7988822741596747], 'recall': [0.8713574495537904]}
+step 51/84, epoch 462/501 --> loss:0.8171473491191864
+step 51/84, epoch 463/501 --> loss:0.8167352652549744
+step 51/84, epoch 464/501 --> loss:0.8233426928520202
+step 51/84, epoch 465/501 --> loss:0.8220064795017242
+step 51/84, epoch 466/501 --> loss:0.8118909466266632
+step 51/84, epoch 467/501 --> loss:0.818445086479187
+step 51/84, epoch 468/501 --> loss:0.8232559299468994
+step 51/84, epoch 469/501 --> loss:0.8218296122550964
+step 51/84, epoch 470/501 --> loss:0.8188889193534851
+step 51/84, epoch 471/501 --> loss:0.8139956879615784
+
+##########train dataset##########
+acc--> [99.326431737839]
+F1--> {'F1': [0.9261016870010838], 'precision': [0.8683754974529276], 'recall': [0.992060643630259]}
+##########eval dataset##########
+acc--> [98.59332988267775]
+F1--> {'F1': [0.837392351731229], 'precision': [0.8069557345033784], 'recall': [0.870225753814289]}
+step 51/84, epoch 472/501 --> loss:0.8197843325138092
+step 51/84, epoch 473/501 --> loss:0.814918851852417
+step 51/84, epoch 474/501 --> loss:0.8176150226593017
+step 51/84, epoch 475/501 --> loss:0.823447014093399
+step 51/84, epoch 476/501 --> loss:0.8186304843425751
+step 51/84, epoch 477/501 --> loss:0.8170453774929046
+step 51/84, epoch 478/501 --> loss:0.8218540906906128
+step 51/84, epoch 479/501 --> loss:0.819072014093399
+step 51/84, epoch 480/501 --> loss:0.8177263534069061
+step 51/84, epoch 481/501 --> loss:0.829626053571701
+
+##########train dataset##########
+acc--> [99.32610934085226]
+F1--> {'F1': [0.9260514275593347], 'precision': [0.8684814940693286], 'recall': [0.9918070317451941]}
+##########eval dataset##########
+acc--> [98.6303508020904]
+F1--> {'F1': [0.8392688138155564], 'precision': [0.8203089268577171], 'recall': [0.8591363543411058]}
+step 51/84, epoch 482/501 --> loss:0.8206016325950622
+step 51/84, epoch 483/501 --> loss:0.8181536412239074
+step 51/84, epoch 484/501 --> loss:0.8216517055034638
+step 51/84, epoch 485/501 --> loss:0.8159672534465789
+step 51/84, epoch 486/501 --> loss:0.8098411011695862
+step 51/84, epoch 487/501 --> loss:0.8254107582569122
+step 51/84, epoch 488/501 --> loss:0.8196458089351654
+step 51/84, epoch 489/501 --> loss:0.8136854600906372
+step 51/84, epoch 490/501 --> loss:0.8324418115615845
+step 51/84, epoch 491/501 --> loss:0.8248081040382386
+
+##########train dataset##########
+acc--> [99.34629762847352]
+F1--> {'F1': [0.9280891462426152], 'precision': [0.8722823388284371], 'recall': [0.9915362076006974]}
+##########eval dataset##########
+acc--> [98.64180690868183]
+F1--> {'F1': [0.8405791183114497], 'precision': [0.8217572551335379], 'recall': [0.8602938688441127]}
+step 51/84, epoch 492/501 --> loss:0.8169250357151031
+step 51/84, epoch 493/501 --> loss:0.8191360402107238
+step 51/84, epoch 494/501 --> loss:0.8194770526885986
+step 51/84, epoch 495/501 --> loss:0.8156748962402344
+step 51/84, epoch 496/501 --> loss:0.8128540325164795
+step 51/84, epoch 497/501 --> loss:0.8165128993988037
+step 51/84, epoch 498/501 --> loss:0.8153490519523621
+step 51/84, epoch 499/501 --> loss:0.816895124912262
+step 51/84, epoch 500/501 --> loss:0.8174906539916992
+step 51/84, epoch 501/501 --> loss:0.8189036571979522
+
+##########train dataset##########
+acc--> [99.29029180800357]
+F1--> {'F1': [0.9224804649572906], 'precision': [0.8616526441944881], 'recall': [0.9925603370368876]}
+##########eval dataset##########
+acc--> [98.5979575810404]
+F1--> {'F1': [0.8387726669472049], 'precision': [0.8043950414075139], 'recall': [0.8762307812567384]}

@@ -1,97 +1,73 @@
-'''
-Author: CT
-Date: 2023-07-23 13:53
-LastEditors: CT
-LastEditTime: 2023-08-06 20:21
-'''
-import torch
-import numpy as np
+from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
+import numpy as np
+import random
+import torch
+import os
 import matplotlib.pyplot as plt
-import torch.nn.functional as F
 
 from Config import config
 from Backbone import Backbone
 from Dataset import create_Dataset
 
-ckpt_path = r"W:\Code\T1\Baseline\Models\2023-07-30_10-14--Cx64\C-E290-0.9447.ckpt"
+random.seed(config.seed)
+torch.manual_seed(config.seed)
 
-def plot_images(original_A, original_B, predicted, label, index):
-    # 输入检查
-    assert original_A.shape == (3, 64, 64)
-    assert original_B.shape == (3, 64, 64)
-    assert predicted.shape == (64, 64)
-    assert label.shape == (64, 64)
+# Path
+ckpt_path = r"Models\Unet\2023-11-30_22-36--Dice--unet--x16--r33--s64--posnone\unet-E470-0.8926.ckpt"
+inference_path = os.path.join(os.path.dirname(ckpt_path).replace("Models", "Inferences"), "split")
+os.makedirs(inference_path, exist_ok=True)
 
-    if not torch.any(label):
-        return
+# Model
+model = Backbone()
+net_state = torch.load(ckpt_path)
+model.load_state_dict(net_state)
+model.eval()
+model.to(config.device)
 
-    # 将原图张量转换为numpy数组，并转置通道维度
-    original_A = original_A.numpy().transpose((1, 2, 0))
-    original_B = original_B.numpy().transpose((1, 2, 0))
-    # 将预测和标签图转换为numpy数组
-    predicted = predicted.numpy()
-    label = label.numpy()
+# Dataset
+dataset = create_Dataset()
+train_ratio = 0.7
+train_size = int(len(dataset) * train_ratio)
+_, inference_dataset = random_split(dataset, [train_size, len(dataset) - train_size])
+inference_dataset = DataLoader(inference_dataset, batch_size=config.batch_size, shuffle=False)
 
-    # 创建预测和标签图的RGB表示
-    predicted_rgb = np.zeros((64, 64, 3))  # 创建一个全0的数组
-    predicted_rgb[predicted == 1] = [1, 0, 0]  # 将1值设为红色
+# Inference
+with torch.no_grad():
+    for idx, (images, labels, directions) in enumerate(tqdm(inference_dataset, desc="Processing")):
+        images = images.to(config.device)
+        outputs = model(images, directions)
 
-    label_rgb = np.zeros((64, 64, 3))  # 创建一个全0的数组
-    label_rgb[label == 1] = [1, 0, 0]  # 将1值设为红色
+        output_classes = torch.argmax(outputs, dim=1)
+        output_binaries = (output_classes == 1).float()
+        original_images = images[:, 0, :, :, :].cpu().numpy()
 
-    # 创建子图
-    fig, axs = plt.subplots(2, 2, figsize=(12, 12))
+        for i in range(images.size(0)):
+            label_image_np = labels[i].squeeze().cpu().numpy() * 255
+            output_image_np = output_binaries[i].squeeze().cpu().numpy() * 255
 
-    # 绘制原图A和B
-    axs[0, 0].imshow(original_A)
-    axs[0, 0].set_title('Original A')
-    axs[0, 1].imshow(original_B)
-    axs[0, 1].set_title('Original B')
+            if np.all(label_image_np == 0) and np.all(output_image_np == 0):
+                continue
 
-    # 绘制预测和标签图
-    axs[1, 0].imshow(predicted_rgb)
-    axs[1, 0].set_title('Predicted')
-    axs[1, 1].imshow(label_rgb)
-    axs[1, 1].set_title('Label')
+            stage_images = [original_images[i, j*3:(j+1)*3, :, :].transpose(1, 2, 0) for j in range(2)]
 
-    # 移除坐标轴
-    for ax in axs.flat:
-        ax.axis('off')
+            fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+            axs[0, 0].imshow(stage_images[0])
+            axs[0, 0].set_title("Before")
+            axs[0, 0].axis('off')
 
-    # plt.show()
-    plt.savefig("W:/Code/T1/Inference/"+str(index)+".png")
-    plt.close(fig)
+            axs[0, 1].imshow(stage_images[1])
+            axs[0, 1].set_title("After")
+            axs[0, 1].axis('off')
 
-if __name__=='__main__':
-    '''
-    Dataset
-    '''
-    # train_dataset = create_Dataset(batch_size=1, shuffle=True, speed_flag=False, mode="train")
-    eval_dataset = create_Dataset(batch_size=1, shuffle=False, speed_flag=False, mode="eval")
-    '''
-    Network
-    '''
-    net = Backbone()
-    net_state = torch.load(ckpt_path)
-    net.load_state_dict(net_state)
-    net.eval()
-    index = 0
-    for image, label_List, task_flag in tqdm(eval_dataset):
-        # forward
-        output_List = net(image)
-        # softmax
-        for output_index in range(len(output_List)):
-            output_List[output_index] = F.softmax(output_List[output_index], dim=1)
-        index += 1
-        plot_images(
-            image[0,0:3,:,:],
-            image[0,3:6,:,:],
-            torch.argmax(output_List[0][0],dim=0),
-            label_List[0][0],
-            index
-        )
+            axs[1, 0].imshow(label_image_np, cmap='gray')
+            axs[1, 0].set_title("Label")
+            axs[1, 0].axis('off')
 
+            axs[1, 1].imshow(output_image_np, cmap='gray')
+            axs[1, 1].set_title("Prediction")
+            axs[1, 1].axis('off')
 
-
-
+            plt.tight_layout()
+            plt.savefig(os.path.join(inference_path, f"{idx}_{i}.png"))
+            plt.close()

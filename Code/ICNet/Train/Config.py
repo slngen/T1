@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-12-06 09:51
+LastEditTime: 2023-12-07 13:19
 '''
 from easydict import EasyDict as ed
 
@@ -11,7 +11,7 @@ config = ed({
     "class_nums":2,
     # Dataset
     "data_path":"Datasets/WHU-BCD",
-    "image_size":64,
+    "image_size":256,
     "num_parallel_workers":4,
     "batch_size": 64,
     "input_dim": 6,
