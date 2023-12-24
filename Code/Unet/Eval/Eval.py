@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-11-16 14:23
 LastEditors: CT
-LastEditTime: 2023-12-10 11:40
+LastEditTime: 2023-12-10 18:41
 '''
 import os
 import torch
@@ -20,7 +20,7 @@ torch.manual_seed(config.seed)
 '''
 Path
 '''
-ckpt_path = r"Models\Unet\2023-12-02_09-58--Dice--unet--x64--r33--s64--posmulti\unet-E490-0.9122.ckpt"
+ckpt_path = r"Models\Unet\2023-11-29_09-39--Dice--unet--x32--r33--s64--posadd\unet-E410-0.9010.ckpt"
 log_path = os.path.join(os.path.dirname(ckpt_path).replace("Models","Logs"), "eval.log")
 
 '''

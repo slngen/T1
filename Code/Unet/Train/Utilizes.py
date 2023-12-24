@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-08-15 10:10
 LastEditors: CT
-LastEditTime: 2023-11-06 10:34
+LastEditTime: 2023-12-24 17:14
 '''
 from Config import config
 
@@ -11,7 +11,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class Loss_net(nn.Module):
-    def __init__(self, mode="dice"):
+    def __init__(self, mode="ce"):
         super(Loss_net, self).__init__()
         self.mode = mode
         self.loss_ce = nn.CrossEntropyLoss()
@@ -23,6 +23,11 @@ class Loss_net(nn.Module):
         dice = (2. * intersection + smooth) / (union + smooth)
         return 1 - dice
     
+    def ce_loss(self, pred, target):
+        target = target.squeeze(1)
+        target = target.long()
+        return self.loss_ce(pred, target)
+
     def iou_loss(self, pred, target):
         smooth = 1e-5
         intersection = (pred * target).sum()
@@ -33,7 +38,7 @@ class Loss_net(nn.Module):
     def forward(self, output, label):
         loss = 0
         if self.mode == "ce":
-            loss += self.loss_ce(output, label)
+            loss += self.ce_loss(output, label)
         elif self.mode == "dice":
             pred = F.softmax(output, dim=1)[:, 1, :, :]
             loss += self.dice_loss(pred, label == 1)

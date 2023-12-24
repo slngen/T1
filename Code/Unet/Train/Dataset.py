@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-11-06 10:15
 LastEditors: CT
-LastEditTime: 2023-11-16 15:39
+LastEditTime: 2023-12-24 17:03
 '''
 import os
 import random
@@ -47,22 +47,20 @@ class BuildingChangeDetectionDataset(Dataset):
         x = (idx % self.n_patches_x) * self.img_size
         y = (idx // self.n_patches_x) * self.img_size
         
-        centerPatch = self.extract_patch(self.combined_image, x, y)
+        data = self.extract_patch(self.combined_image, x, y)
+        data = torch.unsqueeze(data, dim=0)
         patch_label = self.extract_patch(self.label_image, x, y, is_label=True)
         
         directions = torch.tensor([[0, -1], [0, 1], [-1, 0], [1, 0]])
-        direction = random.choice(directions)
-        x_neighbor = x + direction[0] * self.img_size
-        y_neighbor = y + direction[1] * self.img_size
-        
-        auxiliaryPatch = self.extract_patch(self.combined_image, x_neighbor, y_neighbor)
-        
-        if self.transform is not None:
-            centerPatch = self.transform(centerPatch)
-            auxiliaryPatch = self.transform(auxiliaryPatch)
-        
-        data = torch.stack([centerPatch, auxiliaryPatch])
-        return data, patch_label, direction
+        for direction in directions:
+            x_neighbor = x + direction[0] * self.img_size
+            y_neighbor = y + direction[1] * self.img_size
+            
+            auxiliaryPatch = self.extract_patch(self.combined_image, x_neighbor, y_neighbor)
+            auxiliaryPatch = torch.unsqueeze(auxiliaryPatch, dim=0)
+            data = torch.concat([data, auxiliaryPatch])
+
+        return data, patch_label
     
     def extract_patch(self, image, x, y, is_label=False):
         if x < 0 or y < 0 or x + self.img_size > self.width or y + self.img_size > self.height:
@@ -75,6 +73,9 @@ class BuildingChangeDetectionDataset(Dataset):
                 patch = image[y:y+self.img_size, x:x+self.img_size]
             else:
                 patch = image[y:y+self.img_size, x:x+self.img_size]
+                
+        if self.transform is not None:
+            patch = self.transform(patch)
         return patch
 
 def create_Dataset():
@@ -102,16 +103,6 @@ if __name__ == "__main__":
             break
 
     for i, (data, patch_label, direction) in enumerate(eval_dataset):
-        print('Test:', data.size(), patch_label.size(), direction.size())
-        if i == 3:
-            break
-
-    for i, (data, patch_label, direction) in enumerate(train_dataloader):
-        print('Train:', data.size(), patch_label.size(), direction.size())
-        if i == 3:
-            break
-
-    for i, (data, patch_label, direction) in enumerate(test_dataloader):
         print('Test:', data.size(), patch_label.size(), direction.size())
         if i == 3:
             break

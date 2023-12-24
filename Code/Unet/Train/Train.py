@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-04-03 21:24
 LastEditors: CT
-LastEditTime: 2023-11-17 19:07
+LastEditTime: 2023-12-24 17:16
 '''
 import os
 import time
@@ -25,7 +25,7 @@ if __name__=='__main__':
     Log
     '''
     # get time stamp with format "2021-01-01_00-00"
-    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Dice--unet--x"+str(config.features[0])+"--r"+str(config.seed)+"--s"+str(config.image_size)+"--pos"+str(config.pos_mode)
+    time_stamp = time.strftime("%Y-%m-%d_%H-%M", time.localtime()) +"--Puzzle--x"+str(config.features[0])+"--s"+str(config.image_size)
     # create log path
     log_path = os.path.join(config.log_path, time_stamp)
     os.makedirs(log_path, exist_ok=True)
@@ -88,13 +88,13 @@ if __name__=='__main__':
         net.train()
         step = 0
         loss_avg = 0
-        for image, label, direction in train_dataset:
+        for image, label in train_dataset:
             step += 1
             # to device
             image = image.to(config.device)
             label = label.to(config.device)
             # forward
-            output = net(image, direction)
+            output = net(image)
             # loss
             loss = lossNet(output, label)
             # average loss
@@ -121,12 +121,12 @@ if __name__=='__main__':
                 print("#"*10, "train dataset", "#"*10)
                 # write info log
                 info_log_file.write("\n"+"#"*10+"train dataset"+"#"*10+"\n")
-                for image, label, direction in train_dataset:
+                for image, label in train_dataset:
                     # to device
                     image = image.to(config.device)
                     label = label.to(config.device)
                     # forward
-                    output = net(image, direction)
+                    output = net(image)
                     # metrics
                     metricNet.update(output, label)
                 # metrics
@@ -144,12 +144,12 @@ if __name__=='__main__':
                 print("#"*10, "eval dataset", "#"*10)
                 # write info log
                 info_log_file.write("#"*10+"eval dataset"+"#"*10+"\n")
-                for image, label, direction in eval_dataset:
+                for image, label in eval_dataset:
                     # to device
                     image = image.to(config.device)
                     label = label.to(config.device)
                     # forward
-                    output = net(image, direction)
+                    output = net(image)
                     # metrics
                     metricNet.update(output, label)
                 # metrics

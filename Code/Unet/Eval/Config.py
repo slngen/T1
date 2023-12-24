@@ -2,7 +2,7 @@
 Author: CT
 Date: 2022-12-09 10:36
 LastEditors: CT
-LastEditTime: 2023-12-10 15:03
+LastEditTime: 2023-12-10 18:41
 '''
 from easydict import EasyDict as ed
 
@@ -19,7 +19,7 @@ config = ed({
     # Model
     "pretrained":False,
     "resume":r"", 
-    "pos_mode": "none", # add ,none or multi
+    "pos_mode": "add", # add ,none or multi
     # Train & Eval
     "eval_epochs":10,
     "start_eval_epochs":0,
@@ -37,5 +37,5 @@ config = ed({
     "lr_end":5e-5,
     "warmup_epochs":0,
     # Backbone
-    "features":[16, 32, 64]
+    "features":[32, 64, 128]
 })

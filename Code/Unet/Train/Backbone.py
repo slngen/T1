@@ -2,10 +2,12 @@
 Author: CT
 Date: 2023-10-29 16:06
 LastEditors: CT
-LastEditTime: 2023-11-11 09:32
+LastEditTime: 2023-12-24 17:09
 '''
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+
 from Config import config
 
 class DoubleConv(nn.Module):
@@ -60,122 +62,105 @@ class Decoder(nn.Module):
             x = self.layers[i + 1](x)
         return self.conv(x)
 
-class SpatialAttention(nn.Module):
-    def __init__(self, kernel_size=3):
-        super(SpatialAttention, self).__init__()
-        self.conv1 = nn.Conv2d(2, 1, kernel_size=kernel_size, padding=kernel_size // 2)
-        self.sigmoid = nn.Sigmoid()
+class FuseConv(nn.Module):
+    def __init__(self, channels):
+        super(FuseConv, self).__init__()
+        self.conv = nn.Sequential(
+            nn.Conv2d(channels, channels, 3, padding=1),
+            nn.BatchNorm2d(channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(channels, channels, kernel_size=3, padding=1),
+            nn.BatchNorm2d(channels),
+            nn.ReLU(inplace=True),
+        )
 
     def forward(self, x):
-        avg_out = torch.mean(x, dim=1, keepdim=True)
-        max_out, _ = torch.max(x, dim=1, keepdim=True)
-        x = torch.cat([avg_out, max_out], dim=1)
-        x = self.conv1(x)
-        return self.sigmoid(x)
-    
-class ChannelAttention(nn.Module):
-    def __init__(self, num_channels, reduction_ratio=3):
-        super(ChannelAttention, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.max_pool = nn.AdaptiveMaxPool2d(1)
-        self.fc1 = nn.Conv2d(num_channels, num_channels // reduction_ratio, 1, bias=False)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Conv2d(num_channels // reduction_ratio, num_channels, 1, bias=False)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, x):
-        avg_out = self.fc2(self.relu(self.fc1(self.avg_pool(x))))
-        max_out = self.fc2(self.relu(self.fc1(self.max_pool(x))))
-        out = avg_out + max_out
-        return self.sigmoid(out)
-
-class AttentionUnit(nn.Module):
-    def __init__(self, out_channels):
-        super(AttentionUnit, self).__init__()
-        self.sa = SpatialAttention()
-        self.ca = ChannelAttention(out_channels)
-        self.map = DoubleConv(out_channels, out_channels//2)
-
-    def forward(self, x):
-        x = self.sa(x) * x
-        x = self.ca(x) * x
-        x = self.map(x)
+        x = self.conv(x)
         return x
-    
-class AttentionModule(nn.Module):
-    def __init__(self):
-        super(AttentionModule, self).__init__()
-        self.layers = nn.ModuleList([
-            AttentionUnit(2*config.features[0]),
-            AttentionUnit(2*config.features[1]),
-            AttentionUnit(2*config.features[2]),
-        ])
 
-    def forward(self, features):
-        att_features = []
-        for feature_index in range(len(features)):
-            feature = features[feature_index]
-            att_feature = self.layers[feature_index](feature)
-            att_features.append(att_feature)
-        return att_features
-
-class PositionalEmbedding(nn.Module):
+class FuseModule(nn.Module):
     def __init__(self):
-        super(PositionalEmbedding, self).__init__()
-        self.embeddings = nn.ParameterDict()
+        super(FuseModule, self).__init__()
+        self.embeddings = nn.ModuleDict()
         self.device = config.device
 
-    def forward(self, feature_maps, pos):
-        if config.pos_mode == "none":
-            return feature_maps
-        feature_outs = []
-        for feature_index in range(len(feature_maps)):
-            batch_size, channel, size, _ = feature_maps[feature_index].shape
-            batch_embeddings = []
-            for i in range(batch_size):
-                key = f"pos{'_'.join(map(str, pos[i].int().tolist()))}_ch{channel}_s{size}"
-                if key not in self.embeddings:
-                    self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
-                batch_embeddings.append(self.embeddings[key])
-            positional_encoding = torch.cat(batch_embeddings)
-            if config.pos_mode == "add":
-                feature_out = feature_maps[feature_index] + positional_encoding
-            else:
-                feature_out = torch.einsum('bchw,bcwj->bchj', feature_maps[feature_index], positional_encoding)
-            feature_outs.append(feature_out)
-        return feature_outs
+        self.fuseDict = nn.ModuleDict()
+        directions = ["up", "down", "left", "right"]
+        for dir in directions:
+            self.fuseDict[dir] = nn.ModuleDict({
+                str(channels): FuseConv(channels)
+                for channels in config.features
+            })
+        self.fuseDict.to(self.device)
+
+    def _direction_to_key(self, direction):
+        direction_map = {
+            tuple([0, -1]): "up",
+            tuple([0, 1]): "down",
+            tuple([-1, 0]): "left",
+            tuple([1, 0]): "right"
+        }
+        return direction_map[tuple(direction.tolist())]
     
+    def _cat_features(self, center_features, guide_features, dir):
+        if dir == "up":
+            return torch.cat([guide_features, center_features], dim=3)
+        elif dir == "down":
+            return torch.cat([center_features, guide_features], dim=3)
+        elif dir == "left":
+            return torch.cat([guide_features, center_features], dim=2)
+        elif dir == "right":
+            return torch.cat([center_features, guide_features], dim=2)
+        
+    def _reduce_features(self, feature, dir):
+        size = min(feature.shape[2:])
+        if dir == "up":
+            return feature[:,:,:,size:]
+        elif dir == "down":
+            return feature[:,:,:,:size]
+        elif dir == "left":
+            return feature[:,:,size:,:]
+        elif dir == "right":
+            return feature[:,:,:size,:]
+
+    def forward(self, center_features, guide_features, direction):
+        fuse_features = []
+        dir = self._direction_to_key(direction)
+        for index in range(len(center_features)):
+            cat_feature = self._cat_features(center_features[index], guide_features[index], dir)
+            cat_fuse_feature = self.fuseDict[dir][str(center_features[index].shape[1])](cat_feature)
+            fuse_feature = self._reduce_features(cat_fuse_feature, dir)
+            fuse_features.append(fuse_feature)
+        return fuse_features
+
 class Backbone(nn.Module):
     def __init__(self):
         super(Backbone, self).__init__()
         self.device = config.device
         self.encoder = Encoder(config.input_dim, config.features)
         self.decoder = Decoder(config.features, 2)
-        self.embedding = PositionalEmbedding()
-        self.attention = AttentionModule()
+        self.fuse = FuseModule()
         self.softmax = nn.Softmax(dim=1)
 
-    def forward(self, x, direction = torch.randint(-1,1,(config.batch_size,2))):
+    def forward(self, x):
         center_patch = x[:,0,:,:,:]
-        guide_patch = x[:,1,:,:,:]
-        center_features = self.encoder(center_patch)
-        guide_features = self.encoder(guide_patch)
-        positional_guide_features = self.embedding(guide_features, direction)
-        features = [torch.cat((center_features[i], positional_guide_features[i]), dim=1) for i in range(len(config.features))]
-        att_features = self.attention(features)
-        output = self.decoder(att_features)
-        output = self.softmax(output)
-        return output
+        guide_patchs = x[:,1:,:,:,:]
 
-        # center_patch = x[:,0,:,:,:]
-        # center_features = self.encoder(center_patch)
-        # output = self.decoder(center_features)
-        # output = self.softmax(output)
-        # return output
+        score = 0
+        center_features = self.encoder(center_patch)
+        directions = torch.tensor([[0, -1], [0, 1], [-1, 0], [1, 0]])
+        for pos_index in range(len(directions)):
+            guide_features = self.encoder(guide_patchs[:,pos_index,:,:,:])
+            fuse_features = self.fuse(center_features, guide_features, directions[pos_index])
+            output = self.decoder(fuse_features)
+            output = self.softmax(output)
+            score += output
+        score = self.softmax(score)
+        return score
 
 if __name__ == "__main__":
     from torchinfo import summary
     
     model = Backbone()
-    summary(model, input_size=(2, config.batch_size, config.input_dim, config.image_size, config.image_size))
-    print(model)
+    summary(model, input_size=(config.batch_size, 5, config.input_dim, config.image_size, config.image_size))
+    # print(model)

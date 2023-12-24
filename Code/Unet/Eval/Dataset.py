@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-11-06 10:15
 LastEditors: CT
-LastEditTime: 2023-12-10 14:08
+LastEditTime: 2023-12-12 00:17
 '''
 import os
 import random
@@ -53,6 +53,7 @@ class BuildingChangeDetectionDataset(Dataset):
             centerPatch = self.transform(centerPatch)
 
         directions = torch.tensor([[0, -1], [0, 1], [-1, 0], [1, 0]])
+        directions = directions[random.sample(range(len(directions)), 4)]
         # direction = random.choice(directions)
         auxiliaryPatchs = []
         for direction in directions:
