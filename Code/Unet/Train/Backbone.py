@@ -2,7 +2,7 @@
 Author: CT
 Date: 2023-10-29 16:06
 LastEditors: CT
-LastEditTime: 2023-12-24 17:09
+LastEditTime: 2023-12-24 17:17
 '''
 import torch
 import torch.nn as nn
@@ -83,6 +83,57 @@ class FuseModule(nn.Module):
         super(FuseModule, self).__init__()
         self.embeddings = nn.ModuleDict()
         self.device = config.device
+        if config.pos_mode != "none":
+            if config.features[0]==16:
+                eval_keys = [
+                    "pos0_1_ch16_s64", 
+                    "pos-1_0_ch16_s64", 
+                    "pos1_0_ch16_s64", 
+                    "pos0_-1_ch16_s64", 
+                    "pos0_1_ch32_s32", 
+                    "pos-1_0_ch32_s32", 
+                    "pos1_0_ch32_s32", 
+                    "pos0_-1_ch32_s32", 
+                    "pos0_1_ch64_s16", 
+                    "pos-1_0_ch64_s16", 
+                    "pos1_0_ch64_s16", 
+                    "pos0_-1_ch64_s16"
+                ]  
+            elif config.features[0]==32:
+                eval_keys = [
+                    "pos0_1_ch32_s64", 
+                    "pos-1_0_ch32_s64", 
+                    "pos1_0_ch32_s64", 
+                    "pos0_-1_ch32_s64", 
+                    "pos0_1_ch64_s32", 
+                    "pos-1_0_ch64_s32", 
+                    "pos1_0_ch64_s32", 
+                    "pos0_-1_ch64_s32", 
+                    "pos0_1_ch128_s16", 
+                    "pos-1_0_ch128_s16", 
+                    "pos1_0_ch128_s16", 
+                    "pos0_-1_ch128_s16"
+                ]  
+            elif config.features[0]==64:
+                eval_keys = [
+                    "pos0_1_ch64_s64", 
+                    "pos-1_0_ch64_s64", 
+                    "pos1_0_ch64_s64", 
+                    "pos0_-1_ch64_s64", 
+                    "pos0_1_ch128_s32", 
+                    "pos-1_0_ch128_s32", 
+                    "pos1_0_ch128_s32", 
+                    "pos0_-1_ch128_s32", 
+                    "pos0_1_ch256_s16", 
+                    "pos-1_0_ch256_s16", 
+                    "pos1_0_ch256_s16", 
+                    "pos0_-1_ch256_s16"
+                ]
+
+            for key in eval_keys:
+                channel = int(key.split("ch")[1].split("_")[0])
+                size = int(key.split("s")[-1])
+                self.embeddings[key] = nn.Parameter(torch.randn(1, channel, size, size).to(self.device))
 
         self.fuseDict = nn.ModuleDict()
         directions = ["up", "down", "left", "right"]
